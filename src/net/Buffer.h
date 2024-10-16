@@ -126,6 +126,11 @@ public:
         return uRcvLen;
     }
 
+    void Reset() {
+        _RAM_SET_(_data,_size,0,_size);
+        uRcvLen = 0;
+    }
+
 private:
     void* _data;//堆空间
     size_t _size;//堆空间大小

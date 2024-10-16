@@ -1,5 +1,5 @@
-﻿#ifndef __TCP_CLIENT_H
-#define __TCP_CLIENT_H
+﻿#ifndef __UDP_CLIENT_H
+#define __UDP_CLIENT_H
 
 #include <memory>
 #include "Socket.h"
@@ -10,20 +10,13 @@ namespace chw {
  * Tcp客户端基类，实现连接、发送数据、断开等接口。
  * 继承该类，实现虚函数onConnect、onError、onRecv即可自定义一个tcp客户端。
  */
-class TcpClient : public std::enable_shared_from_this<TcpClient> {
+class UdpClient : public std::enable_shared_from_this<UdpClient> {
 public:
-    using Ptr = std::shared_ptr<TcpClient>;
-    TcpClient(const EventLoop::Ptr &poller = nullptr);
-    virtual ~TcpClient();
+    using Ptr = std::shared_ptr<UdpClient>;
+    UdpClient(const EventLoop::Ptr &poller = nullptr);
+    virtual ~UdpClient();
 
-    /**
-     * 开始连接tcp服务器
-     * @param url 服务器ip或域名
-     * @param port 服务器端口
-     * @param timeout_sec 超时时间,单位秒
-     * @param local_port 本地端口
-     */
-    virtual void startConnect(const std::string &url, uint16_t port, float timeout_sec = 5, uint16_t local_port = 0);
+    uint32_t create_udp(const std::string &url, uint16_t port,const std::string &localip = "::", uint16_t localport = 0);
     
     /**
      * 主动断开连接
@@ -35,13 +28,7 @@ public:
      * 连接中或已连接返回true，断开连接时返回false
      */
     virtual bool alive() const;
-
-    /**
-     * 设置网卡适配器,使用该网卡与服务器通信
-     * @param local_ip 本地网卡ip
-     */
-    virtual void setNetAdapter(const std::string &local_ip);
-
+    
     /**
      * 唯一标识
      */
@@ -49,20 +36,20 @@ public:
 
 protected:
     /**
-     * 派生类的连接服务器结果回调
+     * 上层的连接服务器结果回调
      * @param ex 成功与否
      */
     virtual void onConnect(const SockException &ex) = 0;
 
     /**
-     * 派生类收到 eof 或其他导致脱离 Server 事件的回调
+     * 收到 eof 或其他导致脱离 Server 事件的回调
      * 收到该事件时, 该对象一般将立即被销毁
      * @param err 原因
      */
     virtual void onError(const SockException &err) = 0;
 
     /**
-     * 派生类接收数据入口
+     * 接收数据入口
      * @param buf 数据，可以重复使用内存区,不可被缓存使用
      */
     virtual void onRecv(const Buffer::Ptr &buf) = 0;
@@ -73,19 +60,11 @@ protected:
     // void onManager() {}
 
 private:
-    /**
-     * @brief 连接结果回调
-     * 
-     * @param ex 
-     */
-    void onSockConnect(const SockException &ex);
-
-private:
     mutable std::string _id;
     std::string _net_adapter = "::";
     std::shared_ptr<Timer> _timer;
     //对象个数统计
-    // ObjectStatistic<TcpClient> _statistic;
+    // ObjectStatistic<UdpClient> _statistic;
 
     //chw
 public:
@@ -103,4 +82,4 @@ public:
 };
 
 } //namespace chw
-#endif //__TCP_CLIENT_H
+#endif //__UDP_CLIENT_H

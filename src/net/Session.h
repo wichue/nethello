@@ -9,6 +9,7 @@ namespace chw {
     
 class Session : public std::enable_shared_from_this<Session> {
 public:
+    bool enable = true;
     using Ptr = std::shared_ptr<Session>;
     Session(const Socket::Ptr &sock)
     {
@@ -34,6 +35,7 @@ public:
     virtual void onError(const SockException &err) = 0;
     virtual void onManager() = 0;
     virtual const std::string &className() const = 0;
+    virtual uint32_t senddata(uint8_t* buff, uint32_t len) = 0;
 
 private:
     mutable std::string _id;

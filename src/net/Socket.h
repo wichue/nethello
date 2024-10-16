@@ -630,22 +630,25 @@ private:
 public:
     /**
      * 触发onErr事件
-     * Trigger the onErr event
-     
-     * [AUTO-TRANSLATED:b485450f]
      */
     void shutdown(const SockException &ex = SockException(Err_shutdown, "self shutdown"));
 
     /**
      * 线程安全的脱离 Server 并触发 onError 事件
      * @param ex 触发 onError 事件的原因
-     * Safely detach from the Server and trigger the onError event in a thread-safe manner
-     * @param ex The reason for triggering the onError event
-     
-     * [AUTO-TRANSLATED:739455d5]
      */
     void safeShutdown(const SockException &ex = SockException(Err_shutdown, "self shutdown"));
 
+    /**
+     * @brief tcp发送数据
+     * 
+     * @param buff 数据
+     * @param len  数据长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    //todo:创建缓存，当数据达到一定数量时再执行系统调用，减少syscall，如果一定时间内没有达到一定数量也执行系统调用。
+    //注意: 发送失败或部分发送成功会丢弃包,此时建议业务模块触发tcp断开重联
+    //todo:方案2：发送失败时监听可写事件，没有发送成功的先放入缓存，可写时再发送（一直发送失败会出现大量缓存积压，不利于业务快速反映）
     uint32_t send_tcp(uint8_t* buff, uint32_t len);
 
 private:

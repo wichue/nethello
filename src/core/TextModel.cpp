@@ -33,7 +33,7 @@ void TextModel::startmodel()
     else
     {
         _pTcpClient = std::make_shared<chw::TcpTextClient>(_poller);
-        _pTcpClient->startConnect("127.0.0.1",chw::gConfigCmd.server_port);
+        _pTcpClient->startConnect(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port);
     }
 
     // 主线程
@@ -44,10 +44,15 @@ void TextModel::startmodel()
         std::getline(std::cin, msg);
         if(!msg.empty())
         {
-            PrintD("%s",msg.c_str());
-            _poller->async([this](){
-                // _pTcpClient->se
-                // _pTcpClient << "hello";
+            _poller->async([this,&msg](){
+                if(chw::gConfigCmd.role == 's')
+                {
+                    _pTcpServer->sendclientdata((uint8_t*)msg.c_str(),msg.size());
+                }
+                else
+                {
+                    _pTcpClient->senddata((uint8_t*)msg.c_str(),msg.size());
+                }
             });
         }
 

@@ -131,4 +131,13 @@ std::string TcpClient::getIdentifier() const {
     return _id;
 }
 
+uint32_t TcpClient::senddata(uint8_t* buff, uint32_t len)
+{
+    if(_sock) {
+        return _sock->send_tcp(buff,len);
+    } else {
+        return 0;
+    }
+}
+
 } //namespace chw

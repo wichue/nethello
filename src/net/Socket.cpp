@@ -312,6 +312,8 @@ ssize_t Socket::onRead(const SockNum::Ptr &sock/*, const SocketRecvBuffer::Ptr &
                 } else {
                     WarnL << "Recv err on udp socket[" << sock->rawFd() << "]: " << uv_strerror(err);
                 }
+            } else {
+                //跳出循环
             }
             return ret;
         }
@@ -963,29 +965,53 @@ void Socket::safeShutdown(const SockException &ex) {
         }
     });
 }
-
+//     if (!addr) {
+//         if (!_udp_send_dst) {
+//             return send_l(std::move(buf), false, try_flush);
+//         }
+//         // 本次发送未指定目标地址，但是目标定制已通过bindPeerAddr指定  [AUTO-TRANSLATED:afb6ce35]
+//         //This send did not specify a target address, but the target is customized through bindPeerAddr
+//         addr = (struct sockaddr *)_udp_send_dst.get();
+//         addr_len = SockUtil::get_sock_len(addr);
+//     }
+//     return send_l(std::make_shared<BufferSock>(std::move(buf), addr, addr_len), true, try_flush);
 uint32_t Socket::send_tcp(uint8_t* buff, uint32_t len)
 {
     LOCK_GUARD(_mtx_sock_fd);
 
     if (!_sock_fd) {
+        PrintE("tcp already disconnect");
         // 如果已断开连接或者发送超时
-        return chw::fail;
+        return 0;
     }
+    //发送失败由上层处理
     if (_sendable) {
         // 该socket可写
         // return flushData(_sock_fd->rawFd(), _sock_fd->type(), false) ? 0 : -1;
-        SockUtil::send_tcp_data(_sock_fd->rawFd(),buff,len);
+        if(len > 0 && buff != nullptr) {
+            if(_sock_fd->type() == SockNum::Sock_TCP) {
+                return SockUtil::send_tcp_data(_sock_fd->rawFd(),buff,len);
+            } else {
+                if(_udp_send_dst) {
+                    struct sockaddr *addr = (struct sockaddr *)_udp_send_dst.get();
+                    socklen_t addr_len = SockUtil::get_sock_len(addr);
+                    return SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
+                } else {
+                    return 0;
+                }
+            }
+            
+        }
     }
 
-    // 该socket不可写,判断发送超时
-    if (_send_flush_ticker.elapsedTime() > _max_send_buffer_ms) {
-        // 如果发送列队中最老的数据距今超过超时时间限制，那么就断开socket连接
-        emitErr(SockException(Err_other, "socket send timeout"));
-        return chw::fail;
-    }
+    // // 该socket不可写,判断发送超时
+    // if (_send_flush_ticker.elapsedTime() > _max_send_buffer_ms) {
+    //     // 如果发送列队中最老的数据距今超过超时时间限制，那么就断开socket连接
+    //     emitErr(SockException(Err_other, "socket send timeout"));
+    //     return chw::fail;
+    // }
 
-    return chw::success;
+    return 0;
 }
 
 } // namespace chw

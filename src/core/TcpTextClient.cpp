@@ -34,8 +34,8 @@ void TcpTextClient::onRecv(const Buffer::Ptr &pBuf)
 {
     //接收数据事件
     // DebugL << pBuf->data() << " from port:" << getSock()->get_peer_port();
-    InfoLNCR << "<";
-    PrintD("%s",pBuf->data());
+    PrintD("<%s",pBuf->data());
+    pBuf->Reset();
 }
 
 void TcpTextClient::onError(const SockException &ex)

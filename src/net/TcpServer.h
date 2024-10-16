@@ -12,7 +12,10 @@
 
 namespace chw {
 
-//TCP服务器，可配置的；配置通过Session::attachServer方法传递给会话对象
+/**
+ * tcp服务端，实现监听和新连接接入，管理连接。
+ * 接入连接的数据收发在 SessionType 实现。
+ */
 class TcpServer : public std::enable_shared_from_this<TcpServer> {
 public:
     using Ptr = std::shared_ptr<TcpServer>;
@@ -108,10 +111,21 @@ private:
     // ObjectStatistic<TcpServer> _statistic;
 
 //chw
+public:
+    /**
+     * @brief 发送数据给最后一个活动的客户端
+     * 
+     * @param buf   数据
+     * @param len   数据长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    uint32_t sendclientdata(uint8_t* buf, uint32_t len);
+    std::weak_ptr<Session> _last_session;// 最后一个活动的客户端
 private:
     EventLoop::Ptr _poller;
     std::function<Session::Ptr(const TcpServer::Ptr &server, const Socket::Ptr &)> _session_alloc;
     std::unordered_map<Session *, Session::Ptr> _session_map;
+    
 };
 
 } //namespace chw

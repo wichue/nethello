@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8) #设置cmake最低版本
-project("netcheck")	#设置项目名称
+project("nethello")	#设置项目名称
 SET(PREFIX ${CMAKE_CURRENT_SOURCE_DIR})#设置普通变量，CMAKE_CURRENT_SOURCE_DIR为当前cmake文件目录
 SET(BINDIR /usr/bin)
 message (">>> pwd = ${PREFIX}")#打印变量
@@ -38,6 +38,8 @@ SET(SRCS
     ${PREFIX}/src/net/SocketBase.cpp
     ${PREFIX}/src/net/TcpClient.cpp
     ${PREFIX}/src/net/TcpServer.cpp
+    ${PREFIX}/src/net/UdpServer.cpp
+    ${PREFIX}/src/net/UdpClient.cpp
 
     ${PREFIX}/src/GlobalValue.cpp
 )
@@ -51,7 +53,7 @@ SET(LIB_SO
     -lpthread
 )
 
-SET(RUN_MAIN "netcheck")
+SET(RUN_MAIN "nethello")
 #设置C语言编译选项
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 #设置C++编译选项

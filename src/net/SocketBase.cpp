@@ -1157,12 +1157,12 @@ struct sockaddr_storage SockUtil::make_sockaddr(const char *host, uint16_t port)
     throw std::invalid_argument(string("Not ip address: ") + host);
 }
 
-int32_t SockUtil::send_tcp_data(int32_t fd, uint8_t * buff, uint32_t len)
+uint32_t SockUtil::send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len)
 {
-    uint64_t total_send_bytes = 0;
-    int64_t curr_send_len = 0;
-    uint64_t left_bytes = len;
-    int32_t resendtimes = 0;
+    uint32_t total_send_bytes = 0;
+    uint32_t curr_send_len = 0;
+    uint32_t left_bytes = len;
+    uint32_t resendtimes = 0;
 
     while(total_send_bytes < len) {
         curr_send_len = send(fd, buff + total_send_bytes, left_bytes, MSG_NOSIGNAL);
@@ -1173,18 +1173,24 @@ int32_t SockUtil::send_tcp_data(int32_t fd, uint8_t * buff, uint32_t len)
                 continue;
             }
 
-            PrintD("send failed,errno=%d(%s),resendtimes=%d,len=%u,fd=%d",errno,strerror(errno),resendtimes,len,fd);
-            return -1;
+            PrintD("send failed,errno=%d(%s),resendtimes=%d,len=%u,total_send_bytes=%u,fd=%d",errno,strerror(errno),resendtimes,len,total_send_bytes,fd);
+            return total_send_bytes;
         } else if(curr_send_len > 0) {
             total_send_bytes += curr_send_len;
             left_bytes -= curr_send_len;
         } else {
             PrintD("send return 0,errno=%d(%s),len=%u,fd=%d",errno,strerror(errno),len,fd);
-            return -1;
+            return 0;
         }
     }
 
-     return 0;
+     return total_send_bytes;
 }
+
+int32_t SockUtil::send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen)
+{
+    return sendto(fd, buff, len, 0, addr, sizeof(struct sockaddr_in));
+}
+
 
 }  // namespace chw
