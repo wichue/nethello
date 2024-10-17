@@ -9,8 +9,8 @@ namespace chw {
 // INSTANCE_IMP(SessionMap)
 // StatisticImp(TcpServer)
 
-TcpServer::TcpServer(const EventLoop::Ptr &poller) {
-    _poller = poller;
+TcpServer::TcpServer(const EventLoop::Ptr &poller) : Server(poller){
+    // _poller = poller;
     // _multi_poller = !poller;
     setOnCreateSocket(nullptr);
 }
@@ -39,9 +39,9 @@ void TcpServer::setupEvent() {
 }
 
 TcpServer::~TcpServer() {
-    if (_main_server && _socket && _socket->rawFD() != -1) {
-        InfoL << "Close tcp server [" << _socket->get_local_ip() << "]: " << _socket->get_local_port();
-    }
+    // if (_main_server && _socket && _socket->rawFD() != -1) {
+    //     InfoL << "Close tcp server [" << _socket->get_local_ip() << "]: " << _socket->get_local_port();
+    // }
     _timer.reset();
     //先关闭socket监听，防止收到新的连接
     _socket.reset();
@@ -49,25 +49,25 @@ TcpServer::~TcpServer() {
     // _cloned_server.clear();
 }
 
-uint16_t TcpServer::getPort() {
-    if (!_socket) {
-        return 0;
-    }
-    return _socket->get_local_port();
-}
+// uint16_t TcpServer::getPort() {
+//     if (!_socket) {
+//         return 0;
+//     }
+//     return _socket->get_local_port();
+// }
 
-void TcpServer::setOnCreateSocket(Socket::onCreateSocket cb) {
-    if (cb) {
-        _on_create_socket = std::move(cb);
-    } else {
-        _on_create_socket = [](const EventLoop::Ptr &poller) {
-            return Socket::createSocket(poller, false);
-        };
-    }
-    // for (auto &pr : _cloned_server) {
-    //     pr.second->setOnCreateSocket(cb);
-    // }
-}
+// void TcpServer::setOnCreateSocket(Socket::onCreateSocket cb) {
+//     if (cb) {
+//         _on_create_socket = std::move(cb);
+//     } else {
+//         _on_create_socket = [](const EventLoop::Ptr &poller) {
+//             return Socket::createSocket(poller, false);
+//         };
+//     }
+//     // for (auto &pr : _cloned_server) {
+//     //     pr.second->setOnCreateSocket(cb);
+//     // }
+// }
 
 // TcpServer::Ptr TcpServer::onCreatServer(const EventLoop::Ptr &poller) {
 //     return Ptr(new TcpServer(poller), [poller](TcpServer *ptr) { poller->async([ptr]() { delete ptr; }); });
@@ -106,7 +106,7 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
     assert(_poller->isCurrentThread());
     weak_ptr<TcpServer> weak_self = std::static_pointer_cast<TcpServer>(shared_from_this());
     //创建一个Session;这里实现创建不同的服务会话实例
-    auto session = _session_alloc(std::static_pointer_cast<TcpServer>(shared_from_this()), sock);
+    auto session = _session_alloc(sock);
     // auto session = helper->session();
     // auto session = helper;
     //把本服务器的配置传递给Session
@@ -183,7 +183,8 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
     return chw::success;
 }
 
-void TcpServer::start_l(uint16_t port, const std::string &host, uint32_t backlog) {
+void TcpServer::start_l(uint16_t port, const std::string &host) {
+    uint32_t backlog = 1024;
     setupEvent();
 
     //新建一个定时器定时管理这些tcp会话
@@ -246,9 +247,9 @@ void TcpServer::onManagerSession() {
     }
 }
 
-Socket::Ptr TcpServer::createSocket(const EventLoop::Ptr &poller) {
-    return _on_create_socket(poller);
-}
+// Socket::Ptr TcpServer::createSocket(const EventLoop::Ptr &poller) {
+//     return _on_create_socket(poller);
+// }
 
 // TcpServer::Ptr TcpServer::getServer(const EventLoop *poller) const {
 //     auto parent = _parent.lock();

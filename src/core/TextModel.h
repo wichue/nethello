@@ -4,11 +4,12 @@
 #include <memory>
 #include "ComProtocol.h"
 #include "TcpTextSession.h"
-#include "TcpServer.h"
+// #include "TcpServer.h"
 #include "TcpTextClient.h"
 #include "EventLoop.h"
 #include "UdpTextClient.h"
-#include "UdpServer.h"
+// #include "UdpServer.h"
+#include "Server.h"
 
 namespace chw {
 
@@ -22,7 +23,7 @@ public:
     void startmodel() override;
 
 private:
-    chw::TcpServer::Ptr _pTcpServer;
+    chw::Server::Ptr _pTcpServer;
     chw::TcpTextClient::Ptr _pTcpClient;
 
 };

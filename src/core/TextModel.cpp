@@ -1,5 +1,7 @@
 #include "TextModel.h"
 #include "GlobalValue.h"
+#include "UdpServer.h"
+#include "TcpServer.h"
 
 namespace chw {
 
@@ -25,6 +27,7 @@ void TextModel::startmodel()
     if(chw::gConfigCmd.role == 's')
     {
         _pTcpServer = std::make_shared<chw::TcpServer>(_poller);
+        _pTcpServer = std::make_shared<chw::UdpServer>(_poller);
         try {
             _pTcpServer->start<chw::TcpTextSession>(chw::gConfigCmd.server_port);
         } catch(const std::exception &ex) {

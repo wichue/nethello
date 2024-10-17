@@ -5,14 +5,15 @@
 #include <functional>
 #include <unordered_map>
 #include "Session.h"
+#include "Server.h"
 
 namespace chw {
 
-class UdpServer : public std::enable_shared_from_this<UdpServer> {
+class UdpServer : public Server {
 public:
     using Ptr = std::shared_ptr<UdpServer>;
     using PeerIdType = std::string;
-    using onCreateSocket = std::function<Socket::Ptr(const EventLoop::Ptr &)>;
+    // using onCreateSocket = std::function<Socket::Ptr(const EventLoop::Ptr &)>;
 
     explicit UdpServer(const EventLoop::Ptr &poller = nullptr);
     ~UdpServer();
@@ -20,38 +21,38 @@ public:
     /**
      * @brief 开始监听服务器
      */
-    template<typename SessionType>
-    void start(uint16_t port, const std::string &host = "::", const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) {
-        static std::string cls_name = chw::demangle(typeid(SessionType).name());
-        // Session 创建器, 通过它创建不同类型的服务器
-        _session_alloc = [cb](const UdpServer::Ptr &server, const Socket::Ptr &sock) {
-            auto session = std::shared_ptr<SessionType>(new SessionType(sock), [](SessionType * ptr) {
-                // TraceP(static_cast<Session *>(ptr)) << "~" << cls_name;
-                delete ptr;
-            });
-            if (cb) {
-                cb(session);
-            }
-            // TraceP(static_cast<Session *>(session.get())) << cls_name;
-            // auto sock_creator = server->_on_create_socket;
-            // session->setOnCreateSocket([sock_creator](const EventLoop::Ptr &poller) {
-            //     return sock_creator(poller, nullptr, nullptr, 0);
-            // });
-            // return std::make_shared<SessionHelper>(server, std::move(session), cls_name);
-            return std::move(session);
-        };
-        start_l(port, host);
-    }
+    // template<typename SessionType>
+    // void start(uint16_t port, const std::string &host = "::", const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) {
+    //     static std::string cls_name = chw::demangle(typeid(SessionType).name());
+    //     // Session 创建器, 通过它创建不同类型的服务器
+    //     _session_alloc = [cb](const UdpServer::Ptr &server, const Socket::Ptr &sock) {
+    //         auto session = std::shared_ptr<SessionType>(new SessionType(sock), [](SessionType * ptr) {
+    //             // TraceP(static_cast<Session *>(ptr)) << "~" << cls_name;
+    //             delete ptr;
+    //         });
+    //         if (cb) {
+    //             cb(session);
+    //         }
+    //         // TraceP(static_cast<Session *>(session.get())) << cls_name;
+    //         // auto sock_creator = server->_on_create_socket;
+    //         // session->setOnCreateSocket([sock_creator](const EventLoop::Ptr &poller) {
+    //         //     return sock_creator(poller, nullptr, nullptr, 0);
+    //         // });
+    //         // return std::make_shared<SessionHelper>(server, std::move(session), cls_name);
+    //         return std::move(session);
+    //     };
+    //     start_l(port, host);
+    // }
 
     /**
      * @brief 获取服务器监听端口号, 服务器可以选择监听随机端口
      */
-    uint16_t getPort();
+    // uint16_t getPort();
 
     /**
      * @brief 自定义socket构建行为
      */
-    void setOnCreateSocket(onCreateSocket cb);
+    // void setOnCreateSocket(Socket::onCreateSocket cb);
 
 protected:
     // virtual Ptr onCreatServer(const EventLoop::Ptr &poller);
@@ -63,12 +64,12 @@ private:
      * @param port 本机端口，0则随机
      * @param host 监听网卡ip
      */
-    void start_l(uint16_t port, const std::string &host = "::");
+    virtual void start_l(uint16_t port, const std::string &host = "::") override;
 
     /**
      * @brief 定时管理 Session, UDP 会话需要根据需要处理超时
      */
-    void onManagerSession();
+    virtual void onManagerSession() override;
 
     void onRead(Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len);
 
@@ -95,21 +96,21 @@ private:
     /**
      * @brief 创建socket
      */
-    Socket::Ptr createSocket(const EventLoop::Ptr &poller);
+    // Socket::Ptr createSocket(const EventLoop::Ptr &poller);
 
     void setupEvent();
 
 private:
     bool _cloned = false;
-    bool _multi_poller;
-    Socket::Ptr _socket;
+    // bool _multi_poller;
+    // Socket::Ptr _socket;
     std::shared_ptr<Timer> _timer;
-    onCreateSocket _on_create_socket;
+    // Socket::onCreateSocket _on_create_socket;
     //cloned server共享主server的session map，防止数据在不同server间漂移
     std::shared_ptr<std::recursive_mutex> _session_mutex;
     // std::shared_ptr<std::unordered_map<PeerIdType, SessionHelper::Ptr> > _session_map;
     //主server持有cloned server的引用
-    std::unordered_map<EventLoop *, Ptr> _cloned_server;
+    // std::unordered_map<EventLoop *, Ptr> _cloned_server;
     // std::function<SessionHelper::Ptr(const UdpServer::Ptr &, const Socket::Ptr &)> _session_alloc;
     // 对象个数统计
     // ObjectStatistic<UdpServer> _statistic;
@@ -123,11 +124,11 @@ public:
      * @param len   数据长度
      * @return uint32_t 发送成功的数据长度
      */
-    uint32_t sendclientdata(uint8_t* buf, uint32_t len);
+    virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) override;
     std::weak_ptr<Session> _last_session;// 最后一个活动的客户端
 private:
-    EventLoop::Ptr _poller;
-    std::function<Session::Ptr(const UdpServer::Ptr &server, const Socket::Ptr &)> _session_alloc;
+    // EventLoop::Ptr _poller;
+    // std::function<Session::Ptr(const Socket::Ptr &)> _session_alloc;
     std::shared_ptr<std::unordered_map<PeerIdType, Session::Ptr> > _session_map;
 };
 

@@ -4,7 +4,7 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
-// #include "Server.h"
+#include "Server.h"
 #include "Session.h"
 #include "Timer.h"
 #include "util.h"
@@ -16,7 +16,7 @@ namespace chw {
  * tcp服务端，实现监听和新连接接入，管理连接。
  * 接入连接的数据收发在 SessionType 实现。
  */
-class TcpServer : public std::enable_shared_from_this<TcpServer> {
+class TcpServer : public Server {
 public:
     using Ptr = std::shared_ptr<TcpServer>;
 
@@ -45,35 +45,35 @@ public:
      * @param backlog 指排队等待建立3次握手队列长度
      * @param cb 当有新连接接入时执行的回调，默认nullptr
      */
-    template <typename SessionType>
-    void start(uint16_t port, const std::string &host = "::", uint32_t backlog = 1024, const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) {
-        static std::string cls_name = chw::demangle(typeid(SessionType).name());
-        // Session创建器，通过它创建不同类型的服务器
-        _session_alloc = [cb](const TcpServer::Ptr &server, const Socket::Ptr &sock) {
-            auto session = std::shared_ptr<SessionType>(new SessionType(sock), [](SessionType *ptr) {
-                //TraceP(static_cast<Socket *>(ptr->getSock())) << "~" << cls_name;
-                delete ptr;
-            });
-            if (cb) {
-                cb(session);
-            }
-            //TraceP(static_cast<Socket *>(session->getSock())) << cls_name;
-            // session->setOnCreateSocket(server->_on_create_socket);
-            // return std::make_shared<SessionHelper>(server, std::move(session), cls_name);
-            return std::move(session);
-        };
-        start_l(port, host, backlog);
-    }
+    // template <typename SessionType>
+    // void start(uint16_t port, const std::string &host = "::", uint32_t backlog = 1024, const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) {
+    //     static std::string cls_name = chw::demangle(typeid(SessionType).name());
+    //     // Session创建器，通过它创建不同类型的服务器
+    //     _session_alloc = [cb](const TcpServer::Ptr &server, const Socket::Ptr &sock) {
+    //         auto session = std::shared_ptr<SessionType>(new SessionType(sock), [](SessionType *ptr) {
+    //             //TraceP(static_cast<Socket *>(ptr->getSock())) << "~" << cls_name;
+    //             delete ptr;
+    //         });
+    //         if (cb) {
+    //             cb(session);
+    //         }
+    //         //TraceP(static_cast<Socket *>(session->getSock())) << cls_name;
+    //         // session->setOnCreateSocket(server->_on_create_socket);
+    //         // return std::make_shared<SessionHelper>(server, std::move(session), cls_name);
+    //         return std::move(session);
+    //     };
+    //     start_l(port, host, backlog);
+    // }
 
     /**
      * @brief 获取服务器监听端口号, 服务器可以选择监听随机端口
      */
-    uint16_t getPort();
+    // uint16_t getPort();//base
 
     /**
      * @brief 自定义socket构建行为
      */
-    void setOnCreateSocket(Socket::onCreateSocket cb);
+    // void setOnCreateSocket(Socket::onCreateSocket cb);//base
 
     /**
      * 根据socket对象创建Session对象
@@ -86,21 +86,21 @@ protected:
     // virtual TcpServer::Ptr onCreatServer(const EventLoop::Ptr &poller);
 
     uint32_t onAcceptConnection(const Socket::Ptr &sock);
-    virtual Socket::Ptr onBeforeAcceptConnection(const EventLoop::Ptr &poller);
+    Socket::Ptr onBeforeAcceptConnection(const EventLoop::Ptr &poller);
 
 private:
-    void onManagerSession();
-    Socket::Ptr createSocket(const EventLoop::Ptr &poller);
-    void start_l(uint16_t port, const std::string &host, uint32_t backlog);
+    virtual void onManagerSession() override;
+    // Socket::Ptr createSocket(const EventLoop::Ptr &poller);//base
+    virtual void start_l(uint16_t port, const std::string &host) override;
     // Ptr getServer(const EventLoop *) const;
     void setupEvent();
 
 private:
     // bool _multi_poller;
     bool _is_on_manager = false;
-    bool _main_server = true;
+    // bool _main_server = true;
     // std::weak_ptr<TcpServer> _parent;
-    Socket::Ptr _socket;
+    // Socket::Ptr _socket;
     std::shared_ptr<Timer> _timer;
     Socket::onCreateSocket _on_create_socket;
     // std::unordered_map<SessionHelper *, SessionHelper::Ptr> _session_map;
@@ -119,11 +119,11 @@ public:
      * @param len   数据长度
      * @return uint32_t 发送成功的数据长度
      */
-    uint32_t sendclientdata(uint8_t* buf, uint32_t len);
+    virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) override;
     std::weak_ptr<Session> _last_session;// 最后一个活动的客户端
 private:
-    EventLoop::Ptr _poller;
-    std::function<Session::Ptr(const TcpServer::Ptr &server, const Socket::Ptr &)> _session_alloc;
+    // EventLoop::Ptr _poller;
+    // std::function<Session::Ptr(const TcpServer::Ptr &server, const Socket::Ptr &)> _session_alloc;
     std::unordered_map<Session *, Session::Ptr> _session_map;
     
 };

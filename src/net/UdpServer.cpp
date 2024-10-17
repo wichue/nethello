@@ -35,8 +35,8 @@ static UdpServer::PeerIdType makeSockId(sockaddr *addr, int) {
     }
 }
 
-UdpServer::UdpServer(const EventLoop::Ptr &poller) {
-    _poller = poller;
+UdpServer::UdpServer(const EventLoop::Ptr &poller) : Server(poller) {
+    // _poller = poller;
     // _multi_poller = !poller;
     setOnCreateSocket(nullptr);
 }
@@ -255,7 +255,7 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
         socket->bindUdpSock(_socket->get_local_port(), _socket->get_local_ip());
         socket->bindPeerAddr((struct sockaddr *) addr_str.data(), addr_str.size());
 
-        auto session = _session_alloc(server, socket);
+        auto session = _session_alloc(socket);
         // 把本服务器的配置传递给 Session
         // helper->session()->attachServer(*this);
 
@@ -335,29 +335,29 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
     return nullptr;
 }
 
-void UdpServer::setOnCreateSocket(onCreateSocket cb) {
-    if (cb) {
-        _on_create_socket = std::move(cb);
-    } else {
-        _on_create_socket = [](const EventLoop::Ptr &poller) {
-            return Socket::createSocket(poller, false);
-        };
-    }
-    // for (auto &pr : _cloned_server) {
-    //     pr.second->setOnCreateSocket(cb);
-    // }
-}
+// void UdpServer::setOnCreateSocket(Socket::onCreateSocket cb) {
+//     if (cb) {
+//         _on_create_socket = std::move(cb);
+//     } else {
+//         _on_create_socket = [](const EventLoop::Ptr &poller) {
+//             return Socket::createSocket(poller, false);
+//         };
+//     }
+//     // for (auto &pr : _cloned_server) {
+//     //     pr.second->setOnCreateSocket(cb);
+//     // }
+// }
 
-uint16_t UdpServer::getPort() {
-    if (!_socket) {
-        return 0;
-    }
-    return _socket->get_local_port();
-}
+// uint16_t UdpServer::getPort() {
+//     if (!_socket) {
+//         return 0;
+//     }
+//     return _socket->get_local_port();
+// }
 
-Socket::Ptr UdpServer::createSocket(const EventLoop::Ptr &poller) {
-    return _on_create_socket(poller);
-}
+// Socket::Ptr UdpServer::createSocket(const EventLoop::Ptr &poller) {
+//     return _on_create_socket(poller);
+// }
 
 uint32_t UdpServer::sendclientdata(uint8_t* buf, uint32_t len)
 {

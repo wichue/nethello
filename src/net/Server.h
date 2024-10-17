@@ -2,14 +2,15 @@
 #define __SERVER_H
 
 #include <memory>
+#include <functional>
 #include "Socket.h"
+#include "Session.h"
 
 namespace chw {
 
 /**
  * udp和tcp服务端基类，实现一些基础功能，成员：Socket::Ptr，EventLoop::Ptr;
  */
-template <typename SessionType>
 class Server : public std::enable_shared_from_this<Server> {
 public:
     using Ptr = std::shared_ptr<Server>;
@@ -20,25 +21,21 @@ public:
 
     virtual ~Server() = default;
 
-    // virtual void start(uint16_t port, const std::string &host = "::", const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) = 0;
     template <typename SessionType>
-    void start(uint16_t port, const std::string &host = "::", uint32_t backlog = 1024, const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) {
+    void start(uint16_t port, const std::string &host = "::", const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr)
+    {
         static std::string cls_name = chw::demangle(typeid(SessionType).name());
         // Session创建器，通过它创建不同类型的服务器
-        _session_alloc = [cb](const TcpServer::Ptr &server, const Socket::Ptr &sock) {
+        _session_alloc = [cb](const Socket::Ptr &sock) {
             auto session = std::shared_ptr<SessionType>(new SessionType(sock), [](SessionType *ptr) {
-                //TraceP(static_cast<Socket *>(ptr->getSock())) << "~" << cls_name;
                 delete ptr;
             });
             if (cb) {
                 cb(session);
             }
-            //TraceP(static_cast<Socket *>(session->getSock())) << cls_name;
-            // session->setOnCreateSocket(server->_on_create_socket);
-            // return std::make_shared<SessionHelper>(server, std::move(session), cls_name);
             return std::move(session);
         };
-        start_l(port, host, backlog);
+        start_l(port, host);
     }
 
     const Socket::Ptr &getSock() const
@@ -71,7 +68,17 @@ public:
         return _socket->get_local_port();
     }
 
-private:
+    /**
+     * @brief 发送数据给最后一个活动的客户端
+     * 
+     * @param buf   数据
+     * @param len   数据长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) = 0;
+
+protected:
+    virtual void start_l(uint16_t port, const std::string &host) = 0;
     /**
      * @brief 周期性管理会话，定时器回调
      * 
@@ -89,9 +96,10 @@ private:
         return _on_create_socket(poller);
     }
 
-private:
+protected:
     Socket::Ptr _socket;
     EventLoop::Ptr _poller;
+    std::function<Session::Ptr(const Socket::Ptr &)> _session_alloc;
 };
 
 } // namespace chw
