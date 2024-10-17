@@ -1,5 +1,4 @@
 #include "TcpTextClient.h"
-#include "ReadLine.h"
 
 namespace chw {
 

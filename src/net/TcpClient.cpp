@@ -134,7 +134,7 @@ std::string TcpClient::getIdentifier() const {
 uint32_t TcpClient::senddata(uint8_t* buff, uint32_t len)
 {
     if(_sock) {
-        return _sock->send_tcp(buff,len);
+        return _sock->send_i(buff,len);
     } else {
         return 0;
     }

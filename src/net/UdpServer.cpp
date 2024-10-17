@@ -230,7 +230,7 @@ Session::Ptr UdpServer::getOrCreateSession(const UdpServer::PeerIdType &id, Buff
 Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len) {
     // 此处改成自定义获取poller对象，防止负载不均衡
     // auto socket = createSocket(_multi_poller ? EventPollerPool::Instance().getPoller(false) : _poller, buf, addr, addr_len);
-    auto socket = createSocket(_poller, buf, addr, addr_len);
+    auto socket = createSocket(_poller);
     if (!socket) {
         //创建socket失败，本次onRead事件收到的数据直接丢弃
         return nullptr;
@@ -255,12 +255,12 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
         socket->bindUdpSock(_socket->get_local_port(), _socket->get_local_ip());
         socket->bindPeerAddr((struct sockaddr *) addr_str.data(), addr_str.size());
 
-        auto helper = _session_alloc(server, socket);
+        auto session = _session_alloc(server, socket);
         // 把本服务器的配置传递给 Session
         // helper->session()->attachServer(*this);
 
-        std::weak_ptr<Session> weak_helper = helper;
-        socket->setOnRead([weak_self, weak_helper, id](Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len) {
+        std::weak_ptr<Session> weak_session = session;
+        socket->setOnRead([weak_self, weak_session, id](Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len) {
             auto strong_self = weak_self.lock();
             if (!strong_self) {
                 return;
@@ -268,16 +268,17 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
 
             //快速判断是否为本会话的的数据, 通常应该成立
             if (id == makeSockId((struct sockaddr *)addr, addr_len)) {
-                if (auto strong_helper = weak_helper.lock()) {
-                    emitSessionRecv(strong_helper, buf);
+                if (auto strong_session = weak_session.lock()) {
+                    emitSessionRecv(strong_session, buf);
+                    strong_self->_last_session = strong_session;
                 }
                 return;
             }
 
             //收到非本peer fd的数据，让server去派发此数据到合适的session对象
-            strong_self->onRead_l(false, id, buf, addr, addr_len);
+            // strong_self->onRead_l(false, id, buf, addr, addr_len);
         });
-        socket->setOnErr([weak_self, weak_helper, id](const SockException &err) {
+        socket->setOnErr([weak_self, weak_session, id](const SockException &err) {
             // 在本函数作用域结束时移除会话对象
             // 目的是确保移除会话前执行其 onError 函数
             // 同时避免其 onError 函数抛异常时没有移除会话对象
@@ -300,7 +301,7 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
             });
 
             // 获取会话强应用
-            if (auto strong_helper = weak_helper.lock()) {
+            if (auto strong_helper = weak_session.lock()) {
                 // 触发 onError 事件回调
                 TraceP(strong_helper->getSock()) << strong_helper->className() << " on err: " << err;
                 strong_helper->enable = false;
@@ -308,7 +309,7 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
             }
         });
 
-        auto pr = _session_map->emplace(id, std::move(helper));
+        auto pr = _session_map->emplace(id, std::move(session));
         assert(pr.second);
         return pr.first->second;
     };
@@ -338,7 +339,7 @@ void UdpServer::setOnCreateSocket(onCreateSocket cb) {
     if (cb) {
         _on_create_socket = std::move(cb);
     } else {
-        _on_create_socket = [](const EventLoop::Ptr &poller, const Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len) {
+        _on_create_socket = [](const EventLoop::Ptr &poller) {
             return Socket::createSocket(poller, false);
         };
     }
@@ -354,10 +355,20 @@ uint16_t UdpServer::getPort() {
     return _socket->get_local_port();
 }
 
-Socket::Ptr UdpServer::createSocket(const EventLoop::Ptr &poller, const Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len) {
-    return _on_create_socket(poller, buf, addr, addr_len);
+Socket::Ptr UdpServer::createSocket(const EventLoop::Ptr &poller) {
+    return _on_create_socket(poller);
 }
 
+uint32_t UdpServer::sendclientdata(uint8_t* buf, uint32_t len)
+{
+    auto strong_session = _last_session.lock();
+    if (!strong_session) {
+        PrintE("last session is null.");
+        return 0;
+    }
+
+    return strong_session->senddata(buf,len);
+}
 
 // StatisticImp(UdpServer)
 

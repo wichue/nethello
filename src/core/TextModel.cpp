@@ -11,6 +11,8 @@ TextModel::TextModel(const chw::EventLoop::Ptr& poller) : workmodel(poller)
     }
     _pTcpServer = nullptr;
     _pTcpClient = nullptr;
+    // _pUdpServer = nullptr;
+    // _pUdpClient = nullptr;
 }
 
 TextModel::~TextModel()

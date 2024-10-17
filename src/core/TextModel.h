@@ -7,6 +7,8 @@
 #include "TcpServer.h"
 #include "TcpTextClient.h"
 #include "EventLoop.h"
+#include "UdpTextClient.h"
+#include "UdpServer.h"
 
 namespace chw {
 
@@ -22,6 +24,7 @@ public:
 private:
     chw::TcpServer::Ptr _pTcpServer;
     chw::TcpTextClient::Ptr _pTcpClient;
+
 };
 
 }//namespace chw 

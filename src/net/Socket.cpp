@@ -357,8 +357,7 @@ bool Socket::emitErr(const SockException &err) noexcept {
         } catch (std::exception &ex) {
             ErrorL << "Exception occurred when emit on_err: " << ex.what();
         }
-        // 延后关闭socket，只移除其io事件，防止Session对象析构时获取fd相关信息失败  [AUTO-TRANSLATED:db5a0958]
-        //Delay closing the socket, only remove its IO event, to prevent Session object destruction from failing to get fd related information
+        // 延后关闭socket，只移除其io事件，防止Session对象析构时获取fd相关信息失败
         strong_self->closeSock(false);
     });
     return true;
@@ -975,7 +974,7 @@ void Socket::safeShutdown(const SockException &ex) {
 //         addr_len = SockUtil::get_sock_len(addr);
 //     }
 //     return send_l(std::make_shared<BufferSock>(std::move(buf), addr, addr_len), true, try_flush);
-uint32_t Socket::send_tcp(uint8_t* buff, uint32_t len)
+uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
 {
     LOCK_GUARD(_mtx_sock_fd);
 
@@ -1002,6 +1001,9 @@ uint32_t Socket::send_tcp(uint8_t* buff, uint32_t len)
             }
             
         }
+    } else {
+        PrintE("send able is false.");
+        return 0;
     }
 
     // // 该socket不可写,判断发送超时

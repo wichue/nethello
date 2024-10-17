@@ -34,7 +34,7 @@ const std::string &TcpTextSession::className() const
 }
 
 /**
- * @brief tcp发送数据
+ * @brief 发送数据
  * 
  * @param buff 数据
  * @param len  数据长度
@@ -43,7 +43,7 @@ const std::string &TcpTextSession::className() const
 uint32_t TcpTextSession::senddata(uint8_t* buff, uint32_t len)
 {
     if(getSock()) {
-        return getSock()->send_tcp(buff,len);
+        return getSock()->send_i(buff,len);
     } else {
         PrintE("tcp session already disconnect");
         return 0;

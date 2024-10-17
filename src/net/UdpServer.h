@@ -12,16 +12,13 @@ class UdpServer : public std::enable_shared_from_this<UdpServer> {
 public:
     using Ptr = std::shared_ptr<UdpServer>;
     using PeerIdType = std::string;
-    using onCreateSocket = std::function<Socket::Ptr(const EventLoop::Ptr &, const Buffer::Ptr &, struct sockaddr_storage *, int)>;
+    using onCreateSocket = std::function<Socket::Ptr(const EventLoop::Ptr &)>;
 
     explicit UdpServer(const EventLoop::Ptr &poller = nullptr);
     ~UdpServer();
 
     /**
      * @brief 开始监听服务器
-     * @brief Start listening to the server
-     
-     * [AUTO-TRANSLATED:342e9d0e]
      */
     template<typename SessionType>
     void start(uint16_t port, const std::string &host = "::", const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr) {
@@ -98,7 +95,7 @@ private:
     /**
      * @brief 创建socket
      */
-    Socket::Ptr createSocket(const EventLoop::Ptr &poller, const Buffer::Ptr &buf = nullptr, struct sockaddr_storage *addr = nullptr, int addr_len = 0);
+    Socket::Ptr createSocket(const EventLoop::Ptr &poller);
 
     void setupEvent();
 
@@ -118,6 +115,16 @@ private:
     // ObjectStatistic<UdpServer> _statistic;
 
 //chw
+public:
+    /**
+     * @brief 发送数据给最后一个活动的客户端
+     * 
+     * @param buf   数据
+     * @param len   数据长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    uint32_t sendclientdata(uint8_t* buf, uint32_t len);
+    std::weak_ptr<Session> _last_session;// 最后一个活动的客户端
 private:
     EventLoop::Ptr _poller;
     std::function<Session::Ptr(const UdpServer::Ptr &server, const Socket::Ptr &)> _session_alloc;

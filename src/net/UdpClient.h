@@ -7,8 +7,8 @@
 namespace chw {
 
 /**
- * Tcp客户端基类，实现连接、发送数据、断开等接口。
- * 继承该类，实现虚函数onConnect、onError、onRecv即可自定义一个tcp客户端。
+ * Udp客户端基类，实现创建、发送数据、断开等接口。
+ * 继承该类，实现虚函数onError、onRecv即可自定义一个udp客户端。
  */
 class UdpClient : public std::enable_shared_from_this<UdpClient> {
 public:
@@ -36,12 +36,6 @@ public:
 
 protected:
     /**
-     * 上层的连接服务器结果回调
-     * @param ex 成功与否
-     */
-    virtual void onConnect(const SockException &ex) = 0;
-
-    /**
      * 收到 eof 或其他导致脱离 Server 事件的回调
      * 收到该事件时, 该对象一般将立即被销毁
      * @param err 原因
@@ -61,7 +55,6 @@ protected:
 
 private:
     mutable std::string _id;
-    std::string _net_adapter = "::";
     std::shared_ptr<Timer> _timer;
     //对象个数统计
     // ObjectStatistic<UdpClient> _statistic;
