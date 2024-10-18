@@ -49,11 +49,8 @@ public:
     // std::string getIdentifier() const;
 
 protected:
-    // /**
-    //  * 派生类的连接服务器结果回调
-    //  * @param ex 成功与否
-    //  */
-    // virtual void onConnect(const SockException &ex) = 0;
+    // 连接结果事件
+    virtual void onConnect(const SockException &ex) override;
 
     // /**
     //  * 派生类收到 eof 或其他导致脱离 Server 事件的回调

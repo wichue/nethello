@@ -272,7 +272,6 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
             if (id == makeSockId((struct sockaddr *)addr, addr_len)) 
             {
                 if (auto strong_session = weak_session.lock()) {
-                    PrintD("emitSessionRecv");
                     emitSessionRecv(strong_session, buf);
                     strong_self->_last_session = strong_session;
                 }

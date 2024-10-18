@@ -3,8 +3,7 @@
 #include "UdpServer.h"
 #include "TcpServer.h"
 #include "TextSession.h"
-#include "TcpTextClient.h"
-#include "UdpTextClient.h"
+#include "TextClient.h"
 
 namespace chw {
 

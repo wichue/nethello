@@ -18,9 +18,7 @@ SET(SRCS
     ${PREFIX}/src/main.cpp
     ${PREFIX}/src/core/CmdLineParse.cpp
     ${PREFIX}/src/core/TextSession.cpp
-    ${PREFIX}/src/core/TcpTextClient.cpp
     ${PREFIX}/src/core/TextModel.cpp
-    ${PREFIX}/src/core/UdpTextClient.cpp
 
     ${PREFIX}/src/base/SignalCatch.cpp
     ${PREFIX}/src/base/BackTrace.cpp

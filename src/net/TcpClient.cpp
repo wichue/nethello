@@ -127,6 +127,21 @@ void TcpClient::onSockConnect(const SockException &ex) {
     onConnect(ex);
 }
 
+void TcpClient::onConnect(const SockException &ex)
+{
+    if(ex)
+    {
+        PrintE("tcp connect failed, please check ip and port, ex:%s.", ex.what());
+        sleep_exit(100*1000);
+    }
+    else
+    {
+        PrintD("connect success.");
+        usleep(1000);
+        InfoLNCR << ">";
+    }
+}
+
 // std::string TcpClient::getIdentifier() const {
 //     if (_id.empty()) {
 //         static atomic<uint64_t> s_index { 0 };
