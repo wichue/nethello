@@ -282,7 +282,7 @@ public:
     using Ptr = std::shared_ptr<Socket>;
     //接收数据回调  [AUTO-TRANSLATED:e3b7ff16]
     //Receive data callback
-    using onReadCB = std::function<void(Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len)>;
+    using onReadCB = std::function<void(Buffer::Ptr &buf, struct sockaddr *addr, int addr_len)>;
     // using onMultiReadCB = std::function<void(Buffer::Ptr *buf, struct sockaddr_storage *addr, size_t count)>;
 
     //发生错误回调

@@ -4,20 +4,48 @@
 #include <memory>
 #include "TcpClient.h"
 
+
 namespace chw {
-
-class TcpTextClient : public TcpClient {
+template<typename TypeClient>
+class TextClient : public TypeClient {
 public:
-    using Ptr = std::shared_ptr<TcpTextClient>;
+    using Ptr = std::shared_ptr<TextClient>;
 
-    TcpTextClient(const EventLoop::Ptr &poller = nullptr);
-    virtual ~TcpTextClient();
+    TextClient(const EventLoop::Ptr &poller = nullptr) : TcpClient(poller){};
+    virtual ~TextClient() = default;
 
-    virtual void onConnect(const SockException &ex) override;
-    virtual void onRecv(const Buffer::Ptr &pBuf) override;
-    virtual void onError(const SockException &ex) override;
-    const Socket::Ptr &getSock() const;
+    // 连接结果事件
+    virtual void onConnect(const SockException &ex) override
+    {
+    if(ex)
+    {
+        PrintE("tcp connect failed, please check ip and port, ex:%s.", ex.what());
+        sleep_exit(100*1000);
+    }
+    else
+    {
+        PrintD("connect success.");
+        usleep(1000);
+        InfoLNCR << ">";
+    }
+    }
+
+    // 接收数据回调
+    virtual void onRecv(const Buffer::Ptr &pBuf) override
+    {
+    //接收数据事件
+    PrintD("<%s",pBuf->data());
+    pBuf->Reset();
+}
+
+    // 错误回调
+    virtual void onError(const SockException &ex) override
+    {
+    //断开连接事件，一般是EOF
+    WarnL << ex.what();
+}
 };
+typedef TextClient<TcpClient> TcpTextClient;
 
 }//namespace chw
 

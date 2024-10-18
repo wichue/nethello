@@ -390,7 +390,7 @@ void LogChannel::format(const Logger &logger, ostream &ost, const LogContextPtr 
         ost << LOG_CONST_TABLE[ctx->_level][1];
 #endif
     }
-#if 0 //chw:只输出日志本身，不打印日期等其他信息
+#if 1 //chw:只输出日志本身，不打印日期等其他信息
     // print log time and level
 #ifdef _WIN32
     ost << printTime(ctx->_tv) << " " << (char)LOG_CONST_TABLE[ctx->_level][2] << " ";

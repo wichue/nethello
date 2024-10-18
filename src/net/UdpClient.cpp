@@ -7,8 +7,9 @@ namespace chw {
 
 // StatisticImp(UdpClient)
 
-UdpClient::UdpClient(const EventLoop::Ptr &poller) {
-    _poller = poller;
+UdpClient::UdpClient(const EventLoop::Ptr &poller) : Client(poller)
+{
+    // _poller = poller;
     // setPoller(poller ? poller : EventPollerPool::Instance().getPoller());//chw
 
     // setOnCreateSocket([](const EventLoop::Ptr &poller) {
@@ -18,42 +19,42 @@ UdpClient::UdpClient(const EventLoop::Ptr &poller) {
 }
 
 UdpClient::~UdpClient() {
-    TraceL << "~" << UdpClient::getIdentifier();
+    TraceL << "~" << getIdentifier();
 }
 
-void UdpClient::shutdown(const SockException &ex) {
-    _timer.reset();
-    // SocketHelper::shutdown(ex);
-    _sock->shutdown(ex);
-}
+// void UdpClient::shutdown(const SockException &ex) {
+//     // _timer.reset();
+//     // SocketHelper::shutdown(ex);
+//     _sock->shutdown(ex);
+// }
 
-bool UdpClient::alive() const {
-    if (_timer) {
-        //连接中或已连接
-        return true;
-    }
-    //在websocket client()相关代码中
-    //_timer一直为空，但是socket fd有效，alive状态也应该返回true
-    // auto sock = getSock();
-    return _sock && _sock->alive();
-}
+// bool UdpClient::alive() const {
+//     // if (_timer) {
+//         //连接中或已连接
+//         // return true;
+//     // }
+//     //在websocket client()相关代码中
+//     //_timer一直为空，但是socket fd有效，alive状态也应该返回true
+//     // auto sock = getSock();
+//     return _sock && _sock->alive();
+// }
 
-uint32_t UdpClient::create_udp(const std::string &url, uint16_t port,const std::string &localip, uint16_t localport)
+uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_t localport,const std::string &localip)
 {
     weak_ptr<UdpClient> weak_self = static_pointer_cast<UdpClient>(shared_from_this());
-    _sock = Socket::createSocket(_poller);
+    _socket = Socket::createSocket(_poller);
 
-    auto sock_ptr = _sock.get();
+    auto sock_ptr = _socket.get();
     sock_ptr->setOnErr([weak_self, sock_ptr](const SockException &ex) {
         auto strong_self = weak_self.lock();
         if (!strong_self) {
             return;
         }
-        if (sock_ptr != strong_self->_sock.get()) {
+        if (sock_ptr != strong_self->_socket.get()) {
             //已经重连socket，上次的socket的事件忽略掉
             return;
         }
-        strong_self->_timer.reset();
+        // strong_self->_timer.reset();
         TraceL << strong_self->getIdentifier() << " on err: " << ex;
         strong_self->onError(ex);
     });
@@ -72,6 +73,7 @@ uint32_t UdpClient::create_udp(const std::string &url, uint16_t port,const std::
     local_addr.sin_addr.s_addr = inet_addr(url.c_str());
     local_addr.sin_port = htons(port);
     local_addr.sin_family = AF_INET;
+    //chw:客户端使用软绑定
     if(!sock_ptr->bindPeerAddr((struct sockaddr *) &local_addr, sizeof(struct sockaddr_in),true))
     {
         PrintE("bind peer addr failed, remote ip=%s, port=%u",url.c_str(),port);
@@ -79,12 +81,12 @@ uint32_t UdpClient::create_udp(const std::string &url, uint16_t port,const std::
         return chw::fail;
     }
 
-    sock_ptr->setOnRead([weak_self, sock_ptr](const Buffer::Ptr &pBuf, struct sockaddr_storage *, int) {
+    sock_ptr->setOnRead([weak_self, sock_ptr](const Buffer::Ptr &pBuf, struct sockaddr *, int) {
         auto strong_self = weak_self.lock();
         if (!strong_self) {
             return;
         }
-        if (sock_ptr != strong_self->_sock.get()) {
+        if (sock_ptr != strong_self->_socket.get()) {
             //已经重连socket，上传socket的事件忽略掉
             return;
         }
@@ -95,24 +97,28 @@ uint32_t UdpClient::create_udp(const std::string &url, uint16_t port,const std::
         }
     });
 
+    PrintD("create udp client ,local ip=%s,local port=%d,peer ip=%s,peer port=%d"
+        ,getSock()->get_local_ip().c_str(),getSock()->get_local_port(),getSock()->get_peer_ip().c_str(),getSock()->get_peer_port());
+
+
     return chw::success;
 }
 
-std::string UdpClient::getIdentifier() const {
-    if (_id.empty()) {
-        static atomic<uint64_t> s_index { 0 };
-        _id = chw::demangle(typeid(*this).name()) + "-" + to_string(++s_index);
-    }
-    return _id;
-}
+// std::string UdpClient::getIdentifier() const {
+//     if (_id.empty()) {
+//         static atomic<uint64_t> s_index { 0 };
+//         _id = chw::demangle(typeid(*this).name()) + "-" + to_string(++s_index);
+//     }
+//     return _id;
+// }
 
-uint32_t UdpClient::senddata(uint8_t* buff, uint32_t len)
-{
-    if(_sock) {
-        return _sock->send_i(buff,len);
-    } else {
-        return 0;
-    }
-}
+// uint32_t UdpClient::senddata(uint8_t* buff, uint32_t len)
+// {
+//     if(_sock) {
+//         return _sock->send_i(buff,len);
+//     } else {
+//         return 0;
+//     }
+// }
 
 } //namespace chw

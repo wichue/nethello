@@ -73,7 +73,7 @@ void Socket::setOnRead(onReadCB cb) {
     if(cb) {
         _on_read = std::move(cb);
     } else {
-        _on_read = [](Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len) {
+        _on_read = [](Buffer::Ptr &buf, struct sockaddr *addr, int addr_len) {
             WarnL << "Socket not set read callback, data ignored: " << buf->Size();
             buf->SetRcvLen(0);
         };
@@ -332,7 +332,7 @@ ssize_t Socket::onRead(const SockNum::Ptr &sock/*, const SocketRecvBuffer::Ptr &
             //Catch exception here, the purpose is to prevent data from not being read completely, and the epoll edge trigger fails
             LOCK_GUARD(_mtx_event);
             // _on_multi_read(&buf, &addr, count);
-            _on_read(_buffer,&addr,1);
+            _on_read(_buffer,(struct sockaddr *)&addr,sizeof(struct sockaddr_storage));
         } catch (std::exception &ex) {
             ErrorL << "Exception occurred when emit on_read: " << ex.what();
         }
@@ -996,7 +996,9 @@ uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
                     return SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
                 } else {
-                    return 0;
+                    struct sockaddr *addr = (struct sockaddr *)&_peer_addr;
+                    socklen_t addr_len = SockUtil::get_sock_len(addr);
+                    return SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
                 }
             }
             

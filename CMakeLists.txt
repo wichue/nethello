@@ -17,7 +17,7 @@ INCLUDE_DIRECTORIES(${INCDIR})
 SET(SRCS
     ${PREFIX}/src/main.cpp
     ${PREFIX}/src/core/CmdLineParse.cpp
-    ${PREFIX}/src/core/TcpTextSession.cpp
+    ${PREFIX}/src/core/TextSession.cpp
     ${PREFIX}/src/core/TcpTextClient.cpp
     ${PREFIX}/src/core/TextModel.cpp
     ${PREFIX}/src/core/UdpTextClient.cpp
@@ -35,6 +35,8 @@ SET(SRCS
     ${PREFIX}/src/event/PipeWrap.cpp
     ${PREFIX}/src/event/Timer.cpp
 
+    ${PREFIX}/src/net/Client.cpp
+    ${PREFIX}/src/net/Server.cpp
     ${PREFIX}/src/net/Socket.cpp
     ${PREFIX}/src/net/SocketBase.cpp
     ${PREFIX}/src/net/TcpClient.cpp

@@ -71,7 +71,7 @@ private:
      */
     virtual void onManagerSession() override;
 
-    void onRead(Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len);
+    void onRead(Buffer::Ptr &buf, struct sockaddr *addr, int addr_len);
 
     /**
      * @brief 接收到数据,可能来自server fd，也可能来自peer fd
@@ -81,17 +81,17 @@ private:
      * @param addr 客户端地址
      * @param addr_len 客户端地址长度
      */
-    void onRead_l(bool is_server_fd, const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len);
+    void onRead_l(bool is_server_fd, const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len);
 
     /**
      * @brief 根据对端信息获取或创建一个会话
      */
-    Session::Ptr getOrCreateSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len, bool &is_new);
+    Session::Ptr getOrCreateSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len, bool &is_new);
 
     /**
      * @brief 创建一个会话, 同时进行必要的设置
      */
-    Session::Ptr createSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr_storage *addr, int addr_len);
+    Session::Ptr createSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len);
 
     /**
      * @brief 创建socket
@@ -101,7 +101,7 @@ private:
     void setupEvent();
 
 private:
-    bool _cloned = false;
+    // bool _cloned = false;
     // bool _multi_poller;
     // Socket::Ptr _socket;
     std::shared_ptr<Timer> _timer;

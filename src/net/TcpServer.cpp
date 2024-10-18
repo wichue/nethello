@@ -120,7 +120,7 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
 
     weak_ptr<Session> weak_session = session;
     //会话接收数据事件
-    sock->setOnRead([weak_session,weak_self](const Buffer::Ptr &buf, struct sockaddr_storage *, int) {
+    sock->setOnRead([weak_session,weak_self](const Buffer::Ptr &buf, struct sockaddr *, int) {
         //获取会话强应用
         auto strong_session = weak_session.lock();
         if (!strong_session) {

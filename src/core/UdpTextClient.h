@@ -15,7 +15,6 @@ public:
 
     virtual void onRecv(const Buffer::Ptr &pBuf) override;
     virtual void onError(const SockException &ex) override;
-    const Socket::Ptr &getSock() const;
 };
 
 }//namespace chw

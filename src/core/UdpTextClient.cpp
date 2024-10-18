@@ -26,9 +26,4 @@ void UdpTextClient::onError(const SockException &ex)
     WarnL << ex.what();
 }
 
-const Socket::Ptr &UdpTextClient::getSock() const
-{
-    return _sock;
-}
-
 }//namespace chw

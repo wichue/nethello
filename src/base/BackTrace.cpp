@@ -86,7 +86,7 @@ void* parse_symbol_offset(char* frame)
     return (char*)symbol_info.dli_saddr - (char*)symbol_info.dli_fbase + (char*)offset;
 }
 
-const char* _chw_binary = "perfsocket";
+const char* _chw_binary = "nethello";
 
 char* addr2line_format(void* addr, char* symbol, char* buffer, int nn_buffer)
 {

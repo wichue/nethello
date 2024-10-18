@@ -6,11 +6,14 @@
 
 namespace chw {
 
-class TcpTextSession : public Session {
+/**
+ * 文本模式session，收到数据时打印到控制台
+ */
+class TextSession : public Session {
 public:
-    using Ptr = std::shared_ptr<TcpTextSession>();
-    TcpTextSession(const Socket::Ptr &sock);
-    virtual ~TcpTextSession();
+    using Ptr = std::shared_ptr<TextSession>();
+    TextSession(const Socket::Ptr &sock);
+    virtual ~TextSession();
 
     void onRecv(const Buffer::Ptr &buf) override;
     void onError(const SockException &err) override;
