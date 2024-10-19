@@ -5,39 +5,14 @@ using namespace std;
 
 namespace chw {
 
-// StatisticImp(UdpClient)
-
 UdpClient::UdpClient(const EventLoop::Ptr &poller) : Client(poller)
 {
-    // _poller = poller;
-    // setPoller(poller ? poller : EventPollerPool::Instance().getPoller());//chw
 
-    // setOnCreateSocket([](const EventLoop::Ptr &poller) {
-    //     //TCP客户端默认开启互斥锁
-    //     return Socket::createSocket(poller, true);
-    // });
 }
 
 UdpClient::~UdpClient() {
     TraceL << "~" << getIdentifier();
 }
-
-// void UdpClient::shutdown(const SockException &ex) {
-//     // _timer.reset();
-//     // SocketHelper::shutdown(ex);
-//     _sock->shutdown(ex);
-// }
-
-// bool UdpClient::alive() const {
-//     // if (_timer) {
-//         //连接中或已连接
-//         // return true;
-//     // }
-//     //在websocket client()相关代码中
-//     //_timer一直为空，但是socket fd有效，alive状态也应该返回true
-//     // auto sock = getSock();
-//     return _sock && _sock->alive();
-// }
 
 uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_t localport,const std::string &localip)
 {
@@ -103,22 +78,5 @@ uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_
 
     return chw::success;
 }
-
-// std::string UdpClient::getIdentifier() const {
-//     if (_id.empty()) {
-//         static atomic<uint64_t> s_index { 0 };
-//         _id = chw::demangle(typeid(*this).name()) + "-" + to_string(++s_index);
-//     }
-//     return _id;
-// }
-
-// uint32_t UdpClient::senddata(uint8_t* buff, uint32_t len)
-// {
-//     if(_sock) {
-//         return _sock->send_i(buff,len);
-//     } else {
-//         return 0;
-//     }
-// }
 
 } //namespace chw

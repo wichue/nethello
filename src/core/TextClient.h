@@ -6,6 +6,11 @@
 #include "UdpClient.h"
 
 namespace chw {
+
+/**
+ * 文本模式Client，收到数据时打印到控制台。
+ * tcp和udp客户端业务功能相同，使用类模板实现。
+ */
 template<typename TypeClient>
 class TextClient : public TypeClient {
 public:

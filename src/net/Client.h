@@ -47,7 +47,7 @@ public:
 
 protected:
     /**
-     * 派生类的连接服务器结果回调
+     * 派生类的连接服务器结果回调,通常用于tcp
      * @param ex 成功与否
      */
     virtual void onConnect(const SockException &ex) = 0;

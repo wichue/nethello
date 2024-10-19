@@ -9,6 +9,9 @@
 
 namespace chw {
 
+/**
+ *  文本模式，客户端和服务端可以通过命令行><文本聊天。
+ */
 class TextModel : public workmodel
 {
 public:
@@ -16,7 +19,7 @@ public:
     TextModel(const chw::EventLoop::Ptr& poller = nullptr);
     ~TextModel() override;
 
-    void startmodel() override;
+    virtual void startmodel() override;
 
 private:
     chw::Server::Ptr _pServer;

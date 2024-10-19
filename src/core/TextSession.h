@@ -7,7 +7,7 @@
 namespace chw {
 
 /**
- * 文本模式session，收到数据时打印到控制台
+ * tcp和udp文本模式session，收到数据时打印到控制台
  */
 class TextSession : public Session {
 public:
