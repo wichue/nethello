@@ -15,13 +15,18 @@ public:
     TextSession(const Socket::Ptr &sock);
     virtual ~TextSession();
 
+    /**
+     * @brief 接收数据回调（epoll线程执行）
+     * 
+     * @param buf 
+     */
     void onRecv(const Buffer::Ptr &buf) override;
     void onError(const SockException &err) override;
     void onManager() override;
     const std::string &className() const override;
 
     /**
-     * @brief tcp发送数据
+     * @brief tcp发送数据（可在任意线程执行）
      * 
      * @param buff 数据
      * @param len  数据长度

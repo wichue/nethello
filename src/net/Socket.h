@@ -608,13 +608,13 @@ private:
     // List<std::pair<Buffer::Ptr, bool>> _send_buf_waiting;
     // 一级发送缓存锁  [AUTO-TRANSLATED:9ec6c6a9]
     //First-level send cache lock
-    MutexWrapper<std::recursive_mutex> _mtx_send_buf_waiting;
+    // MutexWrapper<std::recursive_mutex> _mtx_send_buf_waiting;
     // 二级发送缓存, socket可写时，会把二级缓存批量写入到socket  [AUTO-TRANSLATED:cc665665]
     //Second-level send cache, when the socket is writable, it will batch the second-level cache into the socket
     // List<BufferList::Ptr> _send_buf_sending;
     // 二级发送缓存锁  [AUTO-TRANSLATED:306e3472]
     //Second-level send cache lock
-    MutexWrapper<std::recursive_mutex> _mtx_send_buf_sending;
+    // MutexWrapper<std::recursive_mutex> _mtx_send_buf_sending;
     // 发送buffer结果回调  [AUTO-TRANSLATED:1cac46fd]
     //Send buffer result callback
     // BufferList::SendResult _send_result;
@@ -650,6 +650,7 @@ public:
     //todo:创建缓存，当数据达到一定数量时再执行系统调用，减少syscall，如果一定时间内没有达到一定数量也执行系统调用。
     //注意: 发送失败或部分发送成功会丢弃包,此时建议业务模块触发tcp断开重联
     //todo:方案2：发送失败时监听可写事件，没有发送成功的先放入缓存，可写时再发送（一直发送失败会出现大量缓存积压，不利于业务快速反映）
+    // _max_send_buffer_ms/_send_flush_ticker 控制一直发送失败的超时
 
 private:
     onReadCB _on_read;

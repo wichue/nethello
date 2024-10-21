@@ -18,7 +18,7 @@ public:
     virtual ~TcpClient();
 
     /**
-     * 开始连接tcp服务器
+     * 开始连接tcp服务器（任意线程执行）
      * @param url 服务器ip或域名
      * @param port 服务器端口
      * @param timeout_sec 超时时间,单位秒
@@ -26,7 +26,11 @@ public:
      */
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") override;
 protected:
-    // 连接结果事件
+    /**
+     * @brief 连接结果事件（epoll线程执行）
+     * 
+     * @param ex 
+     */
     virtual void onConnect(const SockException &ex) override;
 private:
     /**

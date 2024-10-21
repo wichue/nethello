@@ -346,11 +346,21 @@ public:
      * @param fd    fd
      * @param buff  数据
      * @param len   数据长度
-     * @return uint32_t 发送成功的数据长度
+     * @return uint32_t 发送成功的数据长度，0则是发生了错误
      */
     static uint32_t send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len);
 
-    static int32_t send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen);
+    /**
+     * @brief udp发送数据
+     * 
+     * @param fd        fd
+     * @param buff      数据
+     * @param len       数据长度
+     * @param addr      目标地址
+     * @param socklen   地址长度
+     * @return uint32_t 发送成功的数据长度，0则是发生了错误
+     */
+    static uint32_t send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen);
 };
 
 }  // namespace chw

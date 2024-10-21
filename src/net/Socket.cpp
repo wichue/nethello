@@ -55,8 +55,9 @@ Socket::Socket(EventLoop::Ptr poller, bool enable_mutex)
     : _poller(std::move(poller))
     , _mtx_sock_fd(enable_mutex)
     , _mtx_event(enable_mutex)
-    , _mtx_send_buf_waiting(enable_mutex)
-    , _mtx_send_buf_sending(enable_mutex) {
+    // , _mtx_send_buf_waiting(enable_mutex)
+    // , _mtx_send_buf_sending(enable_mutex)
+{
     setOnRead(nullptr);
     setOnErr(nullptr);
     setOnAccept(nullptr);
@@ -986,22 +987,24 @@ uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
     //发送失败由上层处理
     if (_sendable) {
         // 该socket可写
-        // return flushData(_sock_fd->rawFd(), _sock_fd->type(), false) ? 0 : -1;
+        uint32_t _snd_bytes = 0;
         if(len > 0 && buff != nullptr) {
             if(_sock_fd->type() == SockNum::Sock_TCP) {
-                return SockUtil::send_tcp_data(_sock_fd->rawFd(),buff,len);
+                _snd_bytes =  SockUtil::send_tcp_data(_sock_fd->rawFd(),buff,len);
             } else {
                 if(_udp_send_dst) {
                     struct sockaddr *addr = (struct sockaddr *)_udp_send_dst.get();
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
-                    return SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
+                    _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
                 } else {
                     struct sockaddr *addr = (struct sockaddr *)&_peer_addr;
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
-                    return SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
+                    _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
                 }
             }
-            
+
+            _send_speed += _snd_bytes;
+            return _snd_bytes;
         }
     } else {
         PrintE("send able is false.");

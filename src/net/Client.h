@@ -35,7 +35,7 @@ public:
     std::string getIdentifier() const;
 
     /**
-     * @brief tcp发送数据
+     * @brief 发送数据（任意线程执行）
      * 
      * @param buff 数据
      * @param len  数据长度

@@ -233,6 +233,11 @@ typedef enum {
 
 #pragma pack()
 
+typedef struct _MsgHdr_{
+    uint32_t uMsgType;//包序号
+    uint32_t uTotalLen;//包总长度
+} MsgHdr;
+
 enum WorkModel
 {
     TEXT_MODEL,     // 文本聊天模式(-T)
@@ -259,15 +264,15 @@ protected:
 //命令行参数
 struct ConfigCmd
 {
-    char      role;              //'c' lient(-c) or 's' erver(-s)
+    char      role;              // 'c' lient(-c) or 's' erver(-s)
     char     *server_hostname;   // 服务端ip(-c)
     SockNum::SockType protol;    // 协议类型，默认tcp(-u udp)
-    int       domain;            // AF_INET(-4) or AF_INET6(-6)
-    int       server_port;       // 服务端的端口号(-p)
-    int       duration;          // 测试总时长，默认0一直测试(-t)
+    int32_t   domain;            // AF_INET(-4) or AF_INET6(-6)
+    uint16_t  server_port;       // 服务端的端口号(-p)
+    uint32_t  duration;          // 测试总时长，默认0一直测试(-t)
     double    reporter_interval; // 状态输出间隔，默认1，单位秒(-i)
     char     *bind_address;      // 监听的ip地址，默认监听所有ip(-B)
-    int       blksize;           // 发送的每个报文大小(-l)
+    uint32_t  blksize;           // 发送的每个报文大小(-l)
     uint32_t  bandwidth;         // 设置带宽，默认0以最大能力发送(-b)
     WorkModel workmodel;         // 工作模式，默认 TEXT_MODEL
 
@@ -283,7 +288,7 @@ struct ConfigCmd
         duration = 0;
         reporter_interval = 1;
         bandwidth = 0;
-        blksize = 0;
+        blksize = 1000;
         server_hostname = nullptr;
         save = nullptr;
         workmodel = TEXT_MODEL;

@@ -19,7 +19,7 @@ public:
     TextClient(const EventLoop::Ptr &poller = nullptr) : TypeClient(poller){};
     virtual ~TextClient() = default;
 
-    // 接收数据回调
+    // 接收数据回调（epoll线程执行）
     virtual void onRecv(const Buffer::Ptr &pBuf) override
     {
         //接收数据事件

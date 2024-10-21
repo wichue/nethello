@@ -8,6 +8,8 @@ message (">>> pwd = ${PREFIX}")#打印变量
 SET(INCDIR
     ${PREFIX}/src
     ${PREFIX}/src/core
+    ${PREFIX}/src/core/text
+    ${PREFIX}/src/core/press
     ${PREFIX}/src/base
     ${PREFIX}/src/event
     ${PREFIX}/src/net
@@ -17,8 +19,9 @@ INCLUDE_DIRECTORIES(${INCDIR})
 SET(SRCS
     ${PREFIX}/src/main.cpp
     ${PREFIX}/src/core/CmdLineParse.cpp
-    ${PREFIX}/src/core/TextSession.cpp
-    ${PREFIX}/src/core/TextModel.cpp
+    ${PREFIX}/src/core/text/TextSession.cpp
+    ${PREFIX}/src/core/text/TextModel.cpp
+    ${PREFIX}/src/core/press/PressModel.cpp
 
     ${PREFIX}/src/base/SignalCatch.cpp
     ${PREFIX}/src/base/BackTrace.cpp

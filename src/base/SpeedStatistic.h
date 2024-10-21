@@ -15,18 +15,17 @@ public:
      */
     BytesSpeed &operator+=(size_t bytes) {
         _bytes += bytes;
+#if 0//chw:只在需要时计算速率
         if (_bytes > 1024 * 1024) {
             //数据大于1MB就计算一次网速
             computeSpeed();
         }
+#endif
         return *this;
     }
 
     /**
      * 获取速度，单位bytes/s
-     * Get speed, unit bytes/s
-     
-     * [AUTO-TRANSLATED:41e26e29]
      */
     int getSpeed() {
         if (_ticker.elapsedTime() < 1000) {

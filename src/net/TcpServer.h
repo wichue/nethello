@@ -24,12 +24,30 @@ public:
     ~TcpServer();
 
 protected:
+    /**
+     * @brief 新接入连接回调（在epoll线程执行）
+     * 
+     * @param sock  新接入连接Socket
+     * @return uint32_t 成功返回chw::success，失败返回chw::fail
+     */
     uint32_t onAcceptConnection(const Socket::Ptr &sock);
     Socket::Ptr onBeforeAcceptConnection(const EventLoop::Ptr &poller);
 
 private:
     virtual void onManagerSession() override;
+
+    /**
+     * @brief 启动tcp服务端，开始绑定和监听（可在任意线程执行）
+     * 
+     * @param port 绑定端口
+     * @param host 绑定ip
+     */
     virtual void start_l(uint16_t port, const std::string &host) override;
+
+    /**
+     * @brief 创建Socket，设置新接入连接回调
+     * 
+     */
     void setupEvent();
 
 private:
@@ -39,7 +57,7 @@ private:
 //chw
 public:
     /**
-     * @brief 发送数据给最后一个活动的客户端
+     * @brief 发送数据给最后一个活动的客户端（可在任意线程执行）
      * 
      * @param buf   数据
      * @param len   数据长度

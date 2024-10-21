@@ -9,6 +9,7 @@
 #include "File.h"
 #include "TimeThread.h"
 // #include "NoticeCenter.h"
+#include "config.h"
 
 #if defined(_WIN32)
 #include "strptime_win.h"
@@ -132,14 +133,14 @@ void Logger::writeChannels_l(const LogContextPtr &ctx) {
     _last_log = ctx;
     _last_log->_repeat = 0;
 }
-#if 0
+#if LOG_FILter_REPEAT
 //返回毫秒
 static int64_t timevalDiff(struct timeval &a, struct timeval &b) {
     return (1000 * (b.tv_sec - a.tv_sec)) + ((b.tv_usec - a.tv_usec) / 1000);
 }
 #endif
 void Logger::writeChannels(const LogContextPtr &ctx) {
-#if 0//chw
+#if LOG_FILter_REPEAT//chw
     if (ctx->_line == _last_log->_line && ctx->_file == _last_log->_file && ctx->str() == _last_log->str() && ctx->_thread_name == _last_log->_thread_name) {
         //重复的日志每隔500ms打印一次，过滤频繁的重复日志
         ++_last_log->_repeat;
@@ -380,7 +381,9 @@ void LogChannel::format(const Logger &logger, ostream &ost, const LogContextPtr 
         // 没有任何信息打印
         return;
     }
+#if LOG_NON_COLOR
     enable_color = false;//不使用颜色打印
+#endif
 
     if (enable_color) {
         // color console start
@@ -390,7 +393,7 @@ void LogChannel::format(const Logger &logger, ostream &ost, const LogContextPtr 
         ost << LOG_CONST_TABLE[ctx->_level][1];
 #endif
     }
-#if 1 //chw:只输出日志本身，不打印日期等其他信息
+#if LOG_PREFIX //chw:只输出日志本身，不打印日期等其他信息
     // print log time and level
 #ifdef _WIN32
     ost << printTime(ctx->_tv) << " " << (char)LOG_CONST_TABLE[ctx->_level][2] << " ";
@@ -421,7 +424,9 @@ void LogChannel::format(const Logger &logger, ostream &ost, const LogContextPtr 
 
     if (ctx->_repeat > 1) {
         // log repeated
-        // ost << "\r\n    Last message repeated " << ctx->_repeat << " times";//chw
+#if LOG_FILter_REPEAT
+        ost << "\r\n    Last message repeated " << ctx->_repeat << " times";
+#endif
     }
 
     // flush log and new line

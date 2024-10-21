@@ -1187,9 +1187,10 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len)
      return total_send_bytes;
 }
 
-int32_t SockUtil::send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen)
+uint32_t SockUtil::send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen)
 {
-    return sendto(fd, buff, len, 0, addr, sizeof(struct sockaddr_in));
+    int32_t snd_len = sendto(fd, buff, len, 0, addr, sizeof(struct sockaddr_in));
+    return snd_len > 0 ? snd_len : 0;
 }
 
 

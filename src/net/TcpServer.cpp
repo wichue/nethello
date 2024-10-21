@@ -122,7 +122,6 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
 void TcpServer::start_l(uint16_t port, const std::string &host) {
     uint32_t backlog = 1024;
     setupEvent();
-
     //新建一个定时器定时管理这些tcp会话
     weak_ptr<TcpServer> weak_self = std::static_pointer_cast<TcpServer>(shared_from_this());
     _timer = std::make_shared<Timer>(2.0f, [weak_self]() -> bool {
