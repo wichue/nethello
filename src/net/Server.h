@@ -69,6 +69,16 @@ public:
      */
     virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) = 0;
 
+    /**
+     * @brief Get the Rcv Info object
+     * 
+     * @param rcv_num 接收包的数量
+     * @param rcv_seq 接收包的最大序列号
+     * @param rcv_len 接收的字节总大小
+     * @param rcv_speed 接收速率
+     */
+    virtual void GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed) = 0;
+
 protected:
     virtual void start_l(uint16_t port, const std::string &host) = 0;
     /**

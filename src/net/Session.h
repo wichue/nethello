@@ -37,6 +37,10 @@ public:
     virtual const std::string &className() const = 0;
     virtual uint32_t senddata(uint8_t* buff, uint32_t len) = 0;
 
+    virtual uint64_t GetPktNum() = 0;
+    virtual uint64_t GetSeq() = 0;
+    virtual uint64_t GetRcvLen() = 0;
+
 private:
     mutable std::string _id;
     Socket::Ptr _sock;

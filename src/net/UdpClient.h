@@ -27,6 +27,7 @@ public:
      * @return uint32_t 
      */
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") override;
+    virtual void setOnCon(onConCB ) override{};
 
 protected:
     virtual void onConnect(const SockException &ex) override {};

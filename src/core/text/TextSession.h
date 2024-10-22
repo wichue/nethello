@@ -25,6 +25,10 @@ public:
     void onManager() override;
     const std::string &className() const override;
 
+    virtual uint64_t GetPktNum()override{return 0;};
+    virtual uint64_t GetSeq()override{return 0;};
+    virtual uint64_t GetRcvLen()override{return 0;};
+
     /**
      * @brief tcp发送数据（可在任意线程执行）
      * 

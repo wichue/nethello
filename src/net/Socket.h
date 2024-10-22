@@ -506,12 +506,12 @@ public:
     /**
      * 获取接收速率，单位bytes/s
      */
-    int getRecvSpeed();
+    uint64_t getRecvSpeed();
 
     /**
      * 获取发送速率，单位bytes/s
      */
-    int getSendSpeed();
+    uint64_t getSendSpeed();
 
     ////////////SockInfo override////////////
     std::string get_local_ip() override;
@@ -652,6 +652,7 @@ public:
     //todo:方案2：发送失败时监听可写事件，没有发送成功的先放入缓存，可写时再发送（一直发送失败会出现大量缓存积压，不利于业务快速反映）
     // _max_send_buffer_ms/_send_flush_ticker 控制一直发送失败的超时
 
+    void enable_speed(bool enable);
 private:
     onReadCB _on_read;
 

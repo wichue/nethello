@@ -7,6 +7,7 @@ namespace chw {
 TcpClient::TcpClient(const EventLoop::Ptr &poller) : Client(poller)
 {
     _poller = poller;
+    setOnCon(nullptr);
 }
 
 TcpClient::~TcpClient() {
@@ -44,6 +45,27 @@ uint32_t TcpClient::create_client(const string &url, uint16_t port, uint16_t loc
     return chw::success;
 }
 
+void TcpClient::setOnCon(onConCB oncon)
+{
+    if(oncon)
+    {
+        _on_con = oncon;
+    }
+    else
+    {
+        _on_con = [](const SockException &ex){
+            if(ex)
+            {   
+                PrintE("tcp connect failed, please check ip and port, ex:%s.", ex.what());
+            }
+            else
+            {   
+                PrintD("connect success.");
+            }
+        };
+    }
+}
+
 void TcpClient::onSockConnect(const SockException &ex) {
     // TraceL << getIdentifier() << " connect result: " << ex;//chw
     if (ex) {
@@ -77,17 +99,7 @@ void TcpClient::onSockConnect(const SockException &ex) {
 
 void TcpClient::onConnect(const SockException &ex)
 {
-    if(ex)
-    {
-        PrintE("tcp connect failed, please check ip and port, ex:%s.", ex.what());
-        sleep_exit(100*1000);
-    }
-    else
-    {
-        PrintD("connect success.");
-        usleep(1000);
-        InfoLNCR << ">";
-    }
+    _on_con(ex);
 }
 
 } //namespace chw

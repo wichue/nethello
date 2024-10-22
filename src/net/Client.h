@@ -13,10 +13,18 @@ namespace chw {
 class Client : public std::enable_shared_from_this<Client> {
 public:
     using Ptr = std::shared_ptr<Client>;
+    using onConCB = std::function<void(const SockException &ex)>;
     Client(const EventLoop::Ptr &poller);
     virtual ~Client() = default;
 
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") = 0;
+
+    /**
+     * @brief 连接结果回调
+     * 
+     * @param oncon 
+     */
+    virtual void setOnCon(onConCB oncon) = 0;
 
     /**
      * 主动断开连接

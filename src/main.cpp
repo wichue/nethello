@@ -12,6 +12,7 @@
 #include "GlobalValue.h"
 #include "Semaphore.h"
 #include "TextModel.h"
+#include "PressModel.h"
 
 //捕获ctrl+c
 void sigend_handler_abort(int sig)
@@ -69,6 +70,9 @@ int main(int argc, char **argv)
     {
     case chw::TEXT_MODEL:
         _workmodel = std::make_shared<chw::TextModel>();
+        break;
+    case chw::PRESS_MODEL:
+        _workmodel = std::make_shared<chw::PressModel>();
         break;
     
     default:

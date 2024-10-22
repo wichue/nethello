@@ -25,6 +25,13 @@ public:
      * @param local_port 本地端口
      */
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") override;
+
+    /**
+     * @brief 连接结果回调
+     * 
+     * @param oncon 
+     */
+    virtual void setOnCon(onConCB oncon) override;
 protected:
     /**
      * @brief 连接结果事件（epoll线程执行）
@@ -39,6 +46,8 @@ private:
      * @param ex 
      */
     void onSockConnect(const SockException &ex);
+private:
+    onConCB _on_con;// 连接结果回调
 };
 
 } //namespace chw

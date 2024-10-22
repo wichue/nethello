@@ -234,7 +234,7 @@ typedef enum {
 #pragma pack()
 
 typedef struct _MsgHdr_{
-    uint32_t uMsgType;//包序号
+    uint32_t uMsgIndex;//包序号
     uint32_t uTotalLen;//包总长度
 } MsgHdr;
 

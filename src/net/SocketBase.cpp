@@ -1160,7 +1160,7 @@ struct sockaddr_storage SockUtil::make_sockaddr(const char *host, uint16_t port)
 uint32_t SockUtil::send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len)
 {
     uint32_t total_send_bytes = 0;
-    uint32_t curr_send_len = 0;
+    int32_t curr_send_len = 0;
     uint32_t left_bytes = len;
     uint32_t resendtimes = 0;
 

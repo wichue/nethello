@@ -22,6 +22,7 @@ SET(SRCS
     ${PREFIX}/src/core/text/TextSession.cpp
     ${PREFIX}/src/core/text/TextModel.cpp
     ${PREFIX}/src/core/press/PressModel.cpp
+    ${PREFIX}/src/core/press/PressSession.cpp
 
     ${PREFIX}/src/base/SignalCatch.cpp
     ${PREFIX}/src/base/BackTrace.cpp

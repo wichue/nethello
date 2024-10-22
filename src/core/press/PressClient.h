@@ -8,16 +8,16 @@
 namespace chw {
 
 /**
- * 压力测试模式Client，收到数据时打印到控制台。
- * tcp和udp客户端业务功能相同，使用类模板实现。
+ * 压力测试Client，正常情况下只发送不接收。
+ * tcp和udp客户端业务功能类似，使用类模板实现。
  */
 template<typename TypeClient>
-class TextClient : public TypeClient {
+class PressClient : public TypeClient {
 public:
-    using Ptr = std::shared_ptr<TextClient>;
+    using Ptr = std::shared_ptr<PressClient>;
 
-    TextClient(const EventLoop::Ptr &poller = nullptr) : TypeClient(poller){};
-    virtual ~TextClient() = default;
+    PressClient(const EventLoop::Ptr &poller = nullptr) : TypeClient(poller){};
+    virtual ~PressClient() = default;
 
     // 接收数据回调（epoll线程执行）
     virtual void onRecv(const Buffer::Ptr &pBuf) override
@@ -34,8 +34,8 @@ public:
         WarnL << ex.what();
     }
 };
-typedef TextClient<TcpClient> TcpTextClient;
-typedef TextClient<UdpClient> UdpTextClient;
+typedef PressClient<TcpClient> PressTcpClient;
+typedef PressClient<UdpClient> PressUdpClient;
 
 }//namespace chw
 

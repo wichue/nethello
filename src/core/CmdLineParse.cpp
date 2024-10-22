@@ -103,7 +103,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
     int flag;
     int portno;
    
-    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:", longopts, NULL)) != -1) {
+    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:PF", longopts, NULL)) != -1) {
         switch (flag) {
             case 'h':
 				help();
@@ -112,6 +112,13 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
             case 'v':
 				version();
 				exit(0);
+                break;
+
+            case 'P':
+                gConfigCmd.workmodel = PRESS_MODEL;
+                break;
+            case 'F':
+                gConfigCmd.workmodel = FILE_MODEL;
                 break;
 
             case 's':

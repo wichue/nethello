@@ -496,12 +496,12 @@ uint64_t Socket::elapsedTimeAfterFlushed() {
     return _send_flush_ticker.elapsedTime();
 }
 
-int Socket::getRecvSpeed() {
+uint64_t Socket::getRecvSpeed() {
     _enable_speed = true;
     return _recv_speed.getSpeed();
 }
 
-int Socket::getSendSpeed() {
+uint64_t Socket::getSendSpeed() {
     _enable_speed = true;
     return _send_speed.getSpeed();
 }
@@ -965,22 +965,13 @@ void Socket::safeShutdown(const SockException &ex) {
         }
     });
 }
-//     if (!addr) {
-//         if (!_udp_send_dst) {
-//             return send_l(std::move(buf), false, try_flush);
-//         }
-//         // 本次发送未指定目标地址，但是目标定制已通过bindPeerAddr指定  [AUTO-TRANSLATED:afb6ce35]
-//         //This send did not specify a target address, but the target is customized through bindPeerAddr
-//         addr = (struct sockaddr *)_udp_send_dst.get();
-//         addr_len = SockUtil::get_sock_len(addr);
-//     }
-//     return send_l(std::make_shared<BufferSock>(std::move(buf), addr, addr_len), true, try_flush);
+
 uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
 {
     LOCK_GUARD(_mtx_sock_fd);
 
     if (!_sock_fd) {
-        PrintE("tcp already disconnect");
+        PrintE("tcp not connected.");
         // 如果已断开连接或者发送超时
         return 0;
     }
@@ -1019,6 +1010,11 @@ uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
     // }
 
     return 0;
+}
+
+void Socket::enable_speed(bool enable)
+{
+    _enable_speed = enable;
 }
 
 } // namespace chw

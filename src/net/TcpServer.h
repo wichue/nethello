@@ -23,6 +23,16 @@ public:
     explicit TcpServer(const EventLoop::Ptr &poller);
     ~TcpServer();
 
+    /**
+     * @brief 获取会话接收信息
+     * 
+     * @param rcv_num 接收包的数量
+     * @param rcv_seq 接收包的最大序列号
+     * @param rcv_len 接收的字节总大小
+     * @param rcv_speed 接收速率
+     */
+    virtual void GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed) override;
+
 protected:
     /**
      * @brief 新接入连接回调（在epoll线程执行）

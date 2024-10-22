@@ -43,6 +43,19 @@ void TextModel::startmodel()
     {
         if(chw::gConfigCmd.protol == SockNum::Sock_TCP) {
             _pClient = std::make_shared<chw::TcpTextClient>(_poller);
+            _pClient->setOnCon([](const SockException &ex){
+                if(ex)
+                {
+                    PrintE("tcp connect failed, please check ip and port, ex:%s.", ex.what());
+                    sleep_exit(100*1000);
+                }
+                else
+                {
+                    PrintD("connect success.");
+                    usleep(1000);
+                    InfoLNCR << ">";
+                }
+            });
         } else {
             _pClient = std::make_shared<chw::UdpTextClient>(_poller);
         }
