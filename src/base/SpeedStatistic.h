@@ -40,12 +40,10 @@ public:
 private:
     uint64_t computeSpeed() {
         auto elapsed = _ticker.elapsedTime();
-        PrintD("elapsed=%u",elapsed);
         if (elapsed == 0) {
             return _speed;
         }
         _speed = ((_bytes - _bytes_last) * 1000 / elapsed);
-        PrintD("_speed=%lu,_bytes=%lu,_bytes_last=%lu",_speed,_bytes,_bytes_last);
         _ticker.resetTime();
         // _bytes = 0;
         _bytes_last = _bytes;

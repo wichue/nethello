@@ -110,7 +110,7 @@ void UdpServer::onRead_l(bool is_server_fd, const UdpServer::PeerIdType &id, Buf
 
 #if !defined(NDEBUG)
         if (!is_new) {
-            TraceL << "UDP packet incoming from " << (is_server_fd ? "server fd" : "other peer fd");
+            // TraceL << "UDP packet incoming from " << (is_server_fd ? "server fd" : "other peer fd");//chw
         }
 #endif
     }
@@ -270,18 +270,13 @@ uint32_t UdpServer::sendclientdata(uint8_t* buf, uint32_t len)
 
 void UdpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed)
 {
-    rcv_num = 0;
-    rcv_seq = 0;
-    rcv_len = 0;
-    rcv_speed = 0;
-
     auto iter = _session_map->begin();
     while(iter != _session_map->end())
     {
-        rcv_num += iter->second->GetPktNum();
-        rcv_seq += iter->second->GetSeq();
-        rcv_len += iter->second->GetRcvLen();
-        rcv_speed += iter->second->getSock()->getRecvSpeed();
+        rcv_num = iter->second->GetPktNum();
+        rcv_seq = iter->second->GetSeq();
+        rcv_len = iter->second->GetRcvLen();
+        rcv_speed = iter->second->getSock()->getRecvSpeed();
         iter ++;
     }
 }

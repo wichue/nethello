@@ -17,11 +17,14 @@ void PressSession::onRecv(const Buffer::Ptr &pBuf)
     if(getSock()->sockType() == SockNum::Sock_UDP)
     {
         MsgHdr* pMsgHdr = (MsgHdr*)pBuf->data();
-        _server_rcv_seq = pMsgHdr->uMsgIndex;
+        if(_server_rcv_seq < pMsgHdr->uMsgIndex)
+        {
+            _server_rcv_seq = pMsgHdr->uMsgIndex;
+        }
     }
 
     _server_rcv_num ++;
-    _server_rcv_len += pBuf->Size();
+    _server_rcv_len += pBuf->RcvLen();
 
     pBuf->Reset();
 }

@@ -25,7 +25,7 @@ public:
     const std::string &className() const override;
 
     /**
-     * @brief tcp发送数据（可在任意线程执行）
+     * @brief 发送数据（可在任意线程执行）
      * 
      * @param buff 数据
      * @param len  数据长度
@@ -56,7 +56,7 @@ public:
 
 private:
     uint64_t _server_rcv_num;// 接收包的数量
-    uint64_t _server_rcv_seq;// 接收包的最大序列号
+    uint64_t _server_rcv_seq;// 接收包的最大序列号,注意udp可能乱序
     uint64_t _server_rcv_len;// 接收的字节总大小
 
     std::string _cls;

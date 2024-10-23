@@ -14,9 +14,16 @@
 #include "TextModel.h"
 #include "PressModel.h"
 
+chw::workmodel::Ptr _workmodel = nullptr;
 //捕获ctrl+c
 void sigend_handler_abort(int sig)
 {
+    if(_workmodel)
+    {
+        _workmodel->prepare_exit();
+    }
+    usleep(100 * 1000);
+    
     printf("catch abort signal:%d,exit now.\n",sig);
     exit(0);
 }
@@ -24,6 +31,12 @@ void sigend_handler_abort(int sig)
 //捕获段错误
 void sigend_handler_crash(int sig)
 {
+    if(_workmodel)
+    {
+        _workmodel->prepare_exit();
+    }
+    usleep(100 * 1000);
+    
     printf("catch crash signal:%d,exit now.\n",sig);
 	chw::chw_assert();
 }
@@ -34,6 +47,7 @@ void sigend_handler_crash(int sig)
  * 模式1：文本聊天，客户端连接后，命令行>可以发文本给服务端，服务端命令行可以输入回复文本，支持tcp/udp。
  * 模式2：压力测试，测试tcp速率，udp速率和udp丢包率，可设置带宽、包大小等。
  * 模式3：文件传输，功能类似scp的传文件，先启动服务端后启动客户端，由客户端向服务端发文件，优先实现tcp，udp可结合kcp实现。
+ * 模式4：并发测试
  * 
  * @brief 
  * @param argc 
@@ -64,8 +78,7 @@ int main(int argc, char **argv)
         chw::Logger::Instance().add(fc);
     }
     chw::Logger::Instance().setWriter(std::make_shared<chw::AsyncLogWriter>());
-
-    chw::workmodel::Ptr _workmodel = nullptr;
+    
     switch (chw::gConfigCmd.workmodel)
     {
     case chw::TEXT_MODEL:

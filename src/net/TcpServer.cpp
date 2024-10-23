@@ -180,16 +180,11 @@ void TcpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len
         _is_on_manager = false;
     });
 
-    rcv_num = 0;
-    rcv_seq = 0;
-    rcv_len = 0;
-    rcv_speed = 0;
-
     for (auto &pr : _session_map) {
-        rcv_num += pr.second->GetPktNum();
-        rcv_seq += pr.second->GetSeq();
-        rcv_len += pr.second->GetRcvLen();
-        rcv_speed += pr.second->getSock()->getRecvSpeed();
+        rcv_num = pr.second->GetPktNum();
+        rcv_seq = pr.second->GetSeq();
+        rcv_len = pr.second->GetRcvLen();
+        rcv_speed = pr.second->getSock()->getRecvSpeed();
     }
 }
 

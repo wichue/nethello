@@ -20,6 +20,7 @@ public:
     ~TextModel() override;
 
     virtual void startmodel() override;
+    virtual void prepare_exit() override{};
 
 private:
     chw::Server::Ptr _pServer;

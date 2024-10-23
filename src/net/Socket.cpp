@@ -75,7 +75,7 @@ void Socket::setOnRead(onReadCB cb) {
         _on_read = std::move(cb);
     } else {
         _on_read = [](Buffer::Ptr &buf, struct sockaddr *addr, int addr_len) {
-            WarnL << "Socket not set read callback, data ignored: " << buf->Size();
+            WarnL << "Socket not set read callback, data ignored: " << buf->RcvLen();
             buf->SetRcvLen(0);
         };
     }

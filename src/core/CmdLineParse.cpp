@@ -178,7 +178,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
                 gConfigCmd.blksize = atoi(optarg);
                 break;
             case 'b':
-                gConfigCmd.bandwidth = unit_atoi(optarg);
+                gConfigCmd.bandwidth = atoi(optarg);
                 break;
 
                 

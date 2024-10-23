@@ -256,6 +256,7 @@ public:
     virtual ~workmodel() = default;
 
     virtual void startmodel() = 0;
+    virtual void prepare_exit() = 0;
 
 protected:
     chw::EventLoop::Ptr _poller;
