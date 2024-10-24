@@ -19,10 +19,12 @@ INCLUDE_DIRECTORIES(${INCDIR})
 SET(SRCS
     ${PREFIX}/src/main.cpp
     ${PREFIX}/src/core/CmdLineParse.cpp
+    ${PREFIX}/src/core/ErrorCode.cpp
     ${PREFIX}/src/core/text/TextSession.cpp
     ${PREFIX}/src/core/text/TextModel.cpp
     ${PREFIX}/src/core/press/PressModel.cpp
     ${PREFIX}/src/core/press/PressSession.cpp
+    ${PREFIX}/src/core/file/FileTcpClient.cpp
 
     ${PREFIX}/src/base/SignalCatch.cpp
     ${PREFIX}/src/base/BackTrace.cpp

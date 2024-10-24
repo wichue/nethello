@@ -4,6 +4,7 @@
 #include "TcpServer.h"
 #include "PressSession.h"
 #include "PressClient.h"
+#include "MsgInterface.h"
 
 namespace chw {
 

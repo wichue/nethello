@@ -13,6 +13,7 @@
 
 #include "GlobalValue.h"
 #include "Logger.h"
+#include "File.h"
 
 namespace chw {
 
@@ -96,14 +97,17 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
         {"bind", required_argument, NULL, 'B'},
         {"length", required_argument, NULL, 'l'},
         {"bandwidth", required_argument, NULL, 'b'},
+        {"save", required_argument, NULL, 'f'},
 
+        {"src", required_argument, NULL, 'S'},
+        {"dst", required_argument, NULL, 'D'},
 
         {NULL, 0, NULL, 0}
     };
     int flag;
     int portno;
    
-    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:PF", longopts, NULL)) != -1) {
+    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:f:S:D:PF", longopts, NULL)) != -1) {
         switch (flag) {
             case 'h':
 				help();
@@ -114,6 +118,9 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
 				exit(0);
                 break;
 
+            case 'T':
+                gConfigCmd.workmodel = TEXT_MODEL;
+                break;
             case 'P':
                 gConfigCmd.workmodel = PRESS_MODEL;
                 break;
@@ -180,6 +187,15 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
             case 'b':
                 gConfigCmd.bandwidth = atoi(optarg);
                 break;
+            case 'f':
+                gConfigCmd.save = optarg;
+                break;
+            case 'S':
+                gConfigCmd.src = optarg;
+                break;
+            case 'D':
+                gConfigCmd.dst = optarg;
+                break;
 
                 
             default:
@@ -196,6 +212,21 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
     if(gConfigCmd.server_port == 0) {
         printf("server port is empty, use -p option, --help for help.\n");
         return chw::fail;
+    }
+
+    if(gConfigCmd.workmodel == FILE_MODEL)
+    {
+        if(gConfigCmd.src == nullptr || gConfigCmd.dst == nullptr)
+        {
+            printf("file transfer model,-S and -D option is s must, -h for help. \n");
+            return chw::fail;
+        }
+
+        if(fileExist(gConfigCmd.src) == false)
+        {
+            printf("src file is not exist:%s.\n",gConfigCmd.src);
+            return chw::fail;
+        }
     }
 
     return chw::success;

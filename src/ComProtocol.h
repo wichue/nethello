@@ -233,10 +233,17 @@ typedef enum {
 
 #pragma pack()
 
-typedef struct _MsgHdr_{
-    uint32_t uMsgIndex;//包序号
-    uint32_t uTotalLen;//包总长度
-} MsgHdr;
+// 文件传输状态
+enum FileTranStatus
+{
+    TRANS_INIT,
+    TRANS_CONNECTED,// 已经建立连接,协商中
+    TRANS_SENDING,  // 传输中
+    TRANS_SEND_OVER,// 发送完成
+    TRANS_RECV_OVER,// 接收完成
+    TRANS_SEND_FAIL,// 发送失败
+    TRANS_RECV_FAIL,// 接收失败
+};
 
 enum WorkModel
 {
@@ -277,7 +284,10 @@ struct ConfigCmd
     uint32_t  bandwidth;         // 设置带宽，默认0以最大能力发送(-b)
     WorkModel workmodel;         // 工作模式，默认 TEXT_MODEL
 
-    char* save;//要保存的文件名(--save)，没有该选项则输出到屏幕
+    char* src;//文件传输模式，本地文件路经(-S)
+    char* dst;//文件传输模式，目的文件路经(-D)
+
+    char* save;//日志要保存的文件名(-f)，没有该选项则输出到屏幕
 
     ConfigCmd()
     {
@@ -293,6 +303,8 @@ struct ConfigCmd
         server_hostname = nullptr;
         save = nullptr;
         workmodel = TEXT_MODEL;
+        src = nullptr;
+        dst = nullptr;
     }
 };
 

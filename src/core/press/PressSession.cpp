@@ -1,5 +1,6 @@
 #include "PressSession.h"
 #include "ComProtocol.h"
+#include "MsgInterface.h"
 
 namespace chw {
 

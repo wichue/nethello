@@ -149,6 +149,19 @@ bool is_dir(const char *path) {
     return true;
 }
 
+//获取路经最后的文件名
+std::string path_get_file(std::string path)
+{
+    for (int i= path.size()-1;i>0;i--)
+    {
+        if (path[i] == '\\' || path[i] == '/')
+        {
+            return path.substr(i+1);
+        }
+    }
+    return path;
+}
+
 //判断是否为常规文件
 bool fileExist(const char *path) {
     auto fp = fopen(path, "rb");

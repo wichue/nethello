@@ -58,11 +58,41 @@ namespace chw {
 //创建路径
 bool create_path(const char *file, unsigned int mod);
 
-//新建文件，目录文件夹自动生成
+/**
+ * FILE *fopen(const char *filename, const char *mode);
+ * @param mode 定义了文件被打开的方式
+ * "r"​：以只读方式打开文件。文件必须存在。
+ * "w"​：以写入方式打开文件。如果文件不存在，则创建它；如果文件存在，则其内容被清空（即文件被截断为 0 长度）。
+ * ​"a"​：以追加模式打开文件。如果文件不存在，则创建它；如果文件存在，则写入的数据被追加到文件的末尾，而不会覆盖原有内容。
+ * "r+"​：以读写方式打开文件。文件必须存在。
+ * "w+"​：以读写方式打开文件。如果文件不存在，则创建它；如果文件存在，则其内容被清空。
+ * ​"a+"​：以读写模式打开文件用于追加。如果文件不存在，则创建它；如果文件存在，则写入的数据被追加到文件的末尾，并且可以从文件的开头读取数据。
+ */
+
+/**
+ * size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+ * ptr ：指向存储读取数据的缓冲区的指针。
+ * size ：每个数据单元的大小（以字节为单位）。
+ * nmemb ：要读取的数据单元的数量。
+ * stream ：文件指针，指向要读取的文件。
+ * 
+ * fread()返回成功读取的数据单元数量。如果返回值小于nmemb，则可能是遇到了文件结尾或发生了读取错误。
+ */
+
+/**
+ * @brief 新建文件，目录文件夹自动生成
+ * 
+ * @param file 完整路经
+ * @param mode 打开模式，"w"
+ * @return FILE* 
+ */
 FILE *create_file(const char *file, const char *mode);
 
 //判断是否为目录
 bool is_dir(const char *path);
+
+//获取路经最后的文件名
+std::string path_get_file(std::string path);
 
 //判断是否是特殊目录（. or ..）
 bool is_special_dir(const char *path);
