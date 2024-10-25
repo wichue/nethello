@@ -6,10 +6,15 @@
 #include <unordered_map>
 
 #define ERRNO_MAP_FILE(XX) \
-    XX(ERROR_FILE_PERM_DENIED               , 1000,  "Permission denied") \
+    XX(ERROR_FILE_PERM_DENIED               , 1000,  "file transf, permission denied") \
     XX(ERROR_FILE_EXIST                     , 1001,  "file already exist") \
     XX(ERROR_FILE_SEND_FAIL                 , 1002,  "file send failed") \
     XX(ERROR_FILE_INVALID_SIZE              , 1003,  "invalid file size") \
+    XX(ERROR_FILE_PEER_NO_DIR               , 1004,  "file transf, peer no such directory") \
+    XX(ERROR_FILE_PEER_PERM_DENIED          , 1005,  "file transf, peer permission denied") \
+    XX(ERROR_FILE_INVALID_FILE_PATH         , 1006,  "file transf, invalid file path") \
+    XX(ERROR_FILE_INVALID_FILE_NAME         , 1007,  "file transf, invalid file name") \
+    XX(ERROR_FILE_PEER_UNKNOWN              , 1008,  "unknown peer error") \
 
 #define ERRNO_MAP_PRESS(XX) \
     XX(ERROR_PRESS_FAIL                     , 2000,  "press failed") \
@@ -33,6 +38,12 @@ public:
 
     static ErrorCode &Instance();
 
+    /**
+     * @brief 根据错误码查询错误描述
+     * 
+     * @param code 错误码
+     * @return std::string 错误描述
+     */
     std::string error2str(uint32_t code);
 
 private:

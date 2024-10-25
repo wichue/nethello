@@ -10,6 +10,7 @@ SET(INCDIR
     ${PREFIX}/src/core
     ${PREFIX}/src/core/text
     ${PREFIX}/src/core/press
+    ${PREFIX}/src/core/file
     ${PREFIX}/src/base
     ${PREFIX}/src/event
     ${PREFIX}/src/net
@@ -25,6 +26,8 @@ SET(SRCS
     ${PREFIX}/src/core/press/PressModel.cpp
     ${PREFIX}/src/core/press/PressSession.cpp
     ${PREFIX}/src/core/file/FileTcpClient.cpp
+    ${PREFIX}/src/core/file/FileSession.cpp
+    ${PREFIX}/src/core/file/FileModel.cpp
 
     ${PREFIX}/src/base/SignalCatch.cpp
     ${PREFIX}/src/base/BackTrace.cpp
@@ -47,6 +50,7 @@ SET(SRCS
     ${PREFIX}/src/net/TcpServer.cpp
     ${PREFIX}/src/net/UdpServer.cpp
     ${PREFIX}/src/net/UdpClient.cpp
+    ${PREFIX}/src/net/StickyPacket.cpp
 
     ${PREFIX}/src/GlobalValue.cpp
 )

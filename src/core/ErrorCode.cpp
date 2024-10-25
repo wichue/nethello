@@ -16,6 +16,12 @@ ErrorCode::ErrorCode()
 }   
 #undef SRS_STRERRNO_GEN
 
+/**
+ * @brief 根据错误码查询错误描述
+ * 
+ * @param code 错误码
+ * @return std::string 错误描述
+ */
 std::string ErrorCode::error2str(uint32_t code)
 {
     auto iter = _umCodeDesc.find(code);

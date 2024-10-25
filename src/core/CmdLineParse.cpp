@@ -214,7 +214,8 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
         return chw::fail;
     }
 
-    if(gConfigCmd.workmodel == FILE_MODEL)
+    // 如果是文件传输客户端，则需要-S和-D选项
+    if(gConfigCmd.workmodel == FILE_MODEL && gConfigCmd.role == 'c')
     {
         if(gConfigCmd.src == nullptr || gConfigCmd.dst == nullptr)
         {

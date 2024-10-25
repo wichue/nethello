@@ -24,7 +24,7 @@ public:
     {
         //接收数据事件
         PrintD("<%s",pBuf->data());
-        pBuf->Reset();
+        pBuf->Reset0();
     }
 
     // 错误回调

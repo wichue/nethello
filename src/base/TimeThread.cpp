@@ -51,7 +51,7 @@ static atomic<uint64_t> s_currentMillisecond_system(getCurrentMicrosecondOrigin(
 static inline bool initMillisecondThread() {
     static std::thread s_thread([]() {
         setThreadName("time thread");
-        DebugL << "time thread started";
+        // DebugL << "time thread started";//chw
         uint64_t last = getCurrentMicrosecondOrigin();
         uint64_t now;
         uint64_t microsecond = 0;

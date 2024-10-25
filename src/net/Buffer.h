@@ -103,6 +103,7 @@ public:
         }
 
         _RAM_CPY_((uint8_t*)_data, end - start, (uint8_t*)_data + start, end - start);
+        SetRcvLen(end - start);
         return chw::success;
     }
 
@@ -127,6 +128,10 @@ public:
     }
 
     void Reset() {
+        uRcvLen = 0;
+    }
+
+    void Reset0() {
         _RAM_SET_(_data,_size,0,_size);
         uRcvLen = 0;
     }

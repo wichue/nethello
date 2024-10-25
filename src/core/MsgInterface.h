@@ -33,7 +33,7 @@ typedef struct _MsgHdr_{
 typedef struct _FileTranReq_ {
     MsgHdr msgHdr;
 
-    char filepath[256];// 文件保存路经
+    char filepath[256];// 文件保存完整路经,包含文件名
     uint32_t filesize; // 文件大小
 }FileTranReq;
 

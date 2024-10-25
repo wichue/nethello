@@ -80,6 +80,16 @@ bool create_path(const char *file, unsigned int mod);
  */
 
 /**
+ * size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+ * const void *ptr : 指针指向要写出数据的内存首地址 ;
+ * size_t size : 要写出数据的 基本单元 的字节大小 , 写出单位的大小 ;
+ * size_t nmemb : 要写出数据的 基本单元 的个数 ;
+ * FILE *stream : 打开的文件指针 ;
+ * 
+ * 返回值 : size_t 返回值返回的是实际写出到文件的 基本单元 个数 ,0写入失败，小于nmemb则没有完全写入;
+ */
+
+/**
  * @brief 新建文件，目录文件夹自动生成
  * 
  * @param file 完整路经
@@ -93,6 +103,22 @@ bool is_dir(const char *path);
 
 //获取路经最后的文件名
 std::string path_get_file(std::string path);
+
+/**
+ * @brief 返回路经
+ * 
+ * @param path 包含文件名的完整路经
+ * @return std::string 不包含文件名的路经
+ */
+std::string path_Dir(std::string path);
+
+/**
+ * @brief 返回文件名
+ * 
+ * @param path 包含文件名的完整路经
+ * @return std::string 文件名
+ */
+std::string path_Name(std::string path);
 
 //判断是否是特殊目录（. or ..）
 bool is_special_dir(const char *path);

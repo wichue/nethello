@@ -707,6 +707,24 @@ int8_t int8_highfour(int8_t num)
     return ((num >> 4) & 0xF);
 }
 
+#ifndef HAS_CXA_DEMANGLE
+// We only support some compilers that support __cxa_demangle.
+// TODO: Checks if Android NDK has fixed this issue or not.
+#if defined(__ANDROID__) && (defined(__i386__) || defined(__x86_64__))
+#define HAS_CXA_DEMANGLE 0
+#elif (__GNUC__ >= 4 || (__GNUC__ >= 3 && __GNUC_MINOR__ >= 4)) && \
+    !defined(__mips__)
+#define HAS_CXA_DEMANGLE 1
+#elif defined(__clang__) && !defined(_MSC_VER)
+#define HAS_CXA_DEMANGLE 1
+#else
+#define HAS_CXA_DEMANGLE 0
+#endif
+#endif
+#if HAS_CXA_DEMANGLE
+#include <cxxabi.h>
+#endif
+
 std::string demangle(const char *mangled) {
     int status = 0;
     char *demangled = nullptr;

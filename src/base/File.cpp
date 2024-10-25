@@ -162,6 +162,14 @@ std::string path_get_file(std::string path)
     return path;
 }
 
+std::string path_Dir(std::string path) {
+    return path.substr(0, path.rfind('/') + 1);
+}
+
+std::string path_Name(std::string path) {
+    return path.substr(path.rfind('/') + 1);
+}
+
 //判断是否为常规文件
 bool fileExist(const char *path) {
     auto fp = fopen(path, "rb");

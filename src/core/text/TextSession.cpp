@@ -15,7 +15,7 @@ TextSession::~TextSession()
 void TextSession::onRecv(const Buffer::Ptr &buf)
 {
     PrintD("<%s",buf->data());
-    buf->Reset();
+    buf->Reset0();
 }
 
 void TextSession::onError(const SockException &err)

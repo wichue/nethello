@@ -3,6 +3,8 @@
 #include "MsgInterface.h"
 #include "ErrorCode.h"
 #include "GlobalValue.h"
+#include "File.h"
+#include "StickyPacket.h"
 
 namespace chw {
 
@@ -12,6 +14,10 @@ FileTcpClient::FileTcpClient(const EventLoop::Ptr &poller) : TcpClient(poller)
     _send_poller = nullptr;
 }
 
+/**
+ * @brief 开始文件传输
+ * 
+ */
 void FileTcpClient::StartTransf()
 {
     _status = TRANS_CONNECTED;
@@ -33,37 +39,62 @@ void FileTcpClient::StartTransf()
     FileTranReq* preq = (FileTranReq*)_RAM_NEW_(sizeof(FileTranReq));
     preq->msgHdr.uMsgType = FILE_TRAN_REQ;
     preq->msgHdr.uTotalLen = sizeof(FileTranReq);
-    _RAM_CPY_(preq->filepath,256,gConfigCmd.dst,strlen(gConfigCmd.dst));
+
+    // 目的路经
+    std::string dst_path = gConfigCmd.dst;
+    if(dst_path[dst_path.size() - 1] != '/')
+    {
+        dst_path.append("/");
+    }
+
+    snprintf(preq->filepath,256,"%s%s",dst_path.c_str(),path_Name(gConfigCmd.src).c_str());
     preq->filesize = filesize;
+    PrintD("preq->filepath=%s,filesize=%u",preq->filepath,preq->filesize);
 
     senddata((uint8_t*)preq,sizeof(FileTranReq));
     _RAM_DEL_(preq);
 }
 
-// 接收数据回调（epoll线程执行）
-//todo:需要解决粘包后再分发处理
-void FileTcpClient::onRecv(const Buffer::Ptr &pBuf)
+/**
+ * @brief 分发消息
+ * 
+ * @param buf [in]消息
+ * @param len [in]长度
+ */
+void FileTcpClient::DispatchMsg(char* buf, uint32_t len)
 {
-    MsgHdr* pMsgHdr = (MsgHdr*)pBuf->data();
+    MsgHdr* pMsgHdr = (MsgHdr*)buf;
     switch(pMsgHdr->uMsgType)
     {
         case FILE_TRAN_RSP:
-            procTranRsp(pBuf);
+            procTranRsp(buf);
             break;
         case FILE_TRAN_END:
-            procTranEnd(pBuf);
+            procTranEnd(buf);
             break;
 
         default:
             break;
     }
-
-    pBuf->Reset();
 }
 
-void FileTcpClient::procTranEnd(const Buffer::Ptr &pBuf)
+// 接收数据回调（epoll线程执行）
+void FileTcpClient::onRecv(const Buffer::Ptr &pBuf)
 {
-    FileTranSig* pSig = (FileTranSig*)pBuf->data();
+    if(StickyPacket(pBuf,STD_BIND_2(FileTcpClient::DispatchMsg,this)) == chw::fail)
+    {
+        sleep_exit(100 * 1000);
+    }
+}
+
+/**
+ * @brief 收到传输结束消息
+ * 
+ * @param pBuf [in]消息
+ */
+void FileTcpClient::procTranEnd(char* buf)
+{
+    FileTranSig* pSig = (FileTranSig*)buf;
     if(pSig->code != ERROR_SUCCESS)
     {
         PrintE("peer error:%s",Error2Str(pSig->code).c_str());
@@ -71,9 +102,14 @@ void FileTcpClient::procTranEnd(const Buffer::Ptr &pBuf)
     }
 }
 
-void FileTcpClient::procTranRsp(const Buffer::Ptr &pBuf)
+/**
+ * @brief 收到文件发送响应
+ * 
+ * @param pBuf [in]响应数据
+ */
+void FileTcpClient::procTranRsp(char* buf)
 {
-    FileTranSig* pSig = (FileTranSig*)pBuf->data();
+    FileTranSig* pSig = (FileTranSig*)buf;
     if(pSig->code != ERROR_SUCCESS)
     {
         PrintE("peer error:%s",Error2Str(pSig->code).c_str());
@@ -141,14 +177,14 @@ void FileTcpClient::procTranRsp(const Buffer::Ptr &pBuf)
         while ((uReadSize = fread(buf + sizeof(MsgHdr), 1, TCP_BUFFER_SIZE - sizeof(MsgHdr), fp)) > 0)
         {
             pMsgHdr->uTotalLen = uReadSize + sizeof(MsgHdr);
-            uint32_t len = strong_self->senddata((uint8_t*)buf,uReadSize);
+            uint32_t len = strong_self->senddata((uint8_t*)buf,uReadSize + sizeof(MsgHdr));
             if(len == 0)
             {
                 break;
             }
             else
             {
-                allSendLen += len;
+                allSendLen += uReadSize;
             }
         }
         fclose(fp);
@@ -163,6 +199,7 @@ void FileTcpClient::procTranRsp(const Buffer::Ptr &pBuf)
         else
         {
             //发送失败
+            PrintE("send failed, filesize=%u, allSendLen=%u",filesize,allSendLen);
             status = TRANS_SEND_FAIL;
         }
         
@@ -178,10 +215,15 @@ void FileTcpClient::procTranRsp(const Buffer::Ptr &pBuf)
     });
 }
 
+/**
+ * @brief 本端文件发送结束
+ * 
+ * @param status [in]状态码(FileTranStatus)
+ */
 void FileTcpClient::localTransEnd(uint32_t status)
 {
     _status = status;
-    uint32_t code = 0;
+    uint32_t code = ERROR_SUCCESS;
     if(status == TRANS_SEND_OVER)
     {
         PrintD("file send complete!");

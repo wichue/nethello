@@ -13,6 +13,7 @@
 #include "Semaphore.h"
 #include "TextModel.h"
 #include "PressModel.h"
+#include "FileModel.h"
 
 chw::workmodel::Ptr _workmodel = nullptr;
 //捕获ctrl+c
@@ -86,6 +87,9 @@ int main(int argc, char **argv)
         break;
     case chw::PRESS_MODEL:
         _workmodel = std::make_shared<chw::PressModel>();
+        break;
+    case chw::FILE_MODEL:
+        _workmodel = std::make_shared<chw::FileModel>();
         break;
     
     default:

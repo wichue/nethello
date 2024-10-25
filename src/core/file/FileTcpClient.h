@@ -18,25 +18,42 @@ public:
     FileTcpClient(const EventLoop::Ptr &poller = nullptr);
     virtual ~FileTcpClient() = default;
 
+    /**
+     * @brief 分发消息
+     * 
+     * @param buf [in]消息
+     * @param len [in]长度
+     */
+    void DispatchMsg(char* buf, uint32_t len);
+
     // 接收数据回调（epoll线程执行）
     virtual void onRecv(const Buffer::Ptr &pBuf) override;
 
     // 错误回调
     virtual void onError(const SockException &ex) override;
 
+    /**
+     * @brief 开始文件传输
+     * 
+     */
     void StartTransf();
 private:
     /**
-     * @brief 处理文件发送响应
+     * @brief 收到文件发送响应
      * 
-     * @param pBuf 响应数据
+     * @param pBuf [in]响应数据
      */
-    void procTranRsp(const Buffer::Ptr &pBuf);
-
-    void procTranEnd(const Buffer::Ptr &pBuf);
+    void procTranRsp(char* pBuf);
 
     /**
-     * @brief 文件发送结束
+     * @brief 收到传输结束消息
+     * 
+     * @param pBuf [in]消息
+     */
+    void procTranEnd(char* pBuf);
+
+    /**
+     * @brief 本端文件发送结束
      * 
      * @param status 状态码(FileTranStatus)
      */

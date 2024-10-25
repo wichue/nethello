@@ -697,7 +697,7 @@ uint16_t Socket::get_peer_port() {
 
 string Socket::getIdentifier() const {
     static string class_name = "Socket: ";
-    return class_name + to_string(reinterpret_cast<uint64_t>(this));
+    return class_name /*+ to_string(reinterpret_cast<uint64_t>(this))*/;//chw
 }
 
 // bool Socket::flushData(const SockNum::Ptr &sock, bool poller_thread) {
