@@ -7,6 +7,11 @@ Server::Server(const EventLoop::Ptr &poller) : _poller(poller)
 
 }
 
+/**
+ * @brief 返回服务端的Socket
+ * 
+ * @return const Socket::Ptr& 
+ */
 const Socket::Ptr &Server::getSock() const
 {
     return _socket;
@@ -38,7 +43,7 @@ uint16_t Server::getPort()
 }
 
 /**
- * @brief 创建socket
+ * @brief 创建服务端socket
  */
 Socket::Ptr Server::createSocket(const EventLoop::Ptr &poller)
 {

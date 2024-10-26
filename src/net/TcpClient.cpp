@@ -14,6 +14,13 @@ TcpClient::~TcpClient() {
     TraceL << "~" << TcpClient::getIdentifier();
 }
 
+/**
+ * 开始连接tcp服务器（任意线程执行）
+ * @param url           [in]服务器ip或域名
+ * @param port          [in]服务器端口
+ * @param timeout_sec   [in]超时时间,单位秒
+ * @param local_port    [in]本地端口
+ */
 uint32_t TcpClient::create_client(const string &url, uint16_t port, uint16_t localport, const std::string &localip) {
     float timeout_sec = 5;
     weak_ptr<TcpClient> weak_self = static_pointer_cast<TcpClient>(shared_from_this());
@@ -45,6 +52,11 @@ uint32_t TcpClient::create_client(const string &url, uint16_t port, uint16_t loc
     return chw::success;
 }
 
+/**
+ * @brief 设置派生类连接结果回调
+ * 
+ * @param oncon [in]连接结果回调
+ */
 void TcpClient::setOnCon(onConCB oncon)
 {
     if(oncon)
@@ -66,6 +78,11 @@ void TcpClient::setOnCon(onConCB oncon)
     }
 }
 
+/**
+ * @brief 连接结果回调，成功则设置接收回调
+ * 
+ * @param ex [in]结果
+ */
 void TcpClient::onSockConnect(const SockException &ex) {
     // TraceL << getIdentifier() << " connect result: " << ex;//chw
     if (ex) {
@@ -97,6 +114,11 @@ void TcpClient::onSockConnect(const SockException &ex) {
     onConnect(ex);
 }
 
+/**
+ * @brief 派生类连接结果事件（epoll线程执行）
+ * 
+ * @param ex [in]结果
+ */
 void TcpClient::onConnect(const SockException &ex)
 {
     _on_con(ex);

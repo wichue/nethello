@@ -6,7 +6,10 @@
 #include "Socket.h"
 
 namespace chw {
-    
+/**
+ * tcp/udp服务端会话基类，继承该类可实现自定义服务端会话。
+ * 
+ */
 class Session : public std::enable_shared_from_this<Session> {
 public:
     bool enable = true;

@@ -19,18 +19,18 @@ public:
     /**
      * @brief 获取会话接收信息
      * 
-     * @param rcv_num 接收包的数量
-     * @param rcv_seq 接收包的最大序列号
-     * @param rcv_len 接收的字节总大小
-     * @param rcv_speed 接收速率
+     * @param rcv_num   [out]接收包的数量
+     * @param rcv_seq   [out]接收包的最大序列号
+     * @param rcv_len   [out]接收的字节总大小
+     * @param rcv_speed [out]接收速率
      */
     virtual void GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed) override;
 
 private:
     /**
      * @brief 开始udp server
-     * @param port 本机端口，0则随机
-     * @param host 监听网卡ip
+     * @param port [in]本机端口，0则随机
+     * @param host [in]监听网卡ip
      */
     virtual void start_l(uint16_t port, const std::string &host = "::") override;
 
@@ -39,28 +39,52 @@ private:
      */
     virtual void onManagerSession() override;
 
+    /**
+     * @brief udp服务端Socket接收回调
+     * 
+     * @param buf       [in]数据
+     * @param addr      [in]对端地址
+     * @param addr_len  [in]对端地址长度
+     */
     void onRead(Buffer::Ptr &buf, struct sockaddr *addr, int addr_len);
 
     /**
-     * @brief 接收到数据,可能来自server fd，也可能来自peer fd
-     * @param is_server_fd 时候为server fd
-     * @param id 客户端id
-     * @param buf 数据
-     * @param addr 客户端地址
-     * @param addr_len 客户端地址长度
+     * @brief udp服务端Socket接收到数据,获取或创建session,消息可能来自server fd，也可能来自peer fd
+     * @param is_server_fd  [in]是否为server fd
+     * @param id            [in]客户端id
+     * @param buf           [in]数据
+     * @param addr          [in]客户端地址
+     * @param addr_len      [in]客户端地址长度
      */
     void onRead_l(bool is_server_fd, const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len);
 
     /**
      * @brief 根据对端信息获取或创建一个会话
+     * 
+     * @param id        [in]会话唯一标识
+     * @param buf       [in]buf
+     * @param addr      [in]对端地址
+     * @param addr_len  [in]对端地址长度
+     * @param is_new    [out]是否新接入连接
+     * @return Session::Ptr 会话
      */
     Session::Ptr getOrCreateSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len, bool &is_new);
 
     /**
      * @brief 创建一个会话, 同时进行必要的设置
+     * 
+     * @param id        [in]会话唯一标识
+     * @param buf       [in]buf
+     * @param addr      [in]对端地址
+     * @param addr_len  [in]对端地址长度
+     * @return Session::Ptr 会话
      */
     Session::Ptr createSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len);
 
+    /**
+    * @brief 创建服务端Socket，设置接收回调
+    * 
+    */
     void setupEvent();
 
 private:
@@ -72,8 +96,8 @@ public:
     /**
      * @brief 发送数据给最后一个活动的客户端
      * 
-     * @param buf   数据
-     * @param len   数据长度
+     * @param buf   [in]数据
+     * @param len   [in]数据长度
      * @return uint32_t 发送成功的数据长度
      */
     virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) override;

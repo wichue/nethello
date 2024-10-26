@@ -20,11 +20,11 @@ public:
     /**
      * @brief 创建udp客户端
      * 
-     * @param url       远端ip
-     * @param port      远端端口
-     * @param localport 本地端口
-     * @param localip   本地ip
-     * @return uint32_t 
+     * @param url       [in]远端ip
+     * @param port      [in]远端端口
+     * @param localport [in]本地端口
+     * @param localip   [in]本地ip
+     * @return uint32_t 成功返回chw::success，失败返回chw::fail
      */
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") override;
     virtual void setOnCon(onConCB ) override{};

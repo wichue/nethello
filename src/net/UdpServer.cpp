@@ -11,6 +11,12 @@ static const uint8_t s_in6_addr_maped[]
 
 static constexpr auto kUdpDelayCloseMS = 3 * 1000;
 
+/**
+ * @brief 根据网络地址，返回唯一标识std::string
+ * 
+ * @param addr 网络地址
+ * @return UdpServer::PeerIdType 唯一标识std::string
+ */
 static UdpServer::PeerIdType makeSockId(sockaddr *addr, int) {
     UdpServer::PeerIdType ret;
     switch (addr->sa_family) {
@@ -38,6 +44,10 @@ UdpServer::UdpServer(const EventLoop::Ptr &poller) : Server(poller) {
     setOnCreateSocket(nullptr);
 }
 
+/**
+ * @brief 创建服务端Socket，设置接收回调
+ * 
+ */
 void UdpServer::setupEvent() {
     _socket = createSocket(_poller);
     std::weak_ptr<UdpServer> weak_self = std::static_pointer_cast<UdpServer>(shared_from_this());
@@ -56,6 +66,11 @@ UdpServer::~UdpServer() {
     _session_map->clear();
 }
 
+/**
+ * @brief 开始udp server
+ * @param port [in]本机端口，0则随机
+ * @param host [in]监听网卡ip
+ */
 void UdpServer::start_l(uint16_t port, const std::string &host) {
     setupEvent();
     //主server才创建session map，其他cloned server共享之
@@ -81,25 +96,46 @@ void UdpServer::start_l(uint16_t port, const std::string &host) {
     InfoL << "UDP server bind to [" << host << "]: " << port;
 }
 
+/**
+ * @brief udp服务端Socket接收回调
+ * 
+ * @param buf       [in]数据
+ * @param addr      [in]对端地址
+ * @param addr_len  [in]对端地址长度
+ */
 void UdpServer::onRead(Buffer::Ptr &buf, sockaddr *addr, int addr_len) {
     const auto id = makeSockId((struct sockaddr *)addr, addr_len);
     onRead_l(true, id, buf, addr, addr_len);
 }
 
-static void emitSessionRecv(const Session::Ptr &helper, const Buffer::Ptr &buf) {
-    if (!helper->enable) {
+/**
+ * @brief udp会话接收消息回调
+ * 
+ * @param session [in]会话
+ * @param buf     [in]数据
+ */
+static void emitSessionRecv(const Session::Ptr &session, const Buffer::Ptr &buf) {
+    if (!session->enable) {
         // 延时销毁中
         return;
     }
     try {
-        helper->onRecv(buf);
+        session->onRecv(buf);
     } catch (SockException &ex) {
-        helper->getSock()->shutdown(ex);
+        session->getSock()->shutdown(ex);
     } catch (exception &ex) {
-        helper->getSock()->shutdown(SockException(Err_shutdown, ex.what()));
+        session->getSock()->shutdown(SockException(Err_shutdown, ex.what()));
     }
 }
 
+/**
+ * @brief udp服务端Socket接收到数据,获取或创建session,消息可能来自server fd，也可能来自peer fd
+ * @param is_server_fd  [in]是否为server fd
+ * @param id            [in]客户端id
+ * @param buf           [in]数据
+ * @param addr          [in]客户端地址
+ * @param addr_len      [in]客户端地址长度
+ */
 void UdpServer::onRead_l(bool is_server_fd, const UdpServer::PeerIdType &id, Buffer::Ptr &buf, sockaddr *addr, int addr_len) {
     // udp server fd收到数据时触发此函数；大部分情况下数据应该在peer fd触发，此函数应该不是热点函数
     bool is_new = false;
@@ -116,6 +152,9 @@ void UdpServer::onRead_l(bool is_server_fd, const UdpServer::PeerIdType &id, Buf
     }
 }
 
+/**
+ * @brief 定时管理 Session, UDP 会话需要根据需要处理超时
+ */
 void UdpServer::onManagerSession() {
     decltype(_session_map) copy_map;
     {
@@ -138,6 +177,16 @@ void UdpServer::onManagerSession() {
     lam();
 }
 
+/**
+ * @brief 根据对端信息获取或创建一个会话
+ * 
+ * @param id        [in]会话唯一标识
+ * @param buf       [in]buf
+ * @param addr      [in]对端地址
+ * @param addr_len  [in]对端地址长度
+ * @param is_new    [out]是否新接入连接
+ * @return Session::Ptr 会话
+ */
 Session::Ptr UdpServer::getOrCreateSession(const UdpServer::PeerIdType &id, Buffer::Ptr &buf, sockaddr *addr, int addr_len, bool &is_new) {
     {
         //减小临界区
@@ -151,6 +200,15 @@ Session::Ptr UdpServer::getOrCreateSession(const UdpServer::PeerIdType &id, Buff
     return createSession(id, buf, addr, addr_len);
 }
 
+/**
+ * @brief 创建一个会话, 同时进行必要的设置
+ * 
+ * @param id        [in]会话唯一标识
+ * @param buf       [in]buf
+ * @param addr      [in]对端地址
+ * @param addr_len  [in]对端地址长度
+ * @return Session::Ptr 会话
+ */
 Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, struct sockaddr *addr, int addr_len) {
     // 此处改成自定义获取poller对象，防止负载不均衡
     auto socket = createSocket(_poller);
@@ -257,6 +315,13 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
     return nullptr;
 }
 
+/**
+ * @brief 发送数据给最后一个活动的客户端
+ * 
+ * @param buf   [in]数据
+ * @param len   [in]数据长度
+ * @return uint32_t 发送成功的数据长度
+ */
 uint32_t UdpServer::sendclientdata(uint8_t* buf, uint32_t len)
 {
     auto strong_session = _last_session.lock();
@@ -268,15 +333,28 @@ uint32_t UdpServer::sendclientdata(uint8_t* buf, uint32_t len)
     return strong_session->senddata(buf,len);
 }
 
+/**
+ * @brief 获取会话接收信息
+ *
+ * @param rcv_num   [out]接收包的数量
+ * @param rcv_seq   [out]接收包的最大序列号
+ * @param rcv_len   [out]接收的字节总大小
+ * @param rcv_speed [out]接收速率
+ */
 void UdpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed)
 {
+    rcv_num = 0;
+    rcv_seq = 0;
+    rcv_len = 0;
+    rcv_speed = 0;
+
     auto iter = _session_map->begin();
     while(iter != _session_map->end())
     {
-        rcv_num = iter->second->GetPktNum();
-        rcv_seq = iter->second->GetSeq();
-        rcv_len = iter->second->GetRcvLen();
-        rcv_speed = iter->second->getSock()->getRecvSpeed();
+        rcv_num += iter->second->GetPktNum();
+        rcv_seq += iter->second->GetSeq();
+        rcv_len += iter->second->GetRcvLen();
+        rcv_speed += iter->second->getSock()->getRecvSpeed();
         iter ++;
     }
 }

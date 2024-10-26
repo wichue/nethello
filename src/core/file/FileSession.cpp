@@ -254,16 +254,30 @@ void FileSession::procFileData(char* buf, uint32_t len)
     }
 }
 
+/**
+ * @brief 发生错误时的回调
+ * 
+ * @param err 异常
+ */
 void FileSession::onError(const SockException &err)
 {
 
 }
 
+/**
+ * @brief 定时器周期管理回调
+ * 
+ */
 void FileSession::onManager()
 {
 
 }
 
+/**
+ * @brief 返回当前类名称
+ * 
+ * @return const std::string& 类名称
+ */
 const std::string &FileSession::className() const 
 {
     return _cls;

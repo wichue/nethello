@@ -5,6 +5,11 @@
 #include <string>
 #include <unordered_map>
 
+/**
+ * 定义错误码，可根据错误码查询错误描述。
+ * 
+ */
+
 #define ERRNO_MAP_FILE(XX) \
     XX(ERROR_FILE_PERM_DENIED               , 1000,  "file transf, permission denied") \
     XX(ERROR_FILE_EXIST                     , 1001,  "file already exist") \

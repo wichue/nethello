@@ -22,9 +22,9 @@ public:
      * @brief 启动 server
      * 
      * @tparam SessionType 自定义会话类型
-     * @param port 本机端口，0则随机
-     * @param host 监听网卡ip,"0.0.0.0"默认监听所有ipv4,"::"默认监听所有ipv6
-     * @param cb 当有新连接接入时执行的回调，默认nullptr
+     * @param port  [in]本机端口，0则随机
+     * @param host  [in]监听网卡ip,"0.0.0.0"默认监听所有ipv4,"::"默认监听所有ipv6
+     * @param cb    [in]当有新连接接入时执行的回调，默认nullptr
      */
     template <typename SessionType>
     void start(uint16_t port, const std::string &host = "0.0.0.0", const std::function<void(std::shared_ptr<SessionType> &)> &cb = nullptr)
@@ -63,8 +63,8 @@ public:
     /**
      * @brief 发送数据给最后一个活动的客户端
      * 
-     * @param buf   数据
-     * @param len   数据长度
+     * @param buf   [in]数据
+     * @param len   [in]数据长度
      * @return uint32_t 发送成功的数据长度
      */
     virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) = 0;
@@ -72,33 +72,39 @@ public:
     /**
      * @brief Get the Rcv Info object
      * 
-     * @param rcv_num 接收包的数量
-     * @param rcv_seq 接收包的最大序列号
-     * @param rcv_len 接收的字节总大小
-     * @param rcv_speed 接收速率
+     * @param rcv_num   [out]接收包的数量
+     * @param rcv_seq   [out]接收包的最大序列号
+     * @param rcv_len   [out]接收的字节总大小
+     * @param rcv_speed [out]接收速率
      */
     virtual void GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed) = 0;
 
 protected:
+    /**
+     * @brief 开始 server
+     * @param port [in]本机端口，0则随机
+     * @param host [in]监听网卡ip
+     */
     virtual void start_l(uint16_t port, const std::string &host) = 0;
+
     /**
      * @brief 周期性管理会话，定时器回调
      * 
      */
     virtual void onManagerSession() = 0;
 
-    // socket构建方法
+    // 服务端Socket构建方法，允许自定义
     Socket::onCreateSocket _on_create_socket;
 
     /**
-     * @brief 创建socket
+     * @brief 创建服务端socket
      */
     Socket::Ptr createSocket(const EventLoop::Ptr &poller);
 
 protected:
-    Socket::Ptr _socket;
-    EventLoop::Ptr _poller;
-    std::function<Session::Ptr(const Socket::Ptr &)> _session_alloc;
+    Socket::Ptr _socket;// 服务端Socket
+    EventLoop::Ptr _poller;// 绑定的事件循环
+    std::function<Session::Ptr(const Socket::Ptr &)> _session_alloc;// 会话分配回调
 };
 
 } // namespace chw

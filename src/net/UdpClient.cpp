@@ -14,6 +14,15 @@ UdpClient::~UdpClient() {
     TraceL << "~" << getIdentifier();
 }
 
+/**
+ * @brief 创建udp客户端
+ * 
+ * @param url       [in]远端ip
+ * @param port      [in]远端端口
+ * @param localport [in]本地端口
+ * @param localip   [in]本地ip
+ * @return uint32_t 成功返回chw::success，失败返回chw::fail
+ */
 uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_t localport,const std::string &localip)
 {
     weak_ptr<UdpClient> weak_self = static_pointer_cast<UdpClient>(shared_from_this());

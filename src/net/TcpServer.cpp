@@ -10,6 +10,10 @@ TcpServer::TcpServer(const EventLoop::Ptr &poller) : Server(poller){
     setOnCreateSocket(nullptr);
 }
 
+/**
+ * @brief 创建服务端Socket，设置新接入连接回调，自定义创建peer Socket事件
+ * 
+ */
 void TcpServer::setupEvent() {
     _socket = createSocket(_poller);
     weak_ptr<TcpServer> weak_self = std::static_pointer_cast<TcpServer>(shared_from_this());
@@ -34,13 +38,24 @@ TcpServer::~TcpServer() {
     _session_map.clear();
 }
 
+/**
+ * @brief 自定义创建peer Socket事件(可以控制子Socket绑定到其他poller线程)
+ * 
+ * @param poller [in]要绑定的poller
+ * @return Socket::Ptr 创建的Socket
+ */
 Socket::Ptr TcpServer::onBeforeAcceptConnection(const EventLoop::Ptr &poller) {
     assert(_poller->isCurrentThread());
     //此处改成自定义获取poller对象，防止负载不均衡
     return createSocket(poller);
 }
 
-// 接收到客户端连接请求
+/**
+ * @brief 新接入连接回调（在epoll线程执行）
+ * 
+ * @param sock  [in]新接入连接Socket
+ * @return uint32_t 成功返回chw::success，失败返回chw::fail
+ */
 uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
     assert(_poller->isCurrentThread());
     weak_ptr<TcpServer> weak_self = std::static_pointer_cast<TcpServer>(shared_from_this());
@@ -119,6 +134,12 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
     return chw::success;
 }
 
+/**
+ * @brief 启动tcp服务端，开始绑定和监听（可在任意线程执行）
+ * 
+ * @param port [in]绑定端口
+ * @param host [in]绑定ip
+ */
 void TcpServer::start_l(uint16_t port, const std::string &host) {
     uint32_t backlog = 1024;
     setupEvent();
@@ -142,6 +163,10 @@ void TcpServer::start_l(uint16_t port, const std::string &host) {
     InfoL << "TCP server listening on [" << host << "]: " << port;
 }
 
+/**
+ * @brief 定时器周期管理会话
+ * 
+ */
 void TcpServer::onManagerSession() {
     assert(_poller->isCurrentThread());
 
@@ -161,6 +186,13 @@ void TcpServer::onManagerSession() {
     }
 }
 
+/**
+ * @brief 发送数据给最后一个活动的客户端（可在任意线程执行）
+ * 
+ * @param buf   [in]数据
+ * @param len   [in]数据长度
+ * @return uint32_t 发送成功的数据长度
+ */
 uint32_t TcpServer::sendclientdata(uint8_t* buf, uint32_t len)
 {
     auto strong_session = _last_session.lock();
@@ -172,6 +204,14 @@ uint32_t TcpServer::sendclientdata(uint8_t* buf, uint32_t len)
     return strong_session->senddata(buf,len);
 }
 
+/**
+ * @brief 获取会话接收信息(业务相关)
+ * 
+ * @param rcv_num   [out]接收包的数量
+ * @param rcv_seq   [out]接收包的最大序列号
+ * @param rcv_len   [out]接收的字节总大小
+ * @param rcv_speed [out]接收速率
+ */
 void TcpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed)
 {
     onceToken token([&]() {
@@ -180,11 +220,16 @@ void TcpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len
         _is_on_manager = false;
     });
 
+    rcv_num = 0;
+    rcv_seq = 0;
+    rcv_len = 0;
+    rcv_speed = 0;
+
     for (auto &pr : _session_map) {
-        rcv_num = pr.second->GetPktNum();
-        rcv_seq = pr.second->GetSeq();
-        rcv_len = pr.second->GetRcvLen();
-        rcv_speed = pr.second->getSock()->getRecvSpeed();
+        rcv_num += pr.second->GetPktNum();
+        rcv_seq += pr.second->GetSeq();
+        rcv_len += pr.second->GetRcvLen();
+        rcv_speed += pr.second->getSock()->getRecvSpeed();
     }
 }
 

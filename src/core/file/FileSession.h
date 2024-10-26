@@ -21,8 +21,25 @@ public:
      * @param buf [in]数据
      */
     void onRecv(const Buffer::Ptr &buf) override;
+
+    /**
+     * @brief 发生错误时的回调
+     * 
+     * @param err [in]异常
+     */
     void onError(const SockException &err) override;
+
+    /**
+     * @brief 定时器周期管理回调
+     * 
+     */
     void onManager() override;
+
+    /**
+     * @brief 返回当前类名称
+     * 
+     * @return const std::string& 类名称
+     */
     const std::string &className() const override;
 
     virtual uint64_t GetPktNum()override{return 0;};
