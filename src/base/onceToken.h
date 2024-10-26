@@ -1,4 +1,7 @@
-﻿#ifndef __ONCE_TOKEN_H_
+﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
+#ifndef __ONCE_TOKEN_H_
 #define __ONCE_TOKEN_H_
 
 #include <functional>

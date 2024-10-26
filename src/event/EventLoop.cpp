@@ -1,4 +1,7 @@
-﻿//#include "SelectWrap.h"
+﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
+//#include "SelectWrap.h"
 #include "EventLoop.h"
 #include "util.h"
 #include "uv_errno.h"

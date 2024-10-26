@@ -1,3 +1,6 @@
+// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
 #ifndef __TCP_TEXT_CLIENT_H
 #define __TCP_TEXT_CLIENT_H
 

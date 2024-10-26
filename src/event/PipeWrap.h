@@ -1,4 +1,7 @@
-﻿#ifndef __PIPE_WRAP_H
+﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
+#ifndef __PIPE_WRAP_H
 #define __PIPE_WRAP_H
 
 #include "util.h"

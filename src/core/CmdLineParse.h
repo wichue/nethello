@@ -1,5 +1,5 @@
-// Copyright (c) 2024 The idump project authors. SPDX-License-Identifier: MIT.
-// This file is part of idump(https://github.com/wichue/idump).
+// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
 
 #ifndef        __CMD_LINE_PARSE_H
 #define        __CMD_LINE_PARSE_H

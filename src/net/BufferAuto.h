@@ -1,3 +1,6 @@
+// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
 #ifndef __BUFFER_H
 #define __BUFFER_H
 
@@ -7,6 +10,12 @@
 
 namespace chw {
 
+/**
+ * 缓存封装，栈空间大小固定，优先使用栈空间，大于栈空间时使用堆空间。
+ * 
+ * @tparam StackSize    栈空间大小
+ * @tparam MaxHeapSize  堆空间最大值
+ */
 template <size_t StackSize, size_t MaxHeapSize>
 class BufferAuto {
 public:

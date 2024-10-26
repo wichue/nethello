@@ -1,5 +1,5 @@
-// Copyright (c) 2024 The idump project authors. SPDX-License-Identifier: MIT.
-// This file is part of idump(https://github.com/wichue/idump).
+// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
 
 #ifndef __FUNC_PERF_STIC_H_
 #define __FUNC_PERF_STIC_H_

@@ -1,3 +1,6 @@
+// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
 #ifndef __FILE_MODEL_H
 #define __FILE_MODEL_H
 

@@ -1,4 +1,7 @@
-﻿#include <fcntl.h>
+﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
+#include <fcntl.h>
 #include <assert.h>
 #include <cstdio>
 #include <cstring>

@@ -1,4 +1,7 @@
-﻿#ifndef __EVENT_LOOP_H
+﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
+#ifndef __EVENT_LOOP_H
 #define __EVENT_LOOP_H
 
 #include <mutex>

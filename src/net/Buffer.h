@@ -1,4 +1,7 @@
-﻿#ifndef __BUFFER_H
+﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
+// This file is part of nethello(https://github.com/wichue/nethello).
+
+#ifndef __BUFFER_H
 #define __BUFFER_H
 
 #include <memory>
