@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
 // This file is part of nethello(https://github.com/wichue/nethello).
 
-//#include "SelectWrap.h"
+#include "SelectWrap.h"
 #include "EventLoop.h"
 #include "util.h"
 #include "uv_errno.h"
@@ -454,9 +454,9 @@ void EventLoop::runLoop(bool blocked, bool ref_self) {
                 }
             }
 
-            startSleep();//用于统计当前线程负载情况
+            //startSleep();//用于统计当前线程负载情况
             ret = zl_select(max_fd + 1, &set_read, &set_write, &set_err, minDelay ? &tv : nullptr);
-            sleepWakeUp();//用于统计当前线程负载情况
+            //sleepWakeUp();//用于统计当前线程负载情况
 
             if (ret <= 0) {
                 //超时或被打断  [AUTO-TRANSLATED:7005fded]

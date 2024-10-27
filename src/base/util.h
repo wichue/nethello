@@ -6,11 +6,10 @@
 
 #include <memory>// for std::shared_ptr
 #include <vector>
-#include <netinet/in.h>// for in_addr in6_addr
 #include <time.h>
-#include <sys/time.h>
 #include <sstream>
 #include <thread>
+#include <functional>
 
 #if defined(_WIN32)
 #undef FD_SETSIZE
@@ -18,7 +17,11 @@
 //Modify the default 64 to 1024 paths
 #define FD_SETSIZE 1024
 #include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
 #pragma comment (lib,"WS2_32")
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment(lib,"Iphlpapi.lib")
 #else
 #include <unistd.h>
 #include <sys/time.h>
@@ -44,6 +47,35 @@ enum chw_ret{
     success,
     fail
 };
+
+#ifndef bzero
+#define bzero(ptr,size)  memset((ptr),0,(size));
+#endif //bzero
+
+#if defined(_WIN32)
+int gettimeofday(struct timeval* tp, void* tzp);
+void usleep(int micro_seconds);
+void sleep(int second);
+int vasprintf(char** strp, const char* fmt, va_list ap);
+int asprintf(char** strp, const char* fmt, ...);
+const char* strcasestr(const char* big, const char* little);
+
+#if !defined(strcasecmp)
+#define strcasecmp _stricmp
+#endif
+
+#if !defined(strncasecmp)
+#define strncasecmp _strnicmp
+#endif
+
+#ifndef ssize_t
+#ifdef _WIN64
+#define ssize_t int64_t
+#else
+#define ssize_t int32_t
+#endif
+#endif
+#endif //WIN32
 
 /**
  * @brief Set the Thread Name object
@@ -160,6 +192,9 @@ std::string MacBuftoStr(const unsigned char* mac_buf);
  */
 uint32_t StrtoMacBuf(const char* charArray, unsigned char* macAddress);
 
+bool isValidMacAddress(const std::string& mac);
+
+#if defined(__linux__) || defined(__linux)
 /**
  * @brief 判断字符串是否有效的mac地址
  * 
@@ -167,6 +202,7 @@ uint32_t StrtoMacBuf(const char* charArray, unsigned char* macAddress);
  * @return uint32_t 成功返回chw::success,失败返回chw::fail
  */
 uint32_t is_valid_mac_addr(const char* mac);
+#endif// defined(__linux__) || defined(__linux)
 
 //字符串是否以xx开头
 bool start_with(const std::string &str, const std::string &substr);
@@ -180,6 +216,13 @@ std::string exeDir(bool isExe = true);
 std::string exeName(bool isExe = true);
 // 返回文件后缀名
 const char* suffixname(const char* filename);
+
+// string转小写
+std::string& strToLower(std::string& str);
+std::string strToLower(std::string&& str);
+// string转大写
+std::string& strToUpper(std::string& str);
+std::string strToUpper(std::string&& str);
 
 /**
  * @brief 统计字符串中包含某字符的数量

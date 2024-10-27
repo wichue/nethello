@@ -5,7 +5,6 @@
 #include <cstdarg>
 #include <iostream>
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 #include "Logger.h"
 #include "onceToken.h"
@@ -478,7 +477,7 @@ bool FileChannelBase::open() {
     //创建文件夹
     create_path(_path.data(), S_IRWXO | S_IRWXG | S_IRWXU);
 #else
-    File::create_path(_path.data(),0);
+    create_path(_path.data(),0);
 #endif
     _fstream.open(_path.data(), ios::out | ios::app);
     if (!_fstream.is_open()) {

@@ -76,11 +76,11 @@ void TextModel::startmodel()
             _poller->async([this,&msg](){
                 if(chw::gConfigCmd.role == 's')
                 {
-                    _pServer->sendclientdata((uint8_t*)msg.c_str(),msg.size());
+                    _pServer->sendclientdata((char*)msg.c_str(),msg.size());
                 }
                 else
                 {
-                    _pClient->senddata((uint8_t*)msg.c_str(),msg.size());
+                    _pClient->senddata((char*)msg.c_str(),msg.size());
                 }
             });
         }

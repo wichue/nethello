@@ -1,30 +1,100 @@
 // Copyright (c) 2024 The nethello project authors. SPDX-License-Identifier: MIT.
 // This file is part of nethello(https://github.com/wichue/nethello).
 
+
 #include "util.h"
 #include <assert.h>
-#include <pthread.h>
 #include <limits.h>//for PATH_MAX
-#include <unistd.h>
+#if defined(__linux__) || defined(__linux)
+#include <regex.h>
+#endif// defined(__linux__) || defined(__linux)
+#include <algorithm>
+#include <iostream>
+#include <regex>
+#include <string>
+
+#if defined(_WIN32)
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
+extern "C" const IMAGE_DOS_HEADER __ImageBase;
+#endif // defined(_WIN32)
+
 #include <string.h>
 #include <string>
 #include <time.h>
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <net/if.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <regex.h>
 #include <algorithm>
 
 #include "local_time.h"
 #include "Logger.h"
 #include "MemoryHandle.h"
 #include "uv_errno.h"
+#include "File.h"
 
 namespace chw {
+
+
+#if defined(_WIN32)
+    void sleep(int second) {
+        Sleep(1000 * second);
+    }
+    void usleep(int micro_seconds) {
+        std::this_thread::sleep_for(std::chrono::microseconds(micro_seconds));
+    }
+
+    int gettimeofday(struct timeval* tp, void* tzp) {
+        auto now_stamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        tp->tv_sec = (decltype(tp->tv_sec))(now_stamp / 1000000LL);
+        tp->tv_usec = now_stamp % 1000000LL;
+        return 0;
+    }
+
+    const char* strcasestr(const char* big, const char* little) {
+        std::string big_str = big;
+        std::string little_str = little;
+        strToLower(big_str);
+        strToLower(little_str);
+        auto pos = strstr(big_str.data(), little_str.data());
+        if (!pos) {
+            return nullptr;
+        }
+        return big + (pos - big_str.data());
+    }
+
+    int vasprintf(char** strp, const char* fmt, va_list ap) {
+        // _vscprintf tells you how big the buffer needs to be
+        int len = _vscprintf(fmt, ap);
+        if (len == -1) {
+            return -1;
+        }
+        size_t size = (size_t)len + 1;
+        char* str = (char*)malloc(size);
+        if (!str) {
+            return -1;
+        }
+        // _vsprintf_s is the "secure" version of vsprintf
+        int r = vsprintf_s(str, len + 1, fmt, ap);
+        if (r == -1) {
+            free(str);
+            return -1;
+        }
+        *strp = str;
+        return r;
+    }
+
+    int asprintf(char** strp, const char* fmt, ...) {
+        va_list ap;
+        va_start(ap, fmt);
+        int r = vasprintf(strp, fmt, ap);
+        va_end(ap);
+        return r;
+    }
+
+#endif //WIN32
 
 static std::string limitString(const char *name, size_t max_size) {
     std::string str = name;
@@ -49,7 +119,7 @@ void setThreadName(const char *name) {
 #elif defined(_MSC_VER)
     // SetThreadDescription was added in 1607 (aka RS1). Since we can't guarantee the user is running 1607 or later, we need to ask for the function from the kernel.
     using SetThreadDescriptionFunc = HRESULT(WINAPI * )(_In_ HANDLE hThread, _In_ PCWSTR lpThreadDescription);
-    static auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(::GetProcAddress(::GetModuleHandle("Kernel32.dll"), "SetThreadDescription"));
+    static auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(::GetProcAddress(::GetModuleHandle((LPCWSTR)"Kernel32.dll"), "SetThreadDescription"));
     if (setThreadDescription) {
         // Convert the thread name to Unicode
         wchar_t threadNameW[MAX_PATH];
@@ -177,13 +247,13 @@ std::string getThreadName() {
                 if (data) {
                     LocalFree(data);
                 }
-                return to_string((uint64_t) GetCurrentThreadId());
+                return std::to_string((uint64_t) GetCurrentThreadId());
             }
         } else {
             if (data) {
                 LocalFree(data);
             }
-            return to_string((uint64_t) GetCurrentThreadId());
+            return std::to_string((uint64_t) GetCurrentThreadId());
         }
     }
 #else
@@ -352,6 +422,16 @@ std::string MacBuftoStr(const unsigned char* mac_buf) {
     return str;
 }
 
+bool isValidMacAddress(const std::string& mac) {
+    // Regular expression for MAC address
+    std::regex macRegex(
+        "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+    );
+
+    // Check if the string matches the MAC address regex
+    return std::regex_match(mac, macRegex);
+}
+
 /**
  * @brief :分mac地址字符串转换为6字节buf
  * 
@@ -360,7 +440,7 @@ std::string MacBuftoStr(const unsigned char* mac_buf) {
  * @return uint32_t 成功返回chw::success,失败返回chw::fail
  */
 uint32_t StrtoMacBuf(const char* charArray, unsigned char* macAddress) {
-    if(is_valid_mac_addr(charArray) == chw::fail)
+    if(isValidMacAddress(charArray) == chw::fail)
     {
         return chw::fail;
     }
@@ -377,6 +457,7 @@ uint32_t StrtoMacBuf(const char* charArray, unsigned char* macAddress) {
     return chw::success;
 }
 
+#if defined(__linux__) || defined(__linux)
 /**
  * @brief 判断字符串是否有效的mac地址
  * 
@@ -416,6 +497,7 @@ failed:
     regfree(&reg);
     return chw::fail;
 }
+#endif// defined(__linux__) || defined(__linux)
 
 std::string exePath(bool isExe /*= true*/) {
     char buffer[PATH_MAX * 2 + 1] = {0};
@@ -464,6 +546,30 @@ std::string exeName(bool isExe /*= true*/) {
 const char* suffixname(const char* filename) {
     const char* pos = _strrchr_dot(filename);
     return pos ? pos+1 : "";
+}
+
+// string转小写
+std::string& strToLower(std::string& str) {
+    transform(str.begin(), str.end(), str.begin(), towlower);
+    return str;
+}
+
+// string转大写
+std::string& strToUpper(std::string& str) {
+    transform(str.begin(), str.end(), str.begin(), towupper);
+    return str;
+}
+
+// string转小写
+std::string strToLower(std::string&& str) {
+    transform(str.begin(), str.end(), str.begin(), towlower);
+    return std::move(str);
+}
+
+// string转大写
+std::string strToUpper(std::string&& str) {
+    transform(str.begin(), str.end(), str.begin(), towupper);
+    return std::move(str);
 }
 
 /**

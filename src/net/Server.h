@@ -70,7 +70,7 @@ public:
      * @param len   [in]数据长度
      * @return uint32_t 发送成功的数据长度
      */
-    virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) = 0;
+    virtual uint32_t sendclientdata(char* buf, uint32_t len) = 0;
 
     /**
      * @brief Get the Rcv Info object

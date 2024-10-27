@@ -12,7 +12,7 @@
 #include "util.h"
 #include "Logger.h"
 #include "uv_errno.h"
-//#include "Util/onceToken.h"
+#include "onceToken.h"
 #if defined (__APPLE__)
 #include <ifaddrs.h>
 #include <netinet/tcp.h>
@@ -1160,7 +1160,11 @@ struct sockaddr_storage SockUtil::make_sockaddr(const char *host, uint16_t port)
     throw std::invalid_argument(string("Not ip address: ") + host);
 }
 
-uint32_t SockUtil::send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len)
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif // !MSG_NOSIGNAL
+
+uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
 {
     uint32_t total_send_bytes = 0;
     int32_t curr_send_len = 0;
@@ -1168,7 +1172,7 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len)
     uint32_t resendtimes = 0;
 
     while(total_send_bytes < len) {
-        curr_send_len = send(fd, buff + total_send_bytes, left_bytes, MSG_NOSIGNAL);
+        curr_send_len = send(fd, (char*)buff + total_send_bytes, left_bytes, MSG_NOSIGNAL);
         if(curr_send_len < 0) {
             if( (errno == EINTR || errno == EAGAIN) && (resendtimes++ < 100))
             {
@@ -1190,9 +1194,10 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len)
      return total_send_bytes;
 }
 
-uint32_t SockUtil::send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen)
+uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
 {
-    int32_t snd_len = sendto(fd, buff, len, 0, addr, sizeof(struct sockaddr_in));
+    int32_t snd_len = sendto(fd, buff, len, 0, addr, socklen);
+    PrintD("snd_len=%d,errno=%d(%s),err=%d", snd_len, errno, strerror(errno), GetLastError());
     return snd_len > 0 ? snd_len : 0;
 }
 

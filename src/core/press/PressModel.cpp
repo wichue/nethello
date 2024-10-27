@@ -267,7 +267,7 @@ void PressModel::onManagerModel()
 // tcp当连接成功后再开始发送数据
 void PressModel::start_client_press()
 {
-    uint8_t* buf = (uint8_t*)_RAM_NEW_(gConfigCmd.blksize);
+    char* buf = (char*)_RAM_NEW_(gConfigCmd.blksize);
     MsgHdr* pMsgHdr = (MsgHdr*)buf;
     pMsgHdr->uMsgIndex = 0;
     pMsgHdr->uTotalLen = gConfigCmd.blksize;

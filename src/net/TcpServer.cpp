@@ -196,7 +196,7 @@ void TcpServer::onManagerSession() {
  * @param len   [in]数据长度
  * @return uint32_t 发送成功的数据长度
  */
-uint32_t TcpServer::sendclientdata(uint8_t* buf, uint32_t len)
+uint32_t TcpServer::sendclientdata(char* buf, uint32_t len)
 {
     auto strong_session = _last_session.lock();
     if (!strong_session) {

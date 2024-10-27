@@ -4,7 +4,6 @@
 #include <setjmp.h>// for setjmp
 #include <stdio.h>// for printf
 #include <stdlib.h>// for exit
-#include <unistd.h>//for usleep
 #include <signal.h>//for SIG_DFL
 #include <memory>
 
@@ -17,8 +16,10 @@
 #include "TextModel.h"
 #include "PressModel.h"
 #include "FileModel.h"
+#include "util.h"
 
 chw::workmodel::Ptr _workmodel = nullptr;
+using namespace chw;
 //捕获ctrl+c
 void sigend_handler_abort(int sig)
 {

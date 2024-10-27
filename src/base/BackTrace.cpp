@@ -5,7 +5,6 @@
 #include <errno.h>
 #include <sstream>
 #include <stdarg.h>
-#include <unistd.h>
 #include <assert.h>
 
 #include <map>

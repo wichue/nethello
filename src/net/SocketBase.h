@@ -351,7 +351,7 @@ public:
      * @param len   数据长度
      * @return uint32_t 发送成功的数据长度，0则是发生了错误
      */
-    static uint32_t send_tcp_data(uint32_t fd, uint8_t * buff, uint32_t len);
+    static uint32_t send_tcp_data(uint32_t fd, char * buff, uint32_t len);
 
     /**
      * @brief udp发送数据
@@ -363,7 +363,7 @@ public:
      * @param socklen   地址长度
      * @return uint32_t 发送成功的数据长度，0则是发生了错误
      */
-    static uint32_t send_udp_data(uint32_t fd, uint8_t * buff, uint32_t len, const struct sockaddr* addr, uint32_t socklen);
+    static uint32_t send_udp_data(uint32_t fd, char * buff, uint32_t len, struct sockaddr* addr, int32_t socklen);
 };
 
 }  // namespace chw

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/types.h>
+#include "util.h"
 
 #ifndef _MEMORY_PROTECT_
 #define _MEMORY_PROTECT_ 0

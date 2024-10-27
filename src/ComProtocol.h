@@ -6,8 +6,29 @@
 
 #include <stdint.h>
 #include <string>
-#include <netinet/in.h>// for in_addr in6_addr
 #include <vector>
+#if defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment(lib,"Iphlpapi.lib")
+#else
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#endif // defined(_WIN32)
+
+#ifndef __LITTLE_ENDIAN
+#ifndef __BIG_ENDIAN
+#define __LITTLE_ENDIAN
+#endif // !__BIG_ENDIAN
+#endif // !__LITTLE_ENDIAN
+
 #include "Socket.h"
 
 namespace chw {
@@ -49,7 +70,7 @@ struct ethhdr {
 	unsigned char	h_dest[ETH_ALEN];	/* destination eth addr	*/
 	unsigned char	h_source[ETH_ALEN];	/* source ether addr	*/
 	uint16_t		h_proto;		/* packet type ID field	*/
-} __attribute__((packed));
+};
 
 /*
  *  * IPV4头，最小20字节

@@ -103,7 +103,7 @@ public:
      * @param len   [in]数据长度
      * @return uint32_t 发送成功的数据长度
      */
-    virtual uint32_t sendclientdata(uint8_t* buf, uint32_t len) override;
+    virtual uint32_t sendclientdata(char* buf, uint32_t len) override;
     std::weak_ptr<Session> _last_session;// 最后一个活动的客户端
 private:
     std::shared_ptr<std::unordered_map<PeerIdType, Session::Ptr> > _session_map;

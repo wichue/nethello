@@ -29,7 +29,7 @@ public:
      * @param localip   [in]本地ip
      * @return uint32_t 成功返回chw::success，失败返回chw::fail
      */
-    virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") override;
+    virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "0.0.0.0") override;
     virtual void setOnCon(onConCB ) override{};
 
 protected:

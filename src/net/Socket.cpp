@@ -969,7 +969,7 @@ void Socket::safeShutdown(const SockException &ex) {
     });
 }
 
-uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
+uint32_t Socket::send_i(char* buff, uint32_t len)
 {
     LOCK_GUARD(_mtx_sock_fd);
 
@@ -990,10 +990,20 @@ uint32_t Socket::send_i(uint8_t* buff, uint32_t len)
                     struct sockaddr *addr = (struct sockaddr *)_udp_send_dst.get();
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
                     _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
+
+                    struct sockaddr_in* peer_addr = (struct sockaddr_in*)addr;
+                    uint16_t port = ntohs(peer_addr->sin_port);
+                    PrintD("_snd_bytes=%d,errno=%d(%s)", _snd_bytes,errno,strerror(errno));
+                    PrintD("port=%d,len=%d,msg=%s,fd=%d", port,len,buff, _sock_fd->rawFd());
+
+                    char remoteIp[32] = { 0 };
+                    inet_ntop(AF_INET, &peer_addr->sin_addr.S_un, remoteIp, sizeof(remoteIp));
+                    PrintD("remoteIp=%s\n", remoteIp);
                 } else {
                     struct sockaddr *addr = (struct sockaddr *)&_peer_addr;
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
                     _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
+                    PrintD("_snd_bytes=%d", _snd_bytes);
                 }
             }
 
