@@ -176,7 +176,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
                 break;
             case 'B':
                 gConfigCmd.bind_address = optarg;
-                if(isIP(gConfigCmd.bind_address) == false) {
+                if(SockUtil::isIP(gConfigCmd.bind_address) == false) {
                     printf("bind addr not a ip:%s\n",gConfigCmd.bind_address);
                     return chw::fail;
                 }
@@ -241,20 +241,29 @@ void CmdLineParse::help()
 	version();
 
 	printf(
-			"	--help(-h) for help.\n"
-			"	--version(-v) for version info.\n\n"
+            "  -v, --version             show version information and quit\n"
+            "  -h, --help                show this message and quit\n"
 
-			"	--file(-f), pcap file to parse,default model,without -c.\n"
-			"	--json(-j), json match condition,from file.\n"
-			"	--filter(-f), cmd line filter condition,like wireshark.\n"
-			"	--save(-s), log output to file,without this option,log output to console.\n"
-			"	--max(-m), print msg by bytes up to max,without this option or 0,do not print msg details.\n\n"
+			"Server or Client: \n"
+            "  -p, --port      #         server port to listen on/connect to\n"
+            "  -i, --interval  #         seconds between periodic bandwidth reports\n"
+            "  -u, --udp                 use UDP rather than TCP\n"
+            "  -s, --save                log output to file,without this option,log output to console.\n"
+            "  -T, --Text                Text chat mode(default model)\n"
+            "  -P, --Press               Stress test mode\n"
+            "  -F, --File                File transmission mode\n"
 
-			"	--compare(-c),compare by byte,must option:file1,file2,can use --json and --filter conditions.\n"
-			"	--file1(-a),one of pcap file for compare.\n"
-			"	--file2(-b),one of pcap file for compare.\n"
-			"	--start(-k), compare model,the begin offset of msg,without this option begin offset is 0.\n"
-			"	--end(-l), compare model,the end offset of msg,without this option end offset is 0.\n"
+            "Server specific:\n"
+            "  -s, --server              run in server mode\n"
+            "  -B, --bind      <host>    bind to a specific interface\n"
+
+            "Client specific:\n"
+            "  -c, --client    <host>    run in client mode, connecting to <host>\n"
+            "  -b, --bandwidth           Set the send rate, in units MB/s\n"
+            "  -l, --length              The size of each package\n"
+            "  -t, --time      #         time in seconds to transmit for (default 10 secs)\n"
+            "  -S, --src                 --File(-F) model,Source file path, include file name\n"
+            "  -D, --dst                 --File(-F) model,Purpose file save path,exclusive file name\n"
 			);
 
 	exit(0);
@@ -266,9 +275,9 @@ void CmdLineParse::help()
 void CmdLineParse::version()
 {
 #ifdef WIN32
-	printf("idump version 1.0.0 for windows.  Welcome to visit url: https://github.com/wichue/idump\n");
+	printf("nethello version 1.0.0 for windows.  Welcome to visit url: https://github.com/wichue/nethello\n");
 #else
-	printf("idump version 1.0.0 for linux.  Welcome to visit url: https://github.com/wichue/idump\n");
+	printf("nethello version 1.0.0 for linux.  Welcome to visit url: https://github.com/wichue/nethello\n");
 #endif
 }
 

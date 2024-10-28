@@ -205,7 +205,7 @@ void Socket::connect_l(const string &url, uint16_t port, const onErrCB &con_cb_i
         return false;
     }, _poller);
 
-    if (isIP(url.data())) {
+    if (SockUtil::isIP(url.data())) {
         auto fd = SockUtil::connect(url.data(), port, true, local_ip.data(), local_port);
         (*async_con_cb)(fd == -1 ? nullptr : std::make_shared<SockNum>(fd, SockNum::Sock_TCP));
     } else {
@@ -991,19 +991,19 @@ uint32_t Socket::send_i(char* buff, uint32_t len)
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
                     _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
 
-                    struct sockaddr_in* peer_addr = (struct sockaddr_in*)addr;
-                    uint16_t port = ntohs(peer_addr->sin_port);
-                    PrintD("_snd_bytes=%d,errno=%d(%s)", _snd_bytes,errno,strerror(errno));
-                    PrintD("port=%d,len=%d,msg=%s,fd=%d", port,len,buff, _sock_fd->rawFd());
+                    // struct sockaddr_in* peer_addr = (struct sockaddr_in*)addr;
+                    // uint16_t port = ntohs(peer_addr->sin_port);
+                    // PrintD("_snd_bytes=%d,errno=%d(%s)", _snd_bytes,errno,strerror(errno));
+                    // PrintD("port=%d,len=%d,msg=%s,fd=%d", port,len,buff, _sock_fd->rawFd());
 
-                    char remoteIp[32] = { 0 };
-                    inet_ntop(AF_INET, &peer_addr->sin_addr.S_un, remoteIp, sizeof(remoteIp));
-                    PrintD("remoteIp=%s\n", remoteIp);
+                    // char remoteIp[32] = { 0 };
+                    // inet_ntop(AF_INET, &peer_addr->sin_addr.S_un, remoteIp, sizeof(remoteIp));
+                    // PrintD("remoteIp=%s\n", remoteIp);
                 } else {
                     struct sockaddr *addr = (struct sockaddr *)&_peer_addr;
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
                     _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
-                    PrintD("_snd_bytes=%d", _snd_bytes);
+                    // PrintD("_snd_bytes=%d", _snd_bytes);
                 }
             }
 

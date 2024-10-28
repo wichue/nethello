@@ -342,6 +342,45 @@ public:
      */
     static bool is_ipv6(const char *str);
 
+    //判断是否为ip
+    static bool isIP(const char *str);
+
+
+    /**
+    * @brief ipv4地址转换为字符串
+    * 
+    * @param addr  [in]ip地址
+    * @return std::string .分ip地址字符串
+    */
+    static std::string sockaddr_ipv4(uint32_t addr);
+
+    /**
+    * @brief ipv6地址转换为字符串
+    * 
+    * @param addr  [in]ip地址
+    * @return std::string :分ip地址字符串
+    */
+    static std::string sockaddr_ipv6(uint8_t* addr);
+
+    /**
+    * @brief 点分ipv4地址转换为32位网络字节序
+    * 
+    * @param host  [in]点分ip地址
+    * @param addr  [out]32位ip地址
+    * @return int32_t 若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
+    */
+    static int32_t host2addr_ipv4(const char* host, struct in_addr& addr);
+
+    /**
+    * @brief :分ipv6地址转换为128位网络字节序
+    * 
+    * @param host  [in]:分ip地址
+    * @param addr  [out]32位ip地址
+    * @return int32_t 若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
+    */
+    static int32_t host2addr_ipv6(const char* host, struct in6_addr& addr6);
+
+
 //chw
     /**
      * @brief tcp发送数据

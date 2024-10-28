@@ -1127,6 +1127,72 @@ bool SockUtil::is_ipv6(const char *host) {
     return 1 == inet_pton(AF_INET6, host, &addr);
 }
 
+
+bool SockUtil::isIP(const char *str) {
+    return is_ipv4(str) || is_ipv6(str);
+}
+
+
+/**
+ * @brief ipv4地址转换为字符串
+ * 
+ * @param addr  [in]ip地址
+ * @return std::string .分ip地址字符串
+ */
+std::string SockUtil::sockaddr_ipv4(uint32_t addr) {
+    char ip[16];
+    const char* ret = inet_ntop(AF_INET, &addr, ip, 16);
+    if(ret == nullptr) {
+        return "";
+    } else {
+        return ip;
+    }
+
+    return "";
+}
+
+/**
+ * @brief ipv6地址转换为字符串
+ * 
+ * @param addr  [in]ip地址
+ * @return std::string :分ip地址字符串
+ */
+std::string SockUtil::sockaddr_ipv6(uint8_t* addr) {
+    char ip[64];
+    const char* ret = inet_ntop(AF_INET6, addr, ip, 64);
+    if(ret == nullptr) {
+        return "";
+    } else {
+        return ip;
+    }
+    
+    return "";
+}
+
+/**
+ * @brief 点分ipv4地址转换为32位网络字节序
+ * 
+ * @param host  [in]点分ip地址
+ * @param addr  [out]32位ip地址
+ * @return int32_t 若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
+ */
+int32_t SockUtil::host2addr_ipv4(const char* host, struct in_addr& addr)
+{
+    return inet_pton(AF_INET, host, &addr);
+}
+
+/**
+ * @brief :分ipv6地址转换为128位网络字节序
+ * 
+ * @param host  [in]:分ip地址
+ * @param addr  [out]32位ip地址
+ * @return int32_t 若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
+ */
+int32_t SockUtil::host2addr_ipv6(const char* host, struct in6_addr& addr6)
+{
+    return inet_pton(AF_INET6, host, &addr6);
+}
+
 socklen_t SockUtil::get_sock_len(const struct sockaddr *addr) {
     switch (addr->sa_family) {
         case AF_INET : return sizeof(sockaddr_in);
@@ -1197,7 +1263,7 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
 uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
 {
     int32_t snd_len = sendto(fd, buff, len, 0, addr, socklen);
-    PrintD("snd_len=%d,errno=%d(%s),err=%d", snd_len, errno, strerror(errno), GetLastError());
+    //PrintD("snd_len=%d,errno=%d(%s),err=%d", snd_len, errno, strerror(errno), GetLastError());
     return snd_len > 0 ? snd_len : 0;
 }
 

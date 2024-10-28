@@ -10,6 +10,7 @@
 #include <sstream>
 #include <thread>
 #include <functional>
+#include <string.h>
 
 #if defined(_WIN32)
 #undef FD_SETSIZE
@@ -133,47 +134,6 @@ struct tm getLocalTime(time_t sec);
  * @return 时间字符串
  */
 std::string getTimeStr(const char *fmt,time_t time = 0);
-
-//判断是否为ipv4
-bool is_ipv4(const char *host);
-//判断是否为ipv6
-bool is_ipv6(const char *host);
-//判断是否为ip
-bool isIP(const char *str);
-
-/**
- * @brief ipv4地址转换为字符串
- * 
- * @param addr  [in]ip地址
- * @return std::string .分ip地址字符串
- */
-std::string sockaddr_ipv4(uint32_t addr);
-
-/**
- * @brief ipv6地址转换为字符串
- * 
- * @param addr  [in]ip地址
- * @return std::string :分ip地址字符串
- */
-std::string sockaddr_ipv6(uint8_t* addr);
-
-/**
- * @brief 点分ipv4地址转换为32位网络字节序
- * 
- * @param host  [in]点分ip地址
- * @param addr  [out]32位ip地址
- * @return int32_t 若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
- */
-int32_t host2addr_ipv4(const char* host, struct in_addr& addr);
-
-/**
- * @brief :分ipv6地址转换为128位网络字节序
- * 
- * @param host  [in]:分ip地址
- * @param addr  [out]32位ip地址
- * @return int32_t 若成功则为1，若输入不是有效的表达式则为0，若出错则为-1
- */
-int32_t host2addr_ipv6(const char* host, struct in6_addr& addr6);
 
 /**
  * @brief 内存mac地址转换为字符串
