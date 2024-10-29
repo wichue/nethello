@@ -20,7 +20,7 @@ public:
     Client(const EventLoop::Ptr &poller);
     virtual ~Client() = default;
 
-    virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") = 0;
+    virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "0.0.0.0") = 0;
 
     /**
      * @brief 设置连接结果回调

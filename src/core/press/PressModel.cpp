@@ -8,6 +8,7 @@
 #include "PressSession.h"
 #include "PressClient.h"
 #include "MsgInterface.h"
+#include <iomanip>
 
 namespace chw {
 
@@ -254,7 +255,8 @@ void PressModel::onManagerModel()
     }
     if(chw::gConfigCmd.role == 'c')
     {
-        PrintD("%-16u%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
+        //PrintD("%-16u%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
+        InfoL << std::left << std::setw(16) << uDurTimeS << std::setw(8) << std::setprecision(2) << std::fixed << speed << "(" << unit << ")";
     }
 
     if(gConfigCmd.duration > 0 && uDurTimeS >= gConfigCmd.duration)
