@@ -315,6 +315,10 @@ ssize_t Socket::onRead(const SockNum::Ptr &sock/*, const SocketRecvBuffer::Ptr &
                     emitErr(toSockException(err));
                 } else {
                     WarnL << "Recv err on udp socket[" << sock->rawFd() << "]: " << uv_strerror(err);
+#ifdef _WIN32//chw
+                    // windwos每次udp发送失败都会触发一次错误接收,此时应关闭本地udp socket
+                    emitErr(toSockException(err));
+#endif//_WIN32
                 }
             } else {
                 //跳出循环
@@ -990,15 +994,6 @@ uint32_t Socket::send_i(char* buff, uint32_t len)
                     struct sockaddr *addr = (struct sockaddr *)_udp_send_dst.get();
                     socklen_t addr_len = SockUtil::get_sock_len(addr);
                     _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
-
-                    // struct sockaddr_in* peer_addr = (struct sockaddr_in*)addr;
-                    // uint16_t port = ntohs(peer_addr->sin_port);
-                    // PrintD("_snd_bytes=%d,errno=%d(%s)", _snd_bytes,errno,strerror(errno));
-                    // PrintD("port=%d,len=%d,msg=%s,fd=%d", port,len,buff, _sock_fd->rawFd());
-
-                    // char remoteIp[32] = { 0 };
-                    // inet_ntop(AF_INET, &peer_addr->sin_addr.S_un, remoteIp, sizeof(remoteIp));
-                    // PrintD("remoteIp=%s\n", remoteIp);
                 } else {
                     struct sockaddr *addr = (struct sockaddr *)&_peer_addr;
                     socklen_t addr_len = SockUtil::get_sock_len(addr);

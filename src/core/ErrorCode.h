@@ -29,6 +29,7 @@
 
 #define CHW_ERRNO_GEN(n, v, s) n = v,
 enum ChwErrorCode {
+    //windows头文件winerror.h有该宏定义
 #ifndef _WIN32
     ERROR_SUCCESS = 0,
 #endif

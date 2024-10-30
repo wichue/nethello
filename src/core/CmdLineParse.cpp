@@ -87,7 +87,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
         {"version6", no_argument, NULL, '6'},
 
         {"Text", no_argument, NULL, 'T'},
-        {"Press", no_argument, NULL, 'P'},
+        {"Perf", no_argument, NULL, 'P'},
         {"File", no_argument, NULL, 'F'},
 
         {"port", required_argument, NULL, 'p'},
@@ -250,7 +250,7 @@ void CmdLineParse::help()
             "  -u, --udp                 use UDP rather than TCP\n"
             "  -s, --save                log output to file,without this option,log output to console.\n"
             "  -T, --Text                Text chat mode(default model)\n"
-            "  -P, --Press               Stress test mode\n"
+            "  -P, --Perf                Performance test mode\n"
             "  -F, --File                File transmission mode\n"
 
             "Server specific:\n"

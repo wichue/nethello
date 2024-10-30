@@ -7,7 +7,7 @@
 The lightweight tcp / udp network test tool based on C + + 11 implementation includes common basic modules, event loop, network modules, etc., without other three-party library dependence, convenient compilation and deployment.
 ## Features
 - Text chat, optional TCP/UDP protocol, test if the network is connected.
-- Stress testing, optional TCP/UDP protocol, can set sending rate, packet length, testing duration, output interval, etc.
+- Performance testing, optional TCP/UDP protocol, can set sending rate, packet length, testing duration, output interval, etc.
 - File transfer, currently supports TCP protocol, allowing the client to send files to the server.
 
 ## Compile and Install
@@ -34,13 +34,13 @@ _CRT_NONSTDC_NO_DEPRECATE
 - Right click on the project name and generate it。
 
 ## 使用示例
-- Text mode and stress testing default to TCP, support UDP (- u), file transfer only supports TCP.
+- Text mode and performance testing default to TCP, support UDP (- u), file transfer only supports TCP.
 ### Text chat
 ```shell
 ./nethello -s -p 9090
 ./nethello -c 127.0.0.1 -p 9090
 ```
-### Stress testing
+### Performance testing
 ```shell
 ./nethello -s -p 9090 -P
 ./nethello -c 127.0.0.1 -p 9090 -P
@@ -62,7 +62,7 @@ _CRT_NONSTDC_NO_DEPRECATE
       -u, --udp                 use UDP rather than TCP\n"
       -s, --save                log output to file,without this option,log output to console.
       -T, --Text                Text chat mode(default model)
-      -P, --Press               Stress test mode
+      -P, --Perf                Performance test mode
       -F, --File                File transmission mode
 
     Server specific:

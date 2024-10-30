@@ -62,6 +62,8 @@ Socket::Ptr TcpServer::onBeforeAcceptConnection(const EventLoop::Ptr &poller) {
 uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
     assert(_poller->isCurrentThread());
     weak_ptr<TcpServer> weak_self = std::static_pointer_cast<TcpServer>(shared_from_this());
+
+    PrintD("tcp client accept success, remote ip=%s, port=%u",sock->get_peer_ip().c_str(),sock->get_peer_port());
     //创建一个Session;这里实现创建不同的服务会话实例
     auto session = _session_alloc(sock);
     //把本服务器的配置传递给Session
@@ -70,7 +72,6 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
     auto success = _session_map.emplace(session.get(), session).second;
     assert(success == true);
     _last_session = session;
-    PrintD("tcp client accept success, remote ip=%s, port=%u",sock->get_peer_ip().c_str(),sock->get_peer_port());
 
     weak_ptr<Session> weak_session = session;
     //会话接收数据事件
@@ -208,11 +209,11 @@ uint32_t TcpServer::sendclientdata(char* buf, uint32_t len)
 }
 
 /**
- * @brief 获取会话接收信息(业务相关)
+ * @brief 获取会话接收信息,避免session释放查询不到,包数量和总大小累加,序列号取最大值,速率采用当前值
  * 
- * @param rcv_num   [out]接收包的数量
+ * @param rcv_num   [out]接收包的数量(每次调用后session保存的值清0,因此这里累加)
  * @param rcv_seq   [out]接收包的最大序列号
- * @param rcv_len   [out]接收的字节总大小
+ * @param rcv_len   [out]接收的字节总大小(每次调用后session保存的值清0,因此这里累加)
  * @param rcv_speed [out]接收速率
  */
 void TcpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed)
@@ -223,16 +224,18 @@ void TcpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len
         _is_on_manager = false;
     });
 
-    rcv_num = 0;
-    rcv_seq = 0;
-    rcv_len = 0;
-    rcv_speed = 0;
+    uint64_t curr_seq = 0;
 
     for (auto &pr : _session_map) {
         rcv_num += pr.second->GetPktNum();
-        rcv_seq += pr.second->GetSeq();
+        curr_seq += pr.second->GetSeq();
         rcv_len += pr.second->GetRcvLen();
         rcv_speed += pr.second->getSock()->getRecvSpeed();
+    }
+
+    if(curr_seq > rcv_seq)
+    {
+        rcv_seq = curr_seq;
     }
 }
 

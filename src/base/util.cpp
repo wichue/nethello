@@ -739,6 +739,37 @@ int8_t int8_highfour(int8_t num)
     return ((num >> 4) & 0xF);
 }
 
+/**
+ * @brief 字节/秒的速率转换为方便识别的大单位速率
+ * 
+ * @param BytesPs   [in]速率，字节/秒
+ * @param speed     [out]速率
+ * @param unit      [out]速率单位
+ */
+void speed_human(uint64_t BytesPs, double& speed, std::string& unit)
+{
+    if(BytesPs < 1024)
+    {
+        speed = BytesPs;
+        unit = "Bytes/s";
+    }
+    else if(BytesPs >= 1024 && BytesPs < 1024 * 1024)
+    {
+        speed = (double)BytesPs / 1024;
+        unit = "KB/s";
+    }
+    else if(BytesPs >= 1024 * 1024 && BytesPs < 1024 * 1024 * 1024)
+    {
+        speed = (double)BytesPs / 1024 / 1024;
+        unit = "MB/s";
+    }
+    else
+    {
+        speed = (double)BytesPs / 1024 / 1024 / 1024;
+        unit = "GB/s";
+    }
+}
+
 #ifndef HAS_CXA_DEMANGLE
 // We only support some compilers that support __cxa_demangle.
 // TODO: Checks if Android NDK has fixed this issue or not.

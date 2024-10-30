@@ -302,6 +302,15 @@ int8_t int8_lowfour(int8_t num);
 int8_t int8_highfour(int8_t num);
 
 /**
+ * @brief 字节/秒的速率转换为方便识别的大单位速率
+ * 
+ * @param BytesPs   [in]速率，字节/秒
+ * @param speed     [out]速率
+ * @param unit      [out]速率单位
+ */
+void speed_human(uint64_t BytesPs, double& speed, std::string& unit);
+
+/**
  * 根据typeid(class).name()获取类名
  */
 std::string demangle(const char *mangled);

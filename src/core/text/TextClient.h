@@ -26,7 +26,8 @@ public:
     virtual void onRecv(const Buffer::Ptr &pBuf) override
     {
         //接收数据事件
-        PrintD("<%s",pBuf->data());
+        PrintD("\b<%s",pBuf->data());
+        InfoLNCR << ">";
         pBuf->Reset0();
     }
 

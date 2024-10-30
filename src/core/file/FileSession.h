@@ -106,6 +106,7 @@ private:
 
     FILE* _write_file;// 写文件句柄
     uint32_t _write_size;// 已写入的大小
+    Ticker _ticker;// 统计耗时
 };
 
 }//namespace chw

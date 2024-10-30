@@ -35,6 +35,7 @@ public:
     {
         //断开连接事件，一般是EOF
         WarnL << ex.what();
+        sleep_exit(100 * 1000);
     }
 };
 typedef PressClient<TcpClient> PressTcpClient;

@@ -138,6 +138,8 @@ void PressModel::prepare_exit()
 
     if(chw::gConfigCmd.role == 's')
     {
+        // 做为服务端再获取一次接收数据，防止周期获取的数据不全
+        _pServer->GetRcvInfo(_server_rcv_num,_server_rcv_seq,_server_rcv_len,_server_rcv_spd);
         BytesPs = _server_rcv_len / uDurTimeS;
     }
     else
@@ -145,31 +147,13 @@ void PressModel::prepare_exit()
         BytesPs = _client_snd_len / uDurTimeS;
     }
     
-    if(BytesPs < 1024)
-    {
-        speed = BytesPs;
-        unit = "Bytes/s";
-    }
-    else if(BytesPs >= 1024 && BytesPs < 1024 * 1024)
-    {
-        speed = (double)BytesPs / 1024;
-        unit = "KB/s";
-    }
-    else if(BytesPs >= 1024 * 1024 && BytesPs < 1024 * 1024 * 1024)
-    {
-        speed = (double)BytesPs / 1024 / 1024;
-        unit = "MB/s";
-    }
-    else
-    {
-        speed = (double)BytesPs / 1024 / 1024 / 1024;
-        unit = "GB/s";
-    }
+    speed_human(BytesPs,speed,unit);
 
     PrintD("- - - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - -");
     if(chw::gConfigCmd.protol == SockNum::Sock_TCP)
     {
-        PrintD("%-16.0f%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
+        // PrintD("%-16.0f%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
+        InfoL << std::left << std::setw(16) << std::setprecision(0) << std::fixed << uDurTimeS << std::setw(8) << std::setprecision(2) << std::fixed << speed << "(" << unit << ")";
     }
     else
     {
@@ -177,13 +161,18 @@ void PressModel::prepare_exit()
         {
             uint32_t lost_num = _server_rcv_seq - _server_rcv_num;
             double lost_ratio = ((double)(lost_num) / (double)_server_rcv_seq) * 100;
-            PrintD("%-16.0f%-8.2f(%s)  all %s pkt:%lu,bytes:%lu,seq:%lu,lost:%u(%.2f%%)"
-                ,uDurTimeS,speed,unit.c_str(),_rs.c_str(),_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
+            // PrintD("%-16.0f%-8.2f(%s)  all %s pkt:%lu,bytes:%lu,seq:%lu,lost:%u(%.2f%%)"
+            //     ,uDurTimeS,speed,unit.c_str(),_rs.c_str(),_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
+            InfoL << std::left << std::setw(16) << std::setprecision(0) << std::fixed << uDurTimeS << std::setw(8) << std::setprecision(2) << std::fixed << speed << "(" << unit << ")"
+                << "  all " << _rs << " pkt:" << _server_rcv_num << ",bytes:" << _server_rcv_len
+                << ",seq:" << _server_rcv_seq << ",lost:" << lost_num << "(" << std::setprecision(2) << std::fixed << lost_ratio << "%)";
         }
         else
         {
-            PrintD("%-16.0f%-8.2f(%s)  all %s pkt:%lu,bytes:%lu"
-                ,uDurTimeS,speed,unit.c_str(),_rs.c_str(),_client_snd_num,_client_snd_len);
+            // PrintD("%-16.0f%-8.2f(%s)  all %s pkt:%lu,bytes:%lu"
+            //     ,uDurTimeS,speed,unit.c_str(),_rs.c_str(),_client_snd_num,_client_snd_len);
+            InfoL << std::left << std::setw(16) << std::setprecision(0) << std::fixed << uDurTimeS << std::setw(8) << std::setprecision(2) << std::fixed << speed << "(" << unit << ")"
+                << "  all " << _rs << " pkt:" << _client_snd_num << ",bytes:" << _client_snd_len;
         }
         
     }
@@ -213,32 +202,14 @@ void PressModel::onManagerModel()
         BytesPs = _server_rcv_spd;
     }
 
-    if(BytesPs < 1024)
-    {
-        speed = BytesPs;
-        unit = "Bytes/s";
-    }
-    else if(BytesPs >= 1024 && BytesPs < 1024 * 1024)
-    {
-        speed = (double)BytesPs / 1024;
-        unit = "KB/s";
-    }
-    else if(BytesPs >= 1024 * 1024 && BytesPs < 1024 * 1024 * 1024)
-    {
-        speed = (double)BytesPs / 1024 / 1024;
-        unit = "MB/s";
-    }
-    else
-    {
-        speed = (double)BytesPs / 1024 / 1024 / 1024;
-        unit = "GB/s";
-    }
+    speed_human(BytesPs,speed,unit);
 
     if(chw::gConfigCmd.role == 's' && speed > 0)
     {
         if(chw::gConfigCmd.protol == SockNum::Sock_TCP)
         {
-            PrintD("%-16u%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
+            // PrintD("%-16u%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
+            InfoL << std::left << std::setw(16) << uDurTimeS << std::setw(8) << std::setprecision(2) << std::fixed << speed << "(" << unit << ")";
         }
         else
         {

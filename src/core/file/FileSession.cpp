@@ -172,8 +172,9 @@ void FileSession::procTranReq(char* buf)
         SendSignalMsg(FILE_TRAN_RSP,code);
         sleep_exit(100 * 1000);
 	}
-    PrintD("recv file:%s,size:%u(bytes)",pReq->filepath,pReq->filesize);
+    PrintD("recv file, save to:%s,size:%u(bytes)",pReq->filepath,pReq->filesize);
 
+    _ticker.resetTime();
     SendSignalMsg(FILE_TRAN_RSP,ERROR_SUCCESS);
     _status = TRANS_SENDING;
 }
@@ -233,7 +234,15 @@ void FileSession::procFileData(char* buf, uint32_t len)
         _write_file = nullptr;
 
         SendSignalMsg(FILE_TRAN_END,ERROR_SUCCESS);
-        PrintD("file receive complete!");
+
+        auto elapsed = _ticker.elapsedTime();
+        double times = (double)elapsed / 1000;//耗时，单位秒
+
+        double speed = 0;// 速率
+        std::string unit = "";// 单位
+        assert(times);
+        speed_human(_filesize / times, speed, unit);
+        PrintD("file receive complete! used times:%.2f(sec),speed:%.2f(%s)",times,speed,unit.c_str());
         // sleep_exit(100 * 1000);  
 
         // 重置条件，继续接收其他文件

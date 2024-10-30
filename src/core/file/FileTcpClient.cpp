@@ -8,6 +8,7 @@
 #include "GlobalValue.h"
 #include "File.h"
 #include "StickyPacket.h"
+#include "BackTrace.h"
 
 namespace chw {
 
@@ -175,6 +176,7 @@ void FileTcpClient::procTranRsp(char* buf)
         MsgHdr* pMsgHdr = (MsgHdr*)buf;
         pMsgHdr->uMsgType = FILE_TRAN_DATA;
 
+        Ticker tker;// 统计耗时
         uint32_t uReadSize = 0;
         uint32_t allSendLen = 0;
         while ((uReadSize = fread(buf + sizeof(MsgHdr), 1, TCP_BUFFER_SIZE - sizeof(MsgHdr), fp)) > 0)
@@ -193,6 +195,9 @@ void FileTcpClient::procTranRsp(char* buf)
         fclose(fp);
         _RAM_DEL_(buf);
 
+        auto elapsed = tker.elapsedTime();
+        double times = (double)elapsed / 1000;//耗时，单位秒
+
         uint32_t status = 0;
         if(allSendLen == filesize)
         {
@@ -207,13 +212,13 @@ void FileTcpClient::procTranRsp(char* buf)
         }
         
         // 切回原来的线程
-        poller->async([status,weak_self](){
+        poller->async([status,weak_self,times,filesize](){
             auto strong_self = weak_self.lock();
             if (!strong_self) {
                 return;
             }
 
-            strong_self->localTransEnd(status);
+            strong_self->localTransEnd(status,filesize,times);
         });
     });
 }
@@ -223,13 +228,17 @@ void FileTcpClient::procTranRsp(char* buf)
  * 
  * @param status [in]状态码(FileTranStatus)
  */
-void FileTcpClient::localTransEnd(uint32_t status)
+void FileTcpClient::localTransEnd(uint32_t status, uint32_t filesize, double times)
 {
     _status = status;
     uint32_t code = ERROR_SUCCESS;
     if(status == TRANS_SEND_OVER)
     {
-        PrintD("file send complete!");
+        double speed = 0;// 速率
+        std::string unit = "";// 单位
+        assert(times);
+        speed_human(filesize / times, speed, unit);
+        PrintD("file send complete! used times:%.2f(sec),speed:%.2f(%s)",times,speed,unit.c_str());
     }
     else
     {

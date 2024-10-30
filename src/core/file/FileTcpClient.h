@@ -60,7 +60,7 @@ private:
      * 
      * @param status 状态码(FileTranStatus)
      */
-    void localTransEnd(uint32_t status);
+    void localTransEnd(uint32_t status, uint32_t filesiez, double times);
 
 private:
     uint32_t _status;//FileTranStatus

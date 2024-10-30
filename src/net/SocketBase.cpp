@@ -1240,7 +1240,7 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
     while(total_send_bytes < len) {
         curr_send_len = send(fd, (char*)buff + total_send_bytes, left_bytes, MSG_NOSIGNAL);
         if(curr_send_len < 0) {
-            if( (errno == EINTR || errno == EAGAIN) && (resendtimes++ < 100))
+            if( (errno == EINTR || errno == EAGAIN) && (resendtimes++ < 100000))
             {
                 usleep(1000);
                 continue;

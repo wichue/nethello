@@ -92,7 +92,9 @@ uint32_t PressSession::senddata(char* buff, uint32_t len)
  */
 uint64_t PressSession::GetPktNum()
 {
-    return _server_rcv_num;
+    uint64_t tmp = _server_rcv_num;
+    _server_rcv_num = 0;
+    return tmp;
 }
 
 /**
@@ -112,7 +114,9 @@ uint64_t PressSession::GetSeq()
  */
 uint64_t PressSession::GetRcvLen()
 {
-    return _server_rcv_len;
+    uint64_t tmp = _server_rcv_len;
+    _server_rcv_len = 0;
+    return tmp;
 }
 
 }//namespace chw

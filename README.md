@@ -64,7 +64,7 @@ _CRT_NONSTDC_NO_DEPRECATE
       -u, --udp                 use UDP rather than TCP\n"
       -s, --save                log output to file,without this option,log output to console.
       -T, --Text                Text chat mode(default model)
-      -P, --Press               Stress test mode
+      -P, --Perf                Performance test mode
       -F, --File                File transmission mode
 
     Server specific:

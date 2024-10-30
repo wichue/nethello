@@ -337,28 +337,31 @@ uint32_t UdpServer::sendclientdata(char* buf, uint32_t len)
 }
 
 /**
- * @brief 获取会话接收信息
+ * @brief 获取会话接收信息,避免session释放查询不到,包数量和总大小累加,序列号取最大值,速率采用当前值
  *
- * @param rcv_num   [out]接收包的数量
+ * @param rcv_num   [out]接收包的数量(每次调用后session保存的值清0,因此这里累加)
  * @param rcv_seq   [out]接收包的最大序列号
- * @param rcv_len   [out]接收的字节总大小
+ * @param rcv_len   [out]接收的字节总大小(每次调用后session保存的值清0,因此这里累加)
  * @param rcv_speed [out]接收速率
  */
 void UdpServer::GetRcvInfo(uint64_t& rcv_num,uint64_t& rcv_seq,uint64_t& rcv_len,uint64_t& rcv_speed)
 {
-    rcv_num = 0;
-    rcv_seq = 0;
-    rcv_len = 0;
-    rcv_speed = 0;
+    uint64_t curr_seq = 0;
+    rcv_speed = _socket->getRecvSpeed();// 服务端接收速率
 
     auto iter = _session_map->begin();
     while(iter != _session_map->end())
     {
         rcv_num += iter->second->GetPktNum();
-        rcv_seq += iter->second->GetSeq();
+        curr_seq += iter->second->GetSeq();
         rcv_len += iter->second->GetRcvLen();
         rcv_speed += iter->second->getSock()->getRecvSpeed();
         iter ++;
+    }
+
+    if(curr_seq > rcv_seq)
+    {
+        rcv_seq = curr_seq;
     }
 }
 

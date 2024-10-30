@@ -8,6 +8,7 @@ namespace chw {
 TextSession::TextSession(const Socket::Ptr &sock) :Session(sock)
 {
     _cls = chw::demangle(typeid(TextSession).name());
+    InfoLNCR << ">";
 }
 
 TextSession::~TextSession()
@@ -22,7 +23,8 @@ TextSession::~TextSession()
  */
 void TextSession::onRecv(const Buffer::Ptr &buf)
 {
-    PrintD("<%s",buf->data());
+    PrintD("\b<%s",buf->data());
+    InfoLNCR << ">";
     buf->Reset0();
 }
 
