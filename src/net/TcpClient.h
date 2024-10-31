@@ -36,13 +36,6 @@ public:
      * @param oncon [in]连接结果回调
      */
     virtual void setOnCon(onConCB oncon) override;
-protected:
-    /**
-     * @brief 派生类连接结果事件（epoll线程执行）
-     * 
-     * @param ex [in]结果
-     */
-    virtual void onConnect(const SockException &ex) override;
 private:
     /**
      * @brief 连接结果回调，成功则设置接收回调
@@ -50,8 +43,6 @@ private:
      * @param ex [in]结果
      */
     void onSockConnect(const SockException &ex);
-private:
-    onConCB _on_con;// 派生类连接结果回调
 };
 
 } //namespace chw

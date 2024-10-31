@@ -58,12 +58,6 @@ public:
 
 protected:
     /**
-     * 派生类的连接服务器结果回调,通常用于tcp
-     * @param ex [in]成功与否
-     */
-    virtual void onConnect(const SockException &ex) = 0;
-
-    /**
      * 派生类收到 eof 或其他导致脱离 Server 事件的回调
      * 收到该事件时, 该对象一般将立即被销毁
      * @param err [in]原因
@@ -80,6 +74,7 @@ protected:
     mutable std::string _id;// 唯一标识
     Socket::Ptr _socket;// 客户端Socket
     EventLoop::Ptr _poller;// 绑定的事件循环
+    onConCB _on_con;// 派生类tcp连接结果回调，或udp创建socket回调
 };
 
 

@@ -30,10 +30,13 @@ public:
      * @return uint32_t 成功返回chw::success，失败返回chw::fail
      */
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "0.0.0.0") override;
-    virtual void setOnCon(onConCB ) override{};
-
-protected:
-    virtual void onConnect(const SockException &ex) override {};
+    
+    /**
+     * @brief 设置派生类连接结果回调
+     * 
+     * @param oncon [in]连接结果回调
+     */
+    virtual void setOnCon(onConCB oncon) override;
 };
 
 } //namespace chw

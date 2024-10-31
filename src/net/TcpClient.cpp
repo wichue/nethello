@@ -91,7 +91,7 @@ void TcpClient::onSockConnect(const SockException &ex) {
     if (ex) {
         //连接失败
         // _timer.reset();
-        onConnect(ex);
+        _on_con(ex);
         return;
     }
 
@@ -114,16 +114,6 @@ void TcpClient::onSockConnect(const SockException &ex) {
         }
     });
 
-    onConnect(ex);
-}
-
-/**
- * @brief 派生类连接结果事件（epoll线程执行）
- * 
- * @param ex [in]结果
- */
-void TcpClient::onConnect(const SockException &ex)
-{
     _on_con(ex);
 }
 

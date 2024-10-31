@@ -57,7 +57,7 @@ typedef enum {
     Err_other = 0xFF,//其他错误 other error
 } ErrCode;
 
-//错误信息类
+//错误信息类，重载bool()，_code为0则是无异常
 class SockException : public std::exception {
 public:
     SockException(ErrCode code = Err_success, const std::string &msg = "", int custom_code = 0) {

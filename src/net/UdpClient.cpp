@@ -51,6 +51,7 @@ uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_
     {
         // udp 绑定端口失败, 可能是由于端口占用或权限问题
         PrintE("Bind udp socket failed, local ip=%s,port=%u,err=%s",localip.c_str(),localport,get_uv_errmsg(true));
+        _on_con(SockException(Err_other, std::string("Bind udp socket failed:") + get_uv_errmsg()));
 
         return chw::fail;
     }
@@ -64,6 +65,7 @@ uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_
     if(!sock_ptr->bindPeerAddr((struct sockaddr *) &local_addr, sizeof(struct sockaddr_in),true))
     {
         PrintE("bind peer addr failed, remote ip=%s, port=%u",url.c_str(),port);
+        _on_con(SockException(Err_other, std::string("bind peer addr failed:") + get_uv_errmsg()));
 
         return chw::fail;
     }
@@ -87,8 +89,28 @@ uint32_t UdpClient::create_client(const std::string &url, uint16_t port, uint16_
     PrintD("create udp client ,local ip=%s,local port=%d,peer ip=%s,peer port=%d"
         ,getSock()->get_local_ip().c_str(),getSock()->get_local_port(),getSock()->get_peer_ip().c_str(),getSock()->get_peer_port());
 
+    _on_con(SockException(Err_success, "success"));
 
     return chw::success;
+}
+
+/**
+ * @brief 设置派生类连接结果回调
+ * 
+ * @param oncon [in]连接结果回调
+ */
+void UdpClient::setOnCon(onConCB oncon)
+{
+    if(oncon)
+    {
+        _on_con = oncon;
+    }
+    else
+    {
+        _on_con = [](const SockException &){
+            // 上面已经打印日志了，这里什么都不做
+        };
+    }
 }
 
 } //namespace chw

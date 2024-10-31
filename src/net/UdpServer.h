@@ -11,6 +11,14 @@
 
 namespace chw {
 
+/**
+ * 关于UdpServer的说明
+ * 1、UdpServer创建Socket，绑定本地port和ip。
+ * 2、当接收到对端udp数据时，创建Socket和session，绑定与UdpServer Socket相同的本地port和ip，并使用connect绑定对端port和ip。
+ * 3、这样当收到来自对端port和ip的数据时，内核会分发给使用了connect的Socket。
+ * 4、linux：经测试connect后收到的消息会正确分发给session的Socket。
+ * 5、windows：使用connect后还是UdpServer的Socket收到消息（todo:bug还是系统限制?）。
+ */
 class UdpServer : public Server {
 public:
     using Ptr = std::shared_ptr<UdpServer>;

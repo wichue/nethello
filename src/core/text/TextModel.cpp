@@ -61,6 +61,17 @@ void TextModel::startmodel()
             });
         } else {
             _pClient = std::make_shared<chw::UdpTextClient>(_poller);
+            _pClient->setOnCon([](const SockException &ex){
+                if(ex)
+                {
+                    sleep_exit(100*1000);
+                }
+                else
+                {
+                    usleep(1000);
+                    InfoLNCR << ">";
+                }
+            });
         }
         
         _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port);

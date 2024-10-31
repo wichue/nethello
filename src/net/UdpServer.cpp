@@ -96,7 +96,7 @@ void UdpServer::start_l(uint16_t port, const std::string &host) {
         throw std::runtime_error(err);
     }
 
-    InfoL << "UDP server bind to [" << host << "]: " << port;
+    InfoL << "UDP server bind to [" << host << "]: " << port << ",fd:" << _socket->rawFD();
 }
 
 /**
@@ -300,10 +300,10 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
                 strong_helper->onError(err);
             }
         });
-
         
-        PrintD("create udp session ,local ip=%s,local port=%d,peer ip=%s,peer port=%d"
-        ,session->getSock()->get_local_ip().c_str(),session->getSock()->get_local_port(),session->getSock()->get_peer_ip().c_str(),session->getSock()->get_peer_port());
+        PrintD("create udp session ,local ip=%s,local port=%d,peer ip=%s,peer port=%d,fd=%d"
+        ,session->getSock()->get_local_ip().c_str(),session->getSock()->get_local_port(),session->getSock()->get_peer_ip().c_str(),session->getSock()->get_peer_port(),session->getSock()->rawFD());
+        
         auto pr = _session_map->emplace(id, std::move(session));
         assert(pr.second);
         return pr.first->second;
