@@ -778,9 +778,9 @@ private://SocketRecvFromBuffer
 
             uint32_t ret = chw::success;
             if(_sock_fd->type() == SockNum::Sock_UDP) {
-                ret = _buffer->setCapacity(RAW_BUFFER_SIZE);
+                ret = _buffer->SetCapacity(RAW_BUFFER_SIZE);
             } else {
-                ret = _buffer->setCapacity(TCP_BUFFER_SIZE);
+                ret = _buffer->SetCapacity(TCP_BUFFER_SIZE);
             }
 
             if(ret == chw::fail) {
@@ -792,11 +792,11 @@ private://SocketRecvFromBuffer
 
         do {
             // nread = recvfrom(fd, _buffer->data(), _buffer->getCapacity() - 1, 0, (struct sockaddr *)&_address, &len);
-            nread = recvfrom(fd, (char*)_buffer->data() + _buffer->RcvLen(), _buffer->Idle(), 0, (struct sockaddr *)&_address, &len);
+            nread = recvfrom(fd, (char*)_buffer->data() + _buffer->Size(), _buffer->Idle(), 0, (struct sockaddr *)&_address, &len);
         } while (-1 == nread && UV_EINTR == get_uv_error(true));
 
         if (nread > 0) {
-            _buffer->SetRcvLen(_buffer->RcvLen() + nread);
+            _buffer->SetSize(_buffer->Size() + nread);
             count = 1;
             // _buffer->data()[nread] = '\0';
             // std::static_pointer_cast<BufferRaw>(_buffer)->setSize(nread);

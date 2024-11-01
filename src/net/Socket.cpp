@@ -78,8 +78,8 @@ void Socket::setOnRead(onReadCB cb) {
         _on_read = std::move(cb);
     } else {
         _on_read = [](Buffer::Ptr &buf, struct sockaddr *addr, int addr_len) {
-            WarnL << "Socket not set read callback, data ignored: " << buf->RcvLen();
-            buf->SetRcvLen(0);
+            WarnL << "Socket not set read callback, data ignored: " << buf->Size();
+            buf->SetSize(0);
         };
     }
     // onMultiReadCB cb2;
@@ -833,7 +833,6 @@ string Socket::getIdentifier() const {
 // }
 
 void Socket::onWriteAble(const SockNum::Ptr &sock) {
-    PrintD("fd=%d",sock->rawFd());
     // bool empty_waiting;
     // bool empty_sending;
     // {
@@ -1037,7 +1036,7 @@ uint32_t Socket::send_b(char* buff, uint32_t len)
     if (!_SndBuffer)
     {
         _SndBuffer = std::make_shared<Buffer>();
-        if(_SndBuffer->setCapacity(TCP_BUFFER_SIZE * 2) == chw::fail) {
+        if(_SndBuffer->SetCapacity(TCP_BUFFER_SIZE * 2) == chw::fail) {
             shutdown();
         } else {
             _SndBuffer->Reset0();

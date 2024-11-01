@@ -33,7 +33,7 @@ void PressSession::onRecv(const Buffer::Ptr &pBuf)
     }
 
     _server_rcv_num ++;
-    _server_rcv_len += pBuf->RcvLen();
+    _server_rcv_len += pBuf->Size();
 
     pBuf->Reset();
 }
