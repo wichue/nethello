@@ -250,41 +250,17 @@ private:
     Mtx _mtx;
 };
 
-class SockInfo {
-public:
-    SockInfo() = default;
-    virtual ~SockInfo() = default;
-
-    //获取本机ip  [AUTO-TRANSLATED:02d3901d]
-    //Get local IP
-    virtual std::string get_local_ip() = 0;
-    //获取本机端口号  [AUTO-TRANSLATED:f883cf62]
-    //Get local port number
-    virtual uint16_t get_local_port() = 0;
-    //获取对方ip  [AUTO-TRANSLATED:f042aa78]
-    //Get peer IP
-    virtual std::string get_peer_ip() = 0;
-    //获取对方端口号  [AUTO-TRANSLATED:0d085eca]
-    //Get the peer's port number
-    virtual uint16_t get_peer_port() = 0;
-    //获取标识符  [AUTO-TRANSLATED:e623608c]
-    //Get the identifier
-    virtual std::string getIdentifier() const { return ""; }
-};
-
 #define TraceP(ptr) TraceL << ptr->getIdentifier() << "(" << ptr->get_peer_ip() << ":" << ptr->get_peer_port() << ") "
 #define DebugP(ptr) DebugL << ptr->getIdentifier() << "(" << ptr->get_peer_ip() << ":" << ptr->get_peer_port() << ") "
 #define InfoP(ptr) InfoL << ptr->getIdentifier() << "(" << ptr->get_peer_ip() << ":" << ptr->get_peer_port() << ") "
 #define WarnP(ptr) WarnL << ptr->getIdentifier() << "(" << ptr->get_peer_ip() << ":" << ptr->get_peer_port() << ") "
 #define ErrorP(ptr) ErrorL << ptr->getIdentifier() << "(" << ptr->get_peer_ip() << ":" << ptr->get_peer_port() << ") "
 
-//异步IO Socket对象，包括tcp客户端、服务器和udp套接字  [AUTO-TRANSLATED:8d4fc5c2]
-//Asynchronous IO Socket object, including TCP client, server, and UDP socket
-class Socket : public std::enable_shared_from_this<Socket>, public noncopyable, public SockInfo {
+//异步IO Socket对象，包括tcp客户端、服务器和udp套接字
+class Socket : public std::enable_shared_from_this<Socket>, public noncopyable {
 public:
     using Ptr = std::shared_ptr<Socket>;
-    //接收数据回调  [AUTO-TRANSLATED:e3b7ff16]
-    //Receive data callback
+    //接收数据回调
     using onReadCB = std::function<void(Buffer::Ptr &buf, struct sockaddr *addr, int addr_len)>;
     // using onMultiReadCB = std::function<void(Buffer::Ptr *buf, struct sockaddr_storage *addr, size_t count)>;
 
@@ -305,7 +281,7 @@ public:
      * @param enable_mutex 是否启用互斥锁(接口是否线程安全)
     */
     static Ptr createSocket(const EventLoop::Ptr &poller, bool enable_mutex = true);
-    ~Socket() override;
+    ~Socket();
 
     /**
      * 创建tcp客户端并异步连接服务器
@@ -516,12 +492,16 @@ public:
      */
     uint64_t getSendSpeed();
 
-    ////////////SockInfo override////////////
-    std::string get_local_ip() override;
-    uint16_t get_local_port() override;
-    std::string get_peer_ip() override;
-    uint16_t get_peer_port() override;
-    std::string getIdentifier() const override;
+    //获取本机ip
+    std::string get_local_ip();
+    //获取本机端口号
+    uint16_t get_local_port();
+    //获取对方ip
+    std::string get_peer_ip();
+    //获取对方端口号
+    uint16_t get_peer_port();
+    //获取标识符
+    std::string getIdentifier() const;
 
 private:
     /**
@@ -621,84 +601,60 @@ private:
     int _sock_flags = SOCKET_DEFAULE_FLAGS;
     // 最大发送缓存，单位毫秒，距上次发送缓存清空时间不能超过该参数
     uint32_t _max_send_buffer_ms = SEND_TIME_OUT_SEC * 1000;
-    // 控制是否接收监听socket可读事件，关闭后可用于流量控制  [AUTO-TRANSLATED:71de6ece]
-    //Control whether to receive listen socket readable events, can be used for traffic control after closing
+    // 控制是否接收监听socket可读事件，关闭后可用于流量控制
     std::atomic<bool> _enable_recv { true };
-    // 标记该socket是否可写，socket写缓存满了就不可写  [AUTO-TRANSLATED:32392de2]
-    //Mark whether the socket is writable, the socket write buffer is full and cannot be written
+    // 标记该socket是否可写，socket写缓存满了就不可写
     std::atomic<bool> _sendable { true };
-    // 是否已经触发err回调了  [AUTO-TRANSLATED:17ab8384]
-    //Whether the err callback has been triggered
+    // 是否已经触发err回调了
     bool _err_emit = false;
-    // 是否启用网速统计  [AUTO-TRANSLATED:c0c0e8ee]
-    //Whether to enable network speed statistics
+    // 是否启用网速统计
     bool _enable_speed = false;
-    // udp发送目标地址  [AUTO-TRANSLATED:cce2315a]
-    //UDP send target address
+    // udp发送目标地址
     std::shared_ptr<struct sockaddr_storage> _udp_send_dst;
 
-    // 接收速率统计  [AUTO-TRANSLATED:20dcd724]
-    //Receiving rate statistics
+    // 接收速率统计
     BytesSpeed _recv_speed;
-    // 发送速率统计  [AUTO-TRANSLATED:eab3486a]
-    //Send rate statistics
+    // 发送速率统计
     BytesSpeed _send_speed;
 
-    // tcp连接超时定时器  [AUTO-TRANSLATED:1b3e5fc4]
-    //TCP connection timeout timer
+    // tcp连接超时定时器
     Timer::Ptr _con_timer;
-    // tcp连接结果回调对象  [AUTO-TRANSLATED:4f1c366a]
-    //TCP connection result callback object
+    // tcp连接结果回调对象
     std::shared_ptr<void> _async_con_cb;
 
-    // 记录上次发送缓存(包括socket写缓存、应用层缓存)清空的计时器  [AUTO-TRANSLATED:2c44d156]
-    //Record the timer for the last send buffer (including socket write buffer and application layer buffer) cleared
+    // 记录上次发送缓存(包括socket写缓存、应用层缓存)清空的计时器
     Ticker _send_flush_ticker;
-    // socket fd的抽象类  [AUTO-TRANSLATED:31e4ea33]
-    //Abstract class for socket fd
+    // socket fd的抽象类
     SockFD::Ptr _sock_fd;
-    // 本socket绑定的poller线程，事件触发于此线程  [AUTO-TRANSLATED:6f782513]
-    //The poller thread bound to this socket, events are triggered in this thread
+    // 本socket绑定的poller线程，事件触发于此线程
     EventLoop::Ptr _poller;
-    // 跨线程访问_sock_fd时需要上锁  [AUTO-TRANSLATED:dc63f6c4]
-    //Need to lock when accessing _sock_fd across threads
+    // 跨线程访问_sock_fd时需要上锁
     mutable MutexWrapper<std::recursive_mutex> _mtx_sock_fd;
 
-    // socket异常事件(比如说断开)  [AUTO-TRANSLATED:96c028e8]
-    //Socket exception event (such as disconnection)
+    // socket异常事件(比如说断开)
     onErrCB _on_err;
-    // 收到数据事件  [AUTO-TRANSLATED:23946f9b]
-    //Receive data event
+    // 收到数据事件
     // onMultiReadCB _on_multi_read;
-    // socket缓存清空事件(可用于发送流速控制)  [AUTO-TRANSLATED:976b84ef]
-    //Socket buffer cleared event (can be used for send flow control)
+    // socket缓存清空事件(可用于发送流速控制)
     onFlush _on_flush;
-    // tcp监听收到accept请求事件  [AUTO-TRANSLATED:5fe01738]
-    //TCP listener receives an accept request event
+    // tcp监听收到accept请求事件
     onAcceptCB _on_accept;
     // tcp监听收到accept请求，自定义创建peer Socket事件(可以控制子Socket绑定到其他poller线程)
     onCreateSocket _on_before_accept;
-    // 设置上述回调函数的锁  [AUTO-TRANSLATED:302ca377]
-    //Set the lock for the above callback function
+    // 设置上述回调函数的锁
     MutexWrapper<std::recursive_mutex> _mtx_event;
 
-    // 一级发送缓存, socket可写时，会把一级缓存批量送入到二级缓存  [AUTO-TRANSLATED:26f1da58]
-    //First-level send cache, when the socket is writable, it will batch the first-level cache into the second-level cache
+    // 一级发送缓存, socket可写时，会把一级缓存批量送入到二级缓存
     // List<std::pair<Buffer::Ptr, bool>> _send_buf_waiting;
-    // 一级发送缓存锁  [AUTO-TRANSLATED:9ec6c6a9]
-    //First-level send cache lock
+    // 一级发送缓存锁
     // MutexWrapper<std::recursive_mutex> _mtx_send_buf_waiting;
-    // 二级发送缓存, socket可写时，会把二级缓存批量写入到socket  [AUTO-TRANSLATED:cc665665]
-    //Second-level send cache, when the socket is writable, it will batch the second-level cache into the socket
+    // 二级发送缓存, socket可写时，会把二级缓存批量写入到socket
     // List<BufferList::Ptr> _send_buf_sending;
-    // 二级发送缓存锁  [AUTO-TRANSLATED:306e3472]
-    //Second-level send cache lock
+    // 二级发送缓存锁
     // MutexWrapper<std::recursive_mutex> _mtx_send_buf_sending;
-    // 发送buffer结果回调  [AUTO-TRANSLATED:1cac46fd]
-    //Send buffer result callback
+    // 发送buffer结果回调
     // BufferList::SendResult _send_result;
-    // 对象个数统计  [AUTO-TRANSLATED:f4a012d0]
-    //Object count statistics
+    // 对象个数统计
     //ObjectStatistic<Socket> _statistic;
 
     // 链接缓存地址,防止tcp reset 导致无法获取对端的地址
