@@ -36,7 +36,11 @@ void TextModel::startmodel()
         }
         
         try {
-            _pServer->start<chw::TextSession>(chw::gConfigCmd.server_port);
+            if(gConfigCmd.bind_address == nullptr) {
+                _pServer->start<chw::TextSession>(chw::gConfigCmd.server_port);
+            } else {
+                _pServer->start<chw::TextSession>(chw::gConfigCmd.server_port,gConfigCmd.bind_address);
+            }
         } catch(const std::exception &ex) {
             PrintE("ex:%s",ex.what());
             sleep_exit(100*1000);
@@ -74,7 +78,11 @@ void TextModel::startmodel()
             });
         }
         
-        _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port);
+        if(gConfigCmd.bind_address == nullptr) {
+            _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port,chw::gConfigCmd.client_port);
+        } else {
+            _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port,chw::gConfigCmd.client_port,chw::gConfigCmd.bind_address);
+        }
     }
 
     // 主线程

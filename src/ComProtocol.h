@@ -304,6 +304,7 @@ struct ConfigCmd
     uint32_t  blksize;           // 发送的每个报文大小(-l)
     uint32_t  bandwidth;         // 设置带宽，默认0以最大能力发送(-b)
     WorkModel workmodel;         // 工作模式，默认 TEXT_MODEL
+    uint16_t  client_port;       // 客户端绑定的端口号(-n)
 
     char* src;//文件传输模式，本地文件路经(-S)
     char* dst;//文件传输模式，目的文件路经(-D)
@@ -316,6 +317,7 @@ struct ConfigCmd
         protol = SockNum::Sock_TCP;
         domain = AF_INET;
         server_port = 0;
+        client_port = 0;
         bind_address = nullptr;
         duration = 0;
         reporter_interval = 1;

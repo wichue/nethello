@@ -131,7 +131,7 @@ uint32_t TcpServer::onAcceptConnection(const Socket::Ptr &sock) {
         auto strong_session = weak_session.lock();
         if (strong_session) {
             //触发onError事件回调
-            TraceP(strong_session->getSock()) << cls << " on err: " << err;
+            TraceP(strong_session->getSock()) << cls << " disconnect: " << err;
             strong_session->onError(err);
         }
     });

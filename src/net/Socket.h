@@ -524,20 +524,96 @@ public:
     std::string getIdentifier() const override;
 
 private:
+    /**
+     * @brief Socket私有构造函数，只能通过静态方法 createSocket 创建
+     * 
+     * @param poller        [in]绑定的事件循环线程
+     * @param enable_mutex  [in]是否启用线程锁,false则_mtx_sock_fd、_mtx_event等锁失效
+     */
     Socket(EventLoop::Ptr poller, bool enable_mutex = true);
 
+    /**
+     * @brief 设置 _sock_fd 、本端地址、远端地址
+     * 
+     * @param sock [in]fd
+     */
     void setSock(SockNum::Ptr sock);
+
+    /**
+     * @brief tcp服务端epoll事件回调，Event_Read（新链接接入）和Event_Error（错误）
+     * 
+     * @param sock  [in]tcp服务端fd
+     * @param event [in]epoll事件
+     * @return int 失败返回-1，没有新连接了返回0
+     */
     int onAccept(const SockNum::Ptr &sock, int event) noexcept;
+
+    /**
+     * @brief epoll可读事件回调
+     * @param sock [in]fd
+     */
     ssize_t onRead(const SockNum::Ptr &sock/*, const SocketRecvBuffer::Ptr &buffer*/) noexcept;
+
+    /**
+     * @brief epoll可写事件回调
+     * 
+     * @param sock [in]fd
+     */
     void onWriteAble(const SockNum::Ptr &sock);
+
+    /**
+     * @brief tcp连接结果回调
+     * 
+     * @param sock  [in]fd
+     * @param cb    回调
+     */
     void onConnected(const SockNum::Ptr &sock, const onErrCB &cb);
     // void onFlushed();
+
+    /**
+     * @brief 开始监听socket可写事件
+     * 
+     * @param sock [in]fd
+     */
     void startWriteAbleEvent(const SockNum::Ptr &sock);
+
+    /**
+     * @brief 停止监听socket可写事件
+     * 
+     * @param sock [in]fd
+     */
     void stopWriteAbleEvent(const SockNum::Ptr &sock);
     // bool flushData(const SockNum::Ptr &sock, bool poller_thread);
+
+    /**
+     * @brief 激活epoll事件，tcp服务端监听Event_Read | Event_Error,tcp/udp客户端监听Event_Read | Event_Error | Event_Write
+     * 
+     * @param sock      [in]监听fd
+     * @return true     成功
+     * @return false    失败
+     */
     bool attachEvent(const SockNum::Ptr &sock);
     // ssize_t send_l(Buffer::Ptr buf, bool is_buf_sock, bool try_flush = true);
+
+    /**
+     * @brief tcp客户端异步连接到服务端
+     * 
+     * @param url           [in]服务端ip
+     * @param port          [in]服务端port
+     * @param con_cb_in     [in]连接结果回调
+     * @param timeout_sec   [in]连接超时时长，单位秒
+     * @param local_ip      [in]本地绑定的ip
+     * @param local_port    [in]本地绑定的port
+     */
     void connect_l(const std::string &url, uint16_t port, const onErrCB &con_cb_in, float timeout_sec, const std::string &local_ip, uint16_t local_port);
+    
+    /**
+     * @brief 激活epoll事件，设置 _sock_fd
+     * 
+     * @param sock      fd
+     * @return true     成功
+     * @return false    失败
+     */
     bool fromSock_l(SockNum::Ptr sock);
 
 private:
@@ -643,7 +719,9 @@ public:
     void safeShutdown(const SockException &ex = SockException(Err_shutdown, "self shutdown"));
 
     /**
-     * @brief 不缓存，立刻发送数据
+     * @brief 不缓存，立刻发送数据；失败时丢弃数据，并建议上层断开重联
+     * tcp:发送失败会阻塞尝试一定次数重发
+     * udp:发送失败立即返回
      * 
      * @param buff 数据
      * @param len  数据长度
@@ -655,9 +733,36 @@ public:
     //todo:方案2：发送失败时监听可写事件，没有发送成功的先放入缓存，可写时再发送（一直发送失败会出现大量缓存积压，不利于业务快速反映）
     // _max_send_buffer_ms/_send_flush_ticker 控制一直发送失败的超时
 
+    /**
+     * @brief 先把数据拷贝到Buffer，Buffer足够大时执行系统调用send，适合小包较多的数据，仅用于tcp
+     * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
+     * 
+     * @param buff  数据
+     * @param len   数据长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    uint32_t send_b(char* buff, uint32_t len);
+
+    /**
+     * @brief 先把数据Buffer放入一个list，当epoll不可写时暂时挂起，不阻塞线程
+     * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
+     * todo:可设置buff是否托管，托管则无需拷贝直接放入list，不托管则拷贝到新Buffer后放入一个list，均在发送完成后释放
+     * 
+     * @param buff  数据
+     * @param len   数据长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    uint32_t send_l(char* buff, uint32_t len, bool give_up_owner){return 0;};
+
+    /**
+     * @brief 是否启动测速
+     * 
+     * @param enable true启动测速，false关闭测速
+     */
     void enable_speed(bool enable);
 private:
     onReadCB _on_read;
+    Buffer::Ptr _SndBuffer;//用于 send_b 的发送缓存区
 
 private://SocketRecvFromBuffer
     Buffer::Ptr _buffer;
@@ -677,10 +782,11 @@ private://SocketRecvFromBuffer
             } else {
                 ret = _buffer->setCapacity(TCP_BUFFER_SIZE);
             }
-            _buffer->Reset0();
 
             if(ret == chw::fail) {
                 shutdown();
+            } else {
+                _buffer->Reset0();
             }
         }
 

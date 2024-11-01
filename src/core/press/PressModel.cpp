@@ -52,7 +52,11 @@ void PressModel::startmodel()
         }
         
         try {
-            _pServer->start<chw::PressSession>(chw::gConfigCmd.server_port);
+            if(gConfigCmd.bind_address == nullptr) {
+                _pServer->start<chw::PressSession>(chw::gConfigCmd.server_port);
+            } else {
+                _pServer->start<chw::PressSession>(chw::gConfigCmd.server_port,gConfigCmd.bind_address);
+            }
         } catch(const std::exception &ex) {
             PrintE("ex:%s",ex.what());
             sleep_exit(100*1000);
@@ -81,7 +85,11 @@ void PressModel::startmodel()
             _pClient = std::make_shared<chw::PressUdpClient>(_poller);
         }
         
-        _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port);
+        if(gConfigCmd.bind_address == nullptr) {
+            _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port,chw::gConfigCmd.client_port);
+        } else {
+            _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port,chw::gConfigCmd.client_port,chw::gConfigCmd.bind_address);
+        }
     }
     
     // 创建定时器，周期打印速率信息到控制台

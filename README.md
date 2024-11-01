@@ -66,10 +66,10 @@ _CRT_NONSTDC_NO_DEPRECATE
       -T, --Text                Text chat mode(default model)
       -P, --Perf                Performance test mode
       -F, --File                File transmission mode
+      -B, --bind      <host>    bind to a specific interface
 
     Server specific:
       -s, --server              run in server mode
-      -B, --bind      <host>    bind to a specific interface
 
     Client specific:
       -c, --client    <host>    run in client mode, connecting to <host>
@@ -78,4 +78,5 @@ _CRT_NONSTDC_NO_DEPRECATE
       -t, --time      #         time in seconds to transmit for (default 10 secs)
       -S, --src                 --File(-F) model,Source file path, include file name
       -D, --dst                 --File(-F) model,Purpose file save path,exclusive file name
+      -n, --number              client bind port
 ```

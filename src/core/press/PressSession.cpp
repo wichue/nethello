@@ -45,8 +45,7 @@ void PressSession::onRecv(const Buffer::Ptr &pBuf)
  */
 void PressSession::onError(const SockException &ex)
 {
-    //断开连接事件，一般是EOF
-    WarnL << ex.what();
+
 }
 
 /**

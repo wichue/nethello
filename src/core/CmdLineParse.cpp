@@ -98,6 +98,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
         {"length", required_argument, NULL, 'l'},
         {"bandwidth", required_argument, NULL, 'b'},
         {"save", required_argument, NULL, 'f'},
+        {"number", required_argument, NULL, 'n'},
 
         {"src", required_argument, NULL, 'S'},
         {"dst", required_argument, NULL, 'D'},
@@ -107,7 +108,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
     int flag;
     int portno;
    
-    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:f:S:D:PF", longopts, NULL)) != -1) {
+    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:f:S:D:PFn:", longopts, NULL)) != -1) {
         switch (flag) {
             case 'h':
 				help();
@@ -147,10 +148,18 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
             case 'p':
 		        portno = atoi(optarg);
 		        if (portno < 1 || portno > 65535) {
-		            printf("Bad port number:%d\n",portno);
+		            printf("Bad server port number:%d\n",portno);
 		            return chw::fail;
 		        }
 		        gConfigCmd.server_port = portno;
+                break;
+            case 'n':
+		        portno = atoi(optarg);
+		        if (portno < 1 || portno > 65535) {
+		            printf("Bad client port number:%d\n",portno);
+		            return chw::fail;
+		        }
+		        gConfigCmd.client_port = portno;
                 break;
             case 'c':
                 if (gConfigCmd.role == 's') {
@@ -252,11 +261,11 @@ void CmdLineParse::help()
             "  -T, --Text                Text chat mode(default model)\n"
             "  -P, --Perf                Performance test mode\n"
             "  -F, --File                File transmission mode\n"
+            "  -B, --bind      <host>    bind to a specific interface\n"
 
             "Server specific:\n"
             "  -s, --server              run in server mode\n"
-            "  -B, --bind      <host>    bind to a specific interface\n"
-
+            
             "Client specific:\n"
             "  -c, --client    <host>    run in client mode, connecting to <host>\n"
             "  -b, --bandwidth           Set the send rate, in units MB/s\n"
@@ -264,6 +273,7 @@ void CmdLineParse::help()
             "  -t, --time      #         time in seconds to transmit for (default 10 secs)\n"
             "  -S, --src                 --File(-F) model,Source file path, include file name\n"
             "  -D, --dst                 --File(-F) model,Purpose file save path,exclusive file name\n"
+            "  -n, --number              client bind port\n"
 			);
 
 	exit(0);

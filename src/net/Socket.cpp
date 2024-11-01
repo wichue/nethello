@@ -208,6 +208,9 @@ void Socket::connect_l(const string &url, uint16_t port, const onErrCB &con_cb_i
     if (SockUtil::isIP(url.data())) {
         auto fd = SockUtil::connect(url.data(), port, true, local_ip.data(), local_port);
         (*async_con_cb)(fd == -1 ? nullptr : std::make_shared<SockNum>(fd, SockNum::Sock_TCP));
+
+        //chw
+        TraceL << getIdentifier() << " start connect " << url << ":" << port << ";local ip:" << get_local_ip() << ",local port:" << get_local_port();
     } else {
         // auto poller = _poller;
         // weak_ptr<function<void(const SockNum::Ptr &)>> weak_task = async_con_cb;
@@ -830,6 +833,7 @@ string Socket::getIdentifier() const {
 // }
 
 void Socket::onWriteAble(const SockNum::Ptr &sock) {
+    PrintD("fd=%d",sock->rawFd());
     // bool empty_waiting;
     // bool empty_sending;
     // {
@@ -1018,6 +1022,29 @@ uint32_t Socket::send_i(char* buff, uint32_t len)
     // }
 
     return 0;
+}
+
+/**
+ * @brief 先把数据拷贝到Buffer，Buffer足够大时执行系统调用send，适合小包较多的数据
+ * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
+ * 
+ * @param buff  数据
+ * @param len   数据长度
+ * @return uint32_t 发送成功的数据长度
+ */
+uint32_t Socket::send_b(char* buff, uint32_t len)
+{
+    if (!_SndBuffer)
+    {
+        _SndBuffer = std::make_shared<Buffer>();
+        if(_SndBuffer->setCapacity(TCP_BUFFER_SIZE * 2) == chw::fail) {
+            shutdown();
+        } else {
+            _SndBuffer->Reset0();
+        }
+    }
+
+    return chw::success;
 }
 
 void Socket::enable_speed(bool enable)

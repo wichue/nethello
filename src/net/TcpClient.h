@@ -21,11 +21,12 @@ public:
     virtual ~TcpClient();
 
     /**
-     * 开始连接tcp服务器（任意线程执行）
-     * @param url           [in]服务器ip或域名
-     * @param port          [in]服务器端口
-     * @param timeout_sec   [in]超时时间,单位秒
-     * @param local_port    [in]本地端口
+     * @brief 创建tcp客户端
+     * 
+     * @param url       [in]远端ip
+     * @param port      [in]远端端口
+     * @param localport [in]本地端口，默认0由内核分配
+     * @param localip   [in]本地ip，默认"0.0.0.0"(INADDR_ANY)是绑定所有本地ipv4地址
      * @return uint32_t 成功返回chw::success，失败返回chw::fail
      */
     virtual uint32_t create_client(const std::string &url, uint16_t port, uint16_t localport = 0,const std::string &localip = "::") override;
