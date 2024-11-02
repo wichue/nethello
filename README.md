@@ -43,8 +43,11 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090
 ```
 - tcp文本聊天
+
 ![text_tcp](https://github.com/wichue/nethello/blob/master/doc/text_tcp.png)
+
 - udp文本聊天
+
 ![text_udp](https://github.com/wichue/nethello/blob/master/doc/text_udp.png)
 ### 压力测试
 ```shell
@@ -52,8 +55,10 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090 -P
 ```
 - tcp性能测试
+
 ![perf_tcp](https://github.com/wichue/nethello/blob/master/doc/perf_tcp.png)
 - udp性能测试
+
 ![perf_udp](https://github.com/wichue/nethello/blob/master/doc/perf_udp.png)
 ### 文件传输
 ```shell
