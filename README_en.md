@@ -41,24 +41,24 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090
 ```
 - tcp Text chat
-![text_tcp](https://github.com/wichue/nethello/doc/text_tcp.png)
+![text_tcp](https://github.com/wichue/nethello/blob/master/doc/text_tcp.png)
 - udp Text chat
-![text_udp](https://github.com/wichue/nethello/doc/text_udp.png)
+![text_udp](https://github.com/wichue/nethello/blob/master/doc/text_udp.png)
 ### Performance testing
 ```shell
 ./nethello -s -p 9090 -P
 ./nethello -c 127.0.0.1 -p 9090 -P
 ```
 - tcp Performance testing
-![perf_tcp](https://github.com/wichue/nethello/doc/perf_tcp.png)
+![perf_tcp](https://github.com/wichue/nethello/blob/master/doc/perf_tcp.png)
 - udp Performance testing
-![perf_udp](https://github.com/wichue/nethello/doc/perf_udp.png)
+![perf_udp](https://github.com/wichue/nethello/blob/master/doc/perf_udp.png)
 ### File transfer
 ```shell
 ./nethello -s -p 9090 -F
 ./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
-![file](https://github.com/wichue/nethello/doc/file.png)
+![file](https://github.com/wichue/nethello/blob/master/doc/file.png)
 ## Command line parameters
 ```shell
       -v, --version             show version information and quit
