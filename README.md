@@ -42,17 +42,25 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -s -p 9090
 ./nethello -c 127.0.0.1 -p 9090
 ```
+- tcp文本聊天
+![text_tcp](https://github.com/wichue/nethello/doc/text_tcp.png)
+- udp文本聊天
+![text_udp](https://github.com/wichue/nethello/doc/text_udp.png)
 ### 压力测试
 ```shell
 ./nethello -s -p 9090 -P
 ./nethello -c 127.0.0.1 -p 9090 -P
 ```
+- tcp性能测试
+![perf_tcp](https://github.com/wichue/nethello/doc/perf_tcp.png)
+- udp性能测试
+![perf_udp](https://github.com/wichue/nethello/doc/perf_udp.png)
 ### 文件传输
 ```shell
 ./nethello -s -p 9090 -F
-./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/glibc-2.18.tar.gz -D /root/gitcode/nethello/build/file
+./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
-
+![file](https://github.com/wichue/nethello/doc/file.png)
 ## 命令行参数
 ```shell
       -v, --version             show version information and quit

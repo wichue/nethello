@@ -33,24 +33,32 @@ _CRT_NONSTDC_NO_DEPRECATE
 ```
 - Right click on the project name and generate it。
 
-## 使用示例
+## Use the example
 - Text mode and performance testing default to TCP, support UDP (- u), file transfer only supports TCP.
 ### Text chat
 ```shell
 ./nethello -s -p 9090
 ./nethello -c 127.0.0.1 -p 9090
 ```
+- tcp Text chat
+![text_tcp](https://github.com/wichue/nethello/doc/text_tcp.png)
+- udp Text chat
+![text_udp](https://github.com/wichue/nethello/doc/text_udp.png)
 ### Performance testing
 ```shell
 ./nethello -s -p 9090 -P
 ./nethello -c 127.0.0.1 -p 9090 -P
 ```
+- tcp Performance testing
+![perf_tcp](https://github.com/wichue/nethello/doc/perf_tcp.png)
+- udp Performance testing
+![perf_udp](https://github.com/wichue/nethello/doc/perf_udp.png)
 ### File transfer
 ```shell
 ./nethello -s -p 9090 -F
-./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/glibc-2.18.tar.gz -D /root/gitcode/nethello/build/file
+./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
-
+![file](https://github.com/wichue/nethello/doc/file.png)
 ## Command line parameters
 ```shell
       -v, --version             show version information and quit

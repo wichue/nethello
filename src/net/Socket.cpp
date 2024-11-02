@@ -1043,6 +1043,8 @@ uint32_t Socket::send_b(char* buff, uint32_t len)
         }
     }
 
+    _send_flush_ticker.resetTime();
+
     return chw::success;
 }
 

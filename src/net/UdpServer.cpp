@@ -240,6 +240,10 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
         //chw:服务端必须使用硬绑定,否则内核无法正确把消息分发到各个接入的session
         socket->bindPeerAddr((struct sockaddr *)addr_str.data(), sizeof(struct sockaddr));
 
+        PrintD("create udp session ,local ip=%s,local port=%d,peer ip=%s,peer port=%d,fd=%d"
+        ,socket->get_local_ip().c_str(),socket->get_local_port(),socket->get_peer_ip().c_str(),socket->get_peer_port(),socket->rawFD());
+        
+
         auto session = _session_alloc(socket);
         // 把本服务器的配置传递给 Session
         // helper->session()->attachServer(*this);
@@ -300,9 +304,6 @@ Session::Ptr UdpServer::createSession(const PeerIdType &id, Buffer::Ptr &buf, st
                 strong_helper->onError(err);
             }
         });
-        
-        PrintD("create udp session ,local ip=%s,local port=%d,peer ip=%s,peer port=%d,fd=%d"
-        ,session->getSock()->get_local_ip().c_str(),session->getSock()->get_local_port(),session->getSock()->get_peer_ip().c_str(),session->getSock()->get_peer_port(),session->getSock()->rawFD());
         
         auto pr = _session_map->emplace(id, std::move(session));
         assert(pr.second);

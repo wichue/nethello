@@ -674,6 +674,7 @@ public:
      */
     void safeShutdown(const SockException &ex = SockException(Err_shutdown, "self shutdown"));
 
+// chw:发送API，针对同一个Socket实例，建议只使用一种API
     /**
      * @brief 不缓存，立刻发送数据；失败时丢弃数据，并建议上层断开重联
      * tcp:发送失败会阻塞尝试一定次数重发
@@ -718,7 +719,9 @@ public:
     void enable_speed(bool enable);
 private:
     onReadCB _on_read;
-    Buffer::Ptr _SndBuffer;//用于 send_b 的发送缓存区
+//send_b
+    Buffer::Ptr _SndBuffer;//send_b 的发送缓存区
+    Ticker _SndTicker;//send_b 
 
 private://SocketRecvFromBuffer
     Buffer::Ptr _buffer;
