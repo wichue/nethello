@@ -508,7 +508,7 @@ private:
      * @brief Socket私有构造函数，只能通过静态方法 createSocket 创建
      * 
      * @param poller        [in]绑定的事件循环线程
-     * @param enable_mutex  [in]是否启用线程锁,false则_mtx_sock_fd、_mtx_event等锁失效
+     * @param enable_mutex  [in]是否启用线程锁,false则_mtx_sock_fd、_mtx_event等锁失效；如果send是独立线程，建议传false，减少对锁的检测，有助提升效率
      */
     Socket(EventLoop::Ptr poller, bool enable_mutex = true);
 
@@ -663,6 +663,13 @@ private:
 
 //chw
 public:
+    // 发送策略
+    typedef enum {
+        SEND_IMMED, //立即发送，适用tcp和udp
+        SEND_BUFF,  //缓存大BUFF后发送，适用tcp
+        SEND_LIST   //缓存到列表后发送，适用tcp和udp
+    }SEND_TYPE;
+public:
     /**
      * 触发onErr事件
      */
@@ -675,10 +682,13 @@ public:
     void safeShutdown(const SockException &ex = SockException(Err_shutdown, "self shutdown"));
 
 // chw:发送API，针对同一个Socket实例，建议只使用一种API
+
+    void SetSndType(SEND_TYPE type);
     /**
-     * @brief 不缓存，立刻发送数据；失败时丢弃数据，并建议上层断开重联
+     * @brief 不缓存，立刻同步发送数据；失败时丢弃数据，并建议上层断开重联
      * tcp:发送失败会阻塞尝试一定次数重发
      * udp:发送失败立即返回
+     * epoll:不监听写事件
      * 
      * @param buff 数据
      * @param len  数据长度
@@ -691,17 +701,32 @@ public:
     // _max_send_buffer_ms/_send_flush_ticker 控制一直发送失败的超时
 
     /**
-     * @brief 先把数据拷贝到Buffer，Buffer足够大时执行系统调用send，适合小包较多的数据，仅用于tcp
+     * 关于写事件，适用与 send_b 和 send_l
+     * 1、刚刚连接成功的tcp客户端是监听写事件的。
+     * 2、外部调用send时，如果部分发送成功或等待重发，则启动写监听。
+     * 3、如果监听到可写事件，有缓存数据则内部调用send，没有则停止监听。
+     * 4、内部调用send时，如果发送缓存清空了，则停止写监听。
+     */
+    /**
+     * @brief 先把数据拷贝到_SndBuffer，_SndBuffer足够大时执行系统调用send，适合小包较多的数据，仅用于tcp
      * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
+     * 注意：返回成功表示数据已经拷贝到 _SndBuffer 应用层发送缓存，不代表已经拷贝到内核发送缓存区
+     * 测试：包长1000字节，send_i发送速率220MB/s，send_b发送速率2.3GB/s；包长10字节，send_i发送速率2.3MB/s，send_b发送速率205MB/s。
      * 
-     * @param buff  数据
-     * @param len   数据长度
-     * @return uint32_t 发送成功的数据长度
+     * @param buff  [in]数据
+     * @param len   [in]数据长度
+     * @param epoll_touch   [in]true是epoll触发，false外部调用
+     * @return uint32_t 成功返回chw::success,失败返回chw::fail
      */
     uint32_t send_b(char* buff, uint32_t len);
+    uint32_t try_flush_b(bool epoll_touch);
+    uint32_t flush_b(bool epoll_touch);
+
+    // 设置 _max_bufsize_b
+    void SetMaxBuffB(uint32_t size) {_max_bufsize_b = size;}
 
     /**
-     * @brief 先把数据Buffer放入一个list，当epoll不可写时暂时挂起，不阻塞线程
+     * @brief 先把数据Buffer放入一个list，当epoll不可写时暂时挂起，不阻塞线程，最接近原flushData方案
      * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
      * todo:可设置buff是否托管，托管则无需拷贝直接放入list，不托管则拷贝到新Buffer后放入一个list，均在发送完成后释放
      * 
@@ -718,9 +743,11 @@ public:
      */
     void enable_speed(bool enable);
 private:
+    SEND_TYPE _snd_type;
     onReadCB _on_read;
 //send_b
-    Buffer::Ptr _SndBuffer;//send_b 的发送缓存区
+    Buffer::Ptr _SndBuffer;//send_b 的应用层发送缓存区
+    uint32_t _max_bufsize_b = MAX_BUFFER_SIZE;//_SndBuffer 允许扩容最大值，当前buf大小低于该值则允许扩容
     Ticker _SndTicker;//send_b 
 
 private://SocketRecvFromBuffer

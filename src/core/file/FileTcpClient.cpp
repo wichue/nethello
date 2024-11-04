@@ -55,7 +55,7 @@ void FileTcpClient::StartTransf()
     preq->filesize = filesize;
     PrintD("preq->filepath=%s,filesize=%u",preq->filepath,preq->filesize);
 
-    senddata((char*)preq,sizeof(FileTranReq));
+    senddata_i((char*)preq,sizeof(FileTranReq));
     _RAM_DEL_(preq);
 }
 
@@ -182,7 +182,7 @@ void FileTcpClient::procTranRsp(char* buf)
         while ((uReadSize = fread(buf + sizeof(MsgHdr), 1, TCP_BUFFER_SIZE - sizeof(MsgHdr), fp)) > 0)
         {
             pMsgHdr->uTotalLen = uReadSize + sizeof(MsgHdr);
-            uint32_t len = strong_self->senddata((char*)buf,uReadSize + sizeof(MsgHdr));
+            uint32_t len = strong_self->senddata_i((char*)buf,uReadSize + sizeof(MsgHdr));
             if(len == 0)
             {
                 break;
@@ -253,7 +253,7 @@ void FileTcpClient::localTransEnd(uint32_t status, uint32_t filesize, double tim
 
     psig->code = code;
         
-    senddata((char*)psig,sizeof(FileTranSig));
+    senddata_i((char*)psig,sizeof(FileTranSig));
     _RAM_DEL_(psig);
     sleep_exit(100 * 1000);
 }

@@ -90,6 +90,7 @@ void PressModel::startmodel()
         } else {
             _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port,chw::gConfigCmd.client_port,chw::gConfigCmd.bind_address);
         }
+        _pClient->getSock()->SetSndType(Socket::SEND_BUFF);
     }
     
     // 创建定时器，周期打印速率信息到控制台
@@ -265,19 +266,19 @@ void PressModel::start_client_press()
             }
 
             pMsgHdr->uMsgIndex ++;
-            uint32_t sndlen = _pClient->senddata(buf,gConfigCmd.blksize);
-            if(sndlen == gConfigCmd.blksize)
-            {
-                _client_snd_num ++;
-                _client_snd_seq ++;
-                _client_snd_len += sndlen;
-            }
-            else
-            {
-                // 出现错误，退出测试
-                prepare_exit();
-                sleep_exit(100 * 1000);
-            }
+            uint32_t sndlen = _pClient->senddata_b(buf,gConfigCmd.blksize);
+            // if(sndlen == gConfigCmd.blksize)
+            // {
+            //     _client_snd_num ++;
+            //     _client_snd_seq ++;
+            //     _client_snd_len += sndlen;
+            // }
+            // else
+            // {
+            //     // 出现错误，退出测试
+            //     prepare_exit();
+            //     sleep_exit(100 * 1000);
+            // }
         }
     }
 
@@ -300,7 +301,7 @@ void PressModel::start_client_press()
         while(1)
         {
             pMsgHdr->uMsgIndex ++;
-            uint32_t sndlen = _pClient->senddata(buf,gConfigCmd.blksize);
+            uint32_t sndlen = _pClient->senddata_i(buf,gConfigCmd.blksize);
             if(sndlen == gConfigCmd.blksize)
             {
                 _client_snd_num ++;

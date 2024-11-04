@@ -61,7 +61,16 @@ public:
      * @param len  [in]数据长度
      * @return uint32_t 发送成功的数据长度
      */
-    uint32_t senddata(char* buff, uint32_t len);
+    uint32_t senddata_i(char* buff, uint32_t len);
+
+    /**
+     * @brief 发送数据（任意线程执行）
+     * 
+     * @param buff [in]数据
+     * @param len  [in]数据长度
+     * @return uint32_t 成功返回chw::success,失败返回chw::fail
+     */
+    uint32_t senddata_b(char* buff, uint32_t len);
 
     const Socket::Ptr &getSock() const;
 

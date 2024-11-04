@@ -260,7 +260,7 @@ void Socket::onConnected(const SockNum::Ptr &sock, const onErrCB &cb) {
 bool Socket::attachEvent(const SockNum::Ptr &sock) {
     weak_ptr<Socket> weak_self = shared_from_this();
     if (sock->type() == SockNum::Sock_TCP_Server) {
-        // tcp服务器
+        // tcp服务器，监听读、错误
         auto result = _poller->addEvent(sock->rawFd(), EventLoop::Event_Read | EventLoop::Event_Error, [weak_self, sock](int event) {
             if (auto strong_self = weak_self.lock()) {
                 strong_self->onAccept(sock, event);
@@ -269,7 +269,7 @@ bool Socket::attachEvent(const SockNum::Ptr &sock) {
         return -1 != result;
     }
 
-    // tcp客户端或udp
+    // tcp客户端或udp，监听读、写、错误
     //auto read_buffer = _poller->getSharedBuffer(sock->type() == SockNum::Sock_UDP);
     auto result = _poller->addEvent(sock->rawFd(), EventLoop::Event_Read | EventLoop::Event_Error | EventLoop::Event_Write, [weak_self, sock/*, read_buffer*/](int event) {
         auto strong_self = weak_self.lock();
@@ -369,6 +369,7 @@ bool Socket::emitErr(const SockException &err) noexcept {
             ErrorL << "Exception occurred when emit on_err: " << ex.what();
         }
         // 延后关闭socket，只移除其io事件，防止Session对象析构时获取fd相关信息失败
+        // chw:Socket由上层Session管理释放
         strong_self->closeSock(false);
     });
     return true;
@@ -845,13 +846,26 @@ void Socket::onWriteAble(const SockNum::Ptr &sock) {
     //     empty_sending = _send_buf_sending.empty();
     // }
 
-    // if (empty_waiting && empty_sending) {
-    //     // 数据已经清空了，我们停止监听可写事件
-    //     stopWriteAbleEvent(sock);
-    // } else {
-    //     // socket可写，我们尝试发送剩余的数据
-    //     flushData(sock, true);
-    // }
+    bool empty_sending;
+    {
+        LOCK_GUARD(_mtx_sock_fd);
+        if(_snd_type == SEND_BUFF)
+        {
+            empty_sending = _SndBuffer->Size() == 0 ? true : false;
+        }
+    }
+
+    if (/*empty_waiting && */empty_sending) {
+        // 数据已经清空了，我们停止监听可写事件
+        stopWriteAbleEvent(sock);
+    } else {
+        // socket可写，我们尝试发送剩余的数据
+        if(_snd_type == SEND_BUFF)
+        {
+            flush_b(true);
+        }
+        // flushData(sock, true);
+    }
 }
 
 void Socket::startWriteAbleEvent(const SockNum::Ptr &sock) {
@@ -976,6 +990,32 @@ void Socket::safeShutdown(const SockException &ex) {
     });
 }
 
+void Socket::SetSndType(SEND_TYPE type)
+{
+    _snd_type = type;
+    switch(_snd_type)
+    {
+    case SEND_IMMED:
+        break;
+    case SEND_BUFF:
+        if (!_SndBuffer)
+        {
+            _SndBuffer = std::make_shared<Buffer>();
+            if(_SndBuffer->SetCapacity(TCP_BUFFER_SIZE * 2) == chw::fail) {
+                shutdown();
+            } else {
+                _SndBuffer->Reset0();
+            }
+        }
+        break;
+    case SEND_LIST:
+        break;
+
+    default:
+        break;
+    }
+}
+
 uint32_t Socket::send_i(char* buff, uint32_t len)
 {
     LOCK_GUARD(_mtx_sock_fd);
@@ -1013,37 +1053,141 @@ uint32_t Socket::send_i(char* buff, uint32_t len)
         return 0;
     }
 
-    // // 该socket不可写,判断发送超时
-    // if (_send_flush_ticker.elapsedTime() > _max_send_buffer_ms) {
-    //     // 如果发送列队中最老的数据距今超过超时时间限制，那么就断开socket连接
-    //     emitErr(SockException(Err_other, "socket send timeout"));
-    //     return chw::fail;
-    // }
-
     return 0;
 }
 
 /**
- * @brief 先把数据拷贝到Buffer，Buffer足够大时执行系统调用send，适合小包较多的数据
+ * @brief 先把数据拷贝到Buffer，Buffer足够大时执行系统调用send，适合小包较多的数据，仅用于tcp
  * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
  * 
  * @param buff  数据
  * @param len   数据长度
- * @return uint32_t 发送成功的数据长度
+ * @return uint32_t 成功返回chw::success,失败返回chw::fail
  */
 uint32_t Socket::send_b(char* buff, uint32_t len)
 {
+    LOCK_GUARD(_mtx_sock_fd);
+
     if (!_SndBuffer)
     {
         _SndBuffer = std::make_shared<Buffer>();
         if(_SndBuffer->SetCapacity(TCP_BUFFER_SIZE * 2) == chw::fail) {
             shutdown();
+            return chw::fail;
         } else {
             _SndBuffer->Reset0();
         }
     }
 
-    _send_flush_ticker.resetTime();
+    //1.先把buff放入缓存
+    if(len <= _SndBuffer->Idle())
+    {
+        // _SndBuffer剩余空间满足存放buff
+        _RAM_CPY_((char*)_SndBuffer->data() + _SndBuffer->Size(),len,buff,len);
+        _SndBuffer->SetSize(_SndBuffer->Size() + len);
+    }
+    else
+    {
+        // 不满足时，对_SndBuffer进行扩容   //todo:合理的扩容方案
+        if(_SndBuffer->Capacity() > _max_bufsize_b) {
+            PrintE("too big send_b buff:%u",_SndBuffer->Capacity());
+            shutdown();
+            return chw::fail;
+        }
+        if(_SndBuffer->SetCapacity((_SndBuffer->Capacity() + len) * 2) == chw::fail) {
+            shutdown();
+            return chw::fail;
+        }
+
+        _RAM_CPY_((char*)_SndBuffer->data() + _SndBuffer->Size(),len,buff,len);
+        _SndBuffer->SetSize(_SndBuffer->Size() + len);
+    }
+    
+    //2.尝试发送
+    try_flush_b(false);
+
+    return chw::success;
+}
+
+uint32_t Socket::try_flush_b(bool epoll_touch)
+{
+    //缓存足够大则执行系统调用发送
+    if(_SndBuffer->Size() > TCP_BUFFER_SIZE / 2)
+    {
+        if(_sendable == true) 
+        {
+            flush_b(epoll_touch);
+        } 
+        else
+        {
+            // 该socket不可写,判断发送超时
+            if (_send_flush_ticker.elapsedTime() > _max_send_buffer_ms) {
+                // 如果发送列队中最老的数据距今超过超时时间限制，那么就断开socket连接
+                emitErr(SockException(Err_other, "socket send timeout"));
+                return chw::fail;
+            }
+        }
+    }
+
+    return chw::success;
+}
+
+uint32_t Socket::flush_b(bool epoll_touch)
+{
+    if(_sock_fd->type() == SockNum::Sock_TCP) 
+    {
+        int32_t snd_bytes =  SockUtil::send_once_tcp(_sock_fd->rawFd(),(char*)_SndBuffer->data(),_SndBuffer->Size());
+        if(snd_bytes > 0)
+        {
+            if(snd_bytes == (int32_t)_SndBuffer->Size()) {
+                // 全部发送成功
+                _SndBuffer->Reset();
+                _send_flush_ticker.resetTime();
+            } else if(snd_bytes < (int32_t)_SndBuffer->Size()){
+                // 部分发送成功，监听可写事件，等待重发
+                _SndBuffer->Align(_SndBuffer->Size() - snd_bytes,_SndBuffer->Size());
+                _send_flush_ticker.resetTime();
+                        
+                //如果是epoll触发说明已经监听写事件了，不是则启动写事件监听，下同
+                if(epoll_touch == false) {
+                    // startWriteAbleEvent(_sock_fd->sockNum());
+                }
+            } else {
+                // 异常错误
+                PrintE("Invalid snd_bytes=%d,bufflen=%u",snd_bytes,_SndBuffer->Size());
+                   shutdown();
+               }
+
+            _send_speed += snd_bytes;
+
+            // 如果是epoll触发，且发送缓存已清空，停止写监听
+            if(epoll_touch == true && _SndBuffer->Size() == 0)
+            {
+                // stopWriteAbleEvent(_sock_fd->sockNum());
+            }
+        }
+        else if(snd_bytes == 0)
+        {
+            // 没有发送成功，监听可写事件，等待重发
+            if(epoll_touch == false) {
+                // startWriteAbleEvent(_sock_fd->sockNum());
+            }
+            return chw::success;
+        }
+        else
+        {
+            PrintE("send_b failed,errno=%d(%s)",errno,strerror(errno));
+            shutdown();
+            return chw::fail;
+        }
+    }
+    else
+    {
+        //udp不使用该方法
+        PrintE("send_b nonsupport udp socket.");
+        shutdown();
+        return chw::fail;
+    }
 
     return chw::success;
 }

@@ -99,7 +99,7 @@ void TextModel::startmodel()
                 }
                 else
                 {
-                    _pClient->senddata((char*)msg.c_str(),msg.size());
+                    _pClient->senddata_i((char*)msg.c_str(),msg.size());
                 }
             });
         }

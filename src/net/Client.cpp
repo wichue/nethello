@@ -52,13 +52,30 @@ const Socket::Ptr &Client::getSock() const
  * @param len  [in]数据长度
  * @return uint32_t 发送成功的数据长度
  */
-uint32_t Client::senddata(char* buff, uint32_t len)
+uint32_t Client::senddata_i(char* buff, uint32_t len)
 {
     if(_socket) {
         return _socket->send_i(buff,len);
     } else {
         return 0;
     }
+}
+
+/**
+ * @brief 发送数据（任意线程执行）
+ * 
+ * @param buff [in]数据
+ * @param len  [in]数据长度
+ * @return uint32_t 成功返回chw::success,失败返回chw::fail
+ */
+uint32_t Client::senddata_b(char* buff, uint32_t len)
+{
+    if(_socket) {
+        return _socket->send_b(buff,len);
+    } else {
+        PrintE("_socket==nullptr");
+        return chw::fail;
+    } 
 }
 
 }//namespace chw 

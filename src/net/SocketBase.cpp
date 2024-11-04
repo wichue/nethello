@@ -1240,7 +1240,7 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
     while(total_send_bytes < len) {
         curr_send_len = send(fd, (char*)buff + total_send_bytes, left_bytes, MSG_NOSIGNAL);
         if(curr_send_len < 0) {
-            if( (errno == EINTR || errno == EAGAIN) && (resendtimes++ < 100000))
+            if( (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) && (resendtimes++ < 100000))
             {
                 usleep(1000);
                 continue;
@@ -1258,6 +1258,32 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
     }
 
      return total_send_bytes;
+}
+
+/**
+ * @brief tcp发送数据，执行一次系统调用后立即返回
+ * 
+ * @param fd    fd
+ * @param buff  数据
+ * @param len   数据长度
+ * @return int32_t  发送成功或部分成功，返回发送的数据长度；发生错误返回-1；下次重试返回0
+ */
+int32_t SockUtil::send_once_tcp(int32_t fd, char * buff, uint32_t len)
+{
+    ssize_t sndlen =  send(fd, buff, len, MSG_NOSIGNAL);
+    if(sndlen > 0) {
+        return sndlen;
+    } else if (sndlen < 0) {
+        if(errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 0;
+        } else {
+            PrintD("send failed,errno=%d(%s),len=%u,fd=%d",errno,strerror(errno),len,fd);
+            return -1;
+        }
+    } else { // 对端关闭连接
+        PrintD("send return 0,errno=%d(%s),len=%u,fd=%d",errno,strerror(errno),len,fd);
+        return -1;
+    }
 }
 
 uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
