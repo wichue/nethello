@@ -665,10 +665,13 @@ private:
 public:
     // 发送策略
     typedef enum {
-        SEND_IMMED, //立即发送，适用tcp和udp
+        SEND_IMMED, //立即发送，适用tcp和udp，默认模式
         SEND_BUFF,  //缓存大BUFF后发送，适用tcp
         SEND_LIST   //缓存到列表后发送，适用tcp和udp
     }SEND_TYPE;
+private:
+    SEND_TYPE _snd_type;
+    onReadCB _on_read;
 public:
     /**
      * 触发onErr事件
@@ -683,7 +686,13 @@ public:
 
 // chw:发送API，针对同一个Socket实例，建议只使用一种API
 
+    /**
+     * @brief 设置发送模式
+     * 
+     * @param type SEND_TYPE
+     */
     void SetSndType(SEND_TYPE type);
+
     /**
      * @brief 不缓存，立刻同步发送数据；失败时丢弃数据，并建议上层断开重联
      * tcp:发送失败会阻塞尝试一定次数重发
@@ -695,23 +704,15 @@ public:
      * @return uint32_t 发送成功的数据长度
      */
     uint32_t send_i(char* buff, uint32_t len);
-    //todo:创建缓存，当数据达到一定数量时再执行系统调用，减少syscall，如果一定时间内没有达到一定数量也执行系统调用。
-    //注意: 发送失败或部分发送成功会丢弃包,此时建议业务模块触发tcp断开重联
-    //todo:方案2：发送失败时监听可写事件，没有发送成功的先放入缓存，可写时再发送（一直发送失败会出现大量缓存积压，不利于业务快速反映）
-    // _max_send_buffer_ms/_send_flush_ticker 控制一直发送失败的超时
 
+/**********************************send_b****************************** */
     /**
-     * 关于写事件，适用与 send_b 和 send_l
-     * 1、刚刚连接成功的tcp客户端是监听写事件的。
-     * 2、外部调用send时，如果部分发送成功或等待重发，则启动写监听。
-     * 3、如果监听到可写事件，有缓存数据则内部调用send，没有则停止监听。
-     * 4、内部调用send时，如果发送缓存清空了，则停止写监听。
-     */
-    /**
-     * @brief 先把数据拷贝到_SndBuffer，_SndBuffer足够大时执行系统调用send，适合小包较多的数据，仅用于tcp
-     * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
+     * @brief 先把数据拷贝到_SndBuffer，_SndBuffer足够大时执行系统调用send，适合小包较多的数据，并用定时器周期清空小包数据，仅用于tcp
+     * epoll:不监听写事件
      * 注意：返回成功表示数据已经拷贝到 _SndBuffer 应用层发送缓存，不代表已经拷贝到内核发送缓存区
      * 测试：包长1000字节，send_i发送速率220MB/s，send_b发送速率2.3GB/s；包长10字节，send_i发送速率2.3MB/s，send_b发送速率205MB/s。
+     * 如果是大包且数据量很大的情况，相当于把大量数据放到 _SndBuffer 一个缓存区，可能会爆掉。
+     * 首先要执行 SetSndType(Socket::SEND_BUFF)
      * 
      * @param buff  [in]数据
      * @param len   [in]数据长度
@@ -719,12 +720,44 @@ public:
      * @return uint32_t 成功返回chw::success,失败返回chw::fail
      */
     uint32_t send_b(char* buff, uint32_t len);
-    uint32_t try_flush_b(bool epoll_touch);
-    uint32_t flush_b(bool epoll_touch);
 
-    // 设置 _max_bufsize_b
-    void SetMaxBuffB(uint32_t size) {_max_bufsize_b = size;}
+    /**
+     * @brief 立即发送_SndBuffer（send_b是外部线程调用，timer_b是epoll线程调用）
+     * 
+     * @return uint32_t 成功返回chw::success,失败返回chw::fail
+     */
+    uint32_t flush_b();
 
+    /**
+     * @brief 定时检测是否需要flush_b，epoll线程执行
+     * 
+     * @return uint32_t 成功返回chw::success,失败返回chw::fail
+     */
+    uint32_t timer_b();
+
+    // 设置 _max_bufsize_b 、 _flush_b_times 、 _snd_timeout_b
+    void SetBuffB(uint32_t size, uint32_t times, double timeout) {_max_bufsize_b = size;_flush_b_times = times;_snd_timeout_b = timeout;}
+private:
+    Buffer::Ptr _SndBuffer;//send_b 的应用层发送缓存区
+    uint32_t _max_bufsize_b = 128<<20;//_SndBuffer 允许扩容最大值，当前buf大小低于该值则允许扩容，防止无限制扩容导致分配失败
+    Ticker _snd_ticker_b;//距离上一次执行flush_b时长
+    Timer::Ptr _snd_timer_b;// send_b 周期检测是否flush_b定时器
+    uint32_t _flush_b_times = 1000;// _snd_ticker_b 超时时长，大于该值则执行flush_b，单位毫秒
+    double _snd_timeout_b = 1;// _snd_timer_b 超时时长，单位秒
+/**********************************send_b****************************** */
+
+    // todo:发送失败时监听可写事件，没有发送成功的先放入缓存，可写时再发送（一直发送失败会出现大量缓存积压，不利于业务快速反映）
+    // _max_send_buffer_ms/_send_flush_ticker 控制一直发送失败的超时
+
+    /**
+     * 关于写事件，适用与 send_l
+     * 1、刚刚连接成功的tcp客户端是监听写事件的。
+     * 2、外部调用send时，如果部分发送成功或等待重发，则启动写监听。
+     * 3、如果监听到可写事件，有缓存数据则内部调用send，没有则停止监听。
+     * 4、内部调用send时，如果发送缓存清空了，则停止写监听。
+     * 5、发送需要获取锁，send由外部线程调用，如果有剩余没有发送的数据，则是由epoll线程触发发送。
+     * 6、使用写事件控制发送时，在高数据量情况下，容易导致应用层发送缓存太大，没有不监听写事件的发送效率高。
+     */
     /**
      * @brief 先把数据Buffer放入一个list，当epoll不可写时暂时挂起，不阻塞线程，最接近原flushData方案
      * epoll可写时执行发送，不可写时暂停发送，需要设置发送失败超时时长
@@ -742,13 +775,6 @@ public:
      * @param enable true启动测速，false关闭测速
      */
     void enable_speed(bool enable);
-private:
-    SEND_TYPE _snd_type;
-    onReadCB _on_read;
-//send_b
-    Buffer::Ptr _SndBuffer;//send_b 的应用层发送缓存区
-    uint32_t _max_bufsize_b = MAX_BUFFER_SIZE;//_SndBuffer 允许扩容最大值，当前buf大小低于该值则允许扩容
-    Ticker _SndTicker;//send_b 
 
 private://SocketRecvFromBuffer
     Buffer::Ptr _buffer;

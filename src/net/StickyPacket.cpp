@@ -66,7 +66,7 @@ uint32_t StickyPacket(const Buffer::Ptr &buf,const DispatchCB& cb)
         //3.3处理结束，如果尾部还有不完整的消息，拷贝到buf的最前端
         if(offset < buf->Size())
         {
-            return buf->Align(buf->Size() - offset, buf->Size());
+            return buf->Align(offset, buf->Size());
         }
         else if(offset == buf->Size())
         {
