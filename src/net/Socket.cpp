@@ -272,7 +272,7 @@ bool Socket::attachEvent(const SockNum::Ptr &sock) {
 
     // tcp客户端或udp，监听读、写、错误
     //auto read_buffer = _poller->getSharedBuffer(sock->type() == SockNum::Sock_UDP);
-    auto result = _poller->addEvent(sock->rawFd(), EventLoop::Event_Read | EventLoop::Event_Error | EventLoop::Event_Write, [weak_self, sock/*, read_buffer*/](int event) {
+    auto result = _poller->addEvent(sock->rawFd(), EventLoop::Event_Read | EventLoop::Event_Error/* | EventLoop::Event_Write*/, [weak_self, sock/*, read_buffer*/](int event) {
         auto strong_self = weak_self.lock();
         if (!strong_self) {
             return;
@@ -1152,15 +1152,23 @@ uint32_t Socket::timer_b()
         flush_b();
     }
 
+    if (_snd_ticker_b.elapsedTime() > _flush_b_times * 10)
+    {
+        // 如果连续多个周期都没有数据发送成功，报错关闭Socket，防止无限制等待
+        emitErr(SockException(Err_other, "socket send timeout"));
+    }
+
     return chw::success;
 }
 
 uint32_t Socket::flush_b()
 {
     if(_SndBuffer->Size() == 0)
+    {
+        _snd_ticker_b.resetTime();
         return chw::fail;
-
-    _snd_ticker_b.resetTime();
+    }
+    
     if(_sock_fd->type() == SockNum::Sock_TCP) 
     {
         int32_t snd_bytes =  SockUtil::send_once_tcp(_sock_fd->rawFd(),(char*)_SndBuffer->data(),_SndBuffer->Size());
@@ -1168,9 +1176,11 @@ uint32_t Socket::flush_b()
         {
             if(snd_bytes == (int32_t)_SndBuffer->Size()) {
                 // 全部发送成功
+                _snd_ticker_b.resetTime();
                 _SndBuffer->Reset();
             } else if(snd_bytes < (int32_t)_SndBuffer->Size()){
                 // 部分发送成功，监听可写事件，等待重发
+                _snd_ticker_b.resetTime();
                 _SndBuffer->Align(snd_bytes,_SndBuffer->Size());
             } else {
                 // 异常错误
@@ -1185,7 +1195,6 @@ uint32_t Socket::flush_b()
         }
         else
         {
-            PrintE("send_b failed,errno=%d(%s)",errno,strerror(errno));
             shutdown();
             return chw::fail;
         }

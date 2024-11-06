@@ -1240,19 +1240,22 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
     while(total_send_bytes < len) {
         curr_send_len = send(fd, (char*)buff + total_send_bytes, left_bytes, MSG_NOSIGNAL);
         if(curr_send_len < 0) {
-            if( (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) && (resendtimes++ < 100000))
+            auto err = get_uv_error(true);
+            if (err == UV_EAGAIN && (resendtimes++ < 10000))
+            // if( (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) && (resendtimes++ < 100000))
             {
                 usleep(1000);
                 continue;
             }
 
-            PrintD("send failed,errno=%d(%s),resendtimes=%d,len=%u,total_send_bytes=%u,fd=%d",errno,strerror(errno),resendtimes,len,total_send_bytes,fd);
+            PrintD("send failed,err=%s,resendtimes=%d,len=%u,total_send_bytes=%u,fd=%d",uv_strerror(err),resendtimes,len,total_send_bytes,fd);
             return total_send_bytes;
         } else if(curr_send_len > 0) {
             total_send_bytes += curr_send_len;
             left_bytes -= curr_send_len;
         } else {
-            PrintD("send return 0,errno=%d(%s),len=%u,fd=%d",errno,strerror(errno),len,fd);
+            auto err = get_uv_error(true);
+            PrintD("send return 0,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
             return 0;
         }
     }
@@ -1274,14 +1277,17 @@ int32_t SockUtil::send_once_tcp(int32_t fd, char * buff, uint32_t len)
     if(sndlen > 0) {
         return sndlen;
     } else if (sndlen < 0) {
-        if(errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+        auto err = get_uv_error(true);
+        if (err == UV_EAGAIN) {
+        // if(errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
             return 0;
         } else {
-            PrintD("send failed,errno=%d(%s),len=%u,fd=%d",errno,strerror(errno),len,fd);
+            PrintD("send failed,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
             return -1;
         }
     } else { // 对端关闭连接
-        PrintD("send return 0,errno=%d(%s),len=%u,fd=%d",errno,strerror(errno),len,fd);
+        auto err = get_uv_error(true);
+        PrintD("send return 0,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
         return -1;
     }
 }
