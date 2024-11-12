@@ -1,0 +1,248 @@
+
+
+struct iovec 
+{
+    void  *iov_base;    // 指向数据缓冲区的指针
+    size_t iov_len;     // 数据缓冲区的长度
+};
+
+
+// 描述`sendmsg'和`recvmsg'的消息结构体
+struct msghdr
+{
+    void *msg_name;		/* 发送/接收的网络地址.  */
+    socklen_t msg_namelen;	/* 网络地址长度.  */
+
+    struct iovec *msg_iov;	/* 指向数据缓冲区的指针，可以是数组.  */
+    size_t msg_iovlen;		/* 数据缓存区数组 msg_iov 的成员数量.  */
+
+    void *msg_control;		/* 指向辅助数据的缓冲区 (用于控制消息) */
+    size_t msg_controllen;	/* 辅助数据缓冲区的大小 */
+
+    int msg_flags;		/* 接收消息时设置的标志.  */
+};
+
+struct mmsghdr
+{
+    struct msghdr msg_hdr;	/* 消息头.  */
+    unsigned int msg_len;	/* 传输的字节数.  */
+};
+
+/**
+ * @brief 系统调用 sendmsg
+ * 在发送时， iovec 数组中的每个元素都表示要发送的一个数据块。sendmsg 会将这些数据块作为一个整体发送。
+ * 在接收时， iovec 数组中的每个元素都表示接收的数据块的位置和大小。recvmsg 会将接收到的数据分散到这些缓冲区中。
+ * 
+ * @param sockfd 
+ * @param msg 
+ * @param flags 
+ * @return ssize_t 
+ */
+ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+
+//sendmsg 和 sendmmsg 区别：两者都能发送多块数据，区别在于sendmsg会将所有数据整合成一个UDP包发出，sendmmsg是每个 mmsghdr 一个UDP包，所有发送RTP这种事只能用sendmmsg了。
+//sendmmsg :经测试，如果每个原始udp包都设置一个 mmsghdr 头， __vlen 数量和原始udp包数量一致，观察CPU软中断、性能消耗等和sendto类似，%usr消耗下降，速率有提升但有限。
+//sendmmsg :如果把多个原始udp包都放在一个 mmsghdr 头， __vlen 数量是1，CPU软中断下降，速率有提升，但所有udp包会被合并成一个udp大包，使用同一个ip/udp头部，相当于调用了 sendmsg 。
+//思考： sendmsg/sendmmsg/sendto 等系统调用只是把数据拷贝到内核缓存区，这个拷贝的过程并不会消耗太多CPU性能，真正消耗性能触发软中断的是内核把数据包通过网卡发送出去。
+
+/**
+ * @brief 系统调用 sendmmsg ，可以发送多个mmsghdr数据，每个mmsghdr包含一个msghdr，msghdr中包含多个数据包构成的数组iovec*
+ * 
+ * @param __fd          fd
+ * @param __vmessages   指向 mmsghdr 数组的指针
+ * @param __vlen        mmsghdr 数组的成员个数
+ * @param __flags 
+ * @return int          成功发送 mmsghdr 的个数
+ */
+extern int sendmmsg (int __fd, struct mmsghdr *__vmessages,unsigned int __vlen, int __flags);
+
+
+
+
+
+
+
+
+
+Socket.h
+public:
+    /**
+     * @brief udp使用sendmmsg方案发送，实测对发送速率没有提升，代码先保留
+     * 
+     * @param buf 
+     * @param len 
+     * @return uint32_t 
+     */
+    uint32_t send_u(char* buf, uint32_t len);
+    uint32_t flush_u();
+    ssize_t send_l_u(int fd, int flags);
+    ssize_t send_uu(int fd, int flags);
+    void reOffset_u(size_t n);
+private:
+    List<Buffer::Ptr> _lSndBuffU;//send_u 等待发送数据列表
+    size_t _remain_size = 0;//_iovec 总发送大小
+    std::vector<struct iovec> _iovec;
+    // std::vector<struct mmsghdr> _hdrvec;
+    struct mmsghdr _hdrvec;
+
+//////////////////////////////////////////////////////////////////////////////////
+uint32_t Socket::send_u(char* buf, uint32_t len)
+{
+    //1.先把buf放入缓存list
+    Buffer::Ptr sbuf = std::make_shared<Buffer>();
+    sbuf->SetCapacity(len);
+    _RAM_CPY_((char*)sbuf->data(),len,buf,len);
+    sbuf->SetSize(len);
+
+    {
+        LOCK_GUARD(_mtx_sock_fd);
+        _lSndBuffU.emplace_back(std::move(sbuf));
+    }
+
+    //2.缓存list足够大则执行系统调用发送
+    if(_lSndBuffU.size() > 100)
+    {
+        if(_sendable == true)
+        {
+            flush_u();
+        }
+    }
+
+    return chw::success;
+}
+
+uint32_t Socket::flush_u()
+{
+    if(_lSndBuffU.size() == 0)
+    {
+        _snd_ticker_b.resetTime();
+        return chw::fail;
+    }
+
+    if(_sock_fd->type() == SockNum::Sock_UDP) 
+    {
+        _iovec.resize(_lSndBuffU.size());
+        _hdrvec.resize(_lSndBuffU.size());
+
+        struct sockaddr *addr;
+        socklen_t addr_len;
+        if(_udp_send_dst) 
+        {
+            addr = (struct sockaddr *)_udp_send_dst.get();
+            addr_len = SockUtil::get_sock_len(addr);
+        } else {
+            addr = (struct sockaddr *)&_peer_addr;
+            addr_len = SockUtil::get_sock_len(addr);
+        }
+
+        auto i = 0U;
+        _lSndBuffU.for_each([&](Buffer::Ptr&pr) 
+        {
+            auto &io = _iovec[i];
+            io.iov_base = pr->data();
+            io.iov_len = pr->Size();
+            _remain_size += io.iov_len;
+
+
+
+            // auto ptr = getBufferSockPtr(pr);
+            auto &mmsg = _hdrvec[i];
+            auto &msg = mmsg.msg_hdr;   // 实际消息头
+            mmsg.msg_len = 0;           // 该条目的接收或发送的字节数
+            msg.msg_name = (void *)addr;    // 指向目标地址结构体的指针 
+            msg.msg_namelen = addr_len;     // 目标地址结构体的大小 
+            msg.msg_iov = &io;              // 指向数据缓冲区的指针 
+            msg.msg_iovlen = 1;             // 数据缓冲区的数量
+            msg.msg_control = nullptr;      // 指向辅助数据缓冲区的指针 
+            msg.msg_controllen = 0;         // 辅助数据缓冲区的大小
+            msg.msg_flags = 0;              // 消息标志
+            ++i;
+        });
+
+        auto n = send_l_u(_sock_fd->rawFd(), _sock_flags);
+        if (n > 0) {
+            // // 全部或部分发送成功
+            // if (_remain_size == 0) {
+            //     // 全部发送成功
+            //     send_buf_sending_tmp.pop_front();
+            //     continue;
+            // }
+            // // 部分发送成功
+            // if (!poller_thread) {
+            //     // 如果该函数是poller线程触发的，那么该socket应该已经加入了可写事件的监听，所以我们不需要再次加入监听
+            //     startWriteAbleEvent(sock);
+            // }
+            // break;
+            // PrintD("n=%d",n);
+            _send_speed += n*10;
+        }
+
+        _lSndBuffU.clear();
+        _remain_size = 0;
+        _iovec.clear();
+        _hdrvec.clear();
+    }
+    else
+    {
+        //tcp不使用该方法
+        PrintE("send_b nonsupport tcp socket.");
+        shutdown();
+        return chw::fail;
+    }
+
+    return chw::success;
+}
+
+ssize_t Socket::send_uu(int fd, int flags) {
+    auto remain_size = _remain_size;
+    while (_remain_size && send_l_u(fd, flags) != -1);
+    ssize_t sent = remain_size - _remain_size;
+    // PrintD("sent=%d",sent);
+    //sent是发送成功的字节数
+    if (sent > 0) {
+        //部分或全部发送成功
+        _send_speed += sent;
+        return sent;
+    }
+    //一个字节都未发送成功
+    return -1;
+}
+
+ssize_t Socket::send_l_u(int fd, int flags) {
+    ssize_t n;
+    do {
+        n = ::sendmmsg(fd, &_hdrvec[0], _hdrvec.size(), flags);
+    } while (-1 == n && UV_EINTR == get_uv_error(true));
+// PrintD("sendmmsg n=%d",n);
+    //n 是发送成功包的个数
+    if (n > 0) {
+        //部分或全部发送成功
+        // reOffset_u(n);
+        return n;
+    }
+
+    //一个字节都未发送
+    return n;
+}
+
+void Socket::reOffset_u(size_t n) {
+    for (auto it = _hdrvec.begin(); it != _hdrvec.end();) {
+        auto &hdr = *it;
+        auto &io = *(hdr.msg_hdr.msg_iov);
+        assert(hdr.msg_len <= io.iov_len);
+        _remain_size -= hdr.msg_len;
+        // PrintD("hdr.msg_len=%d",hdr.msg_len);
+        if (hdr.msg_len == io.iov_len) {
+            //这个udp包全部发送成功
+            it = _hdrvec.erase(it);
+            // sendFrontSuccess();
+            continue;
+        }
+        //部分发送成功
+        io.iov_base = (char *)io.iov_base + hdr.msg_len;
+        io.iov_len -= hdr.msg_len;
+        break;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////

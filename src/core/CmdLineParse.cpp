@@ -103,12 +103,16 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
         {"src", required_argument, NULL, 'S'},
         {"dst", required_argument, NULL, 'D'},
 
+        {"raw", no_argument, NULL, 'r'},
+        {"interface", required_argument, NULL, 'I'},
+        {"dstmac", required_argument, NULL, 'M'},
+
         {NULL, 0, NULL, 0}
     };
     int flag;
     int portno;
    
-    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:f:S:D:PFn:", longopts, NULL)) != -1) {
+    while ((flag = getopt_long(argc, argv, "hvsu46p:c:t:i:B:l:b:f:S:D:PFn:rI:M:", longopts, NULL)) != -1) {
         switch (flag) {
             case 'h':
 				help();
@@ -206,6 +210,18 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
                 gConfigCmd.dst = optarg;
                 break;
 
+            case 'r':
+                gConfigCmd.protol = SockNum::Sock_RAW;
+                break;
+            case 'I':
+                gConfigCmd.interface = optarg;
+                break;
+            case 'M':
+                if(StrtoMacBuf(optarg,gConfigCmd.dstmac) == chw::fail) {
+                    printf("Invalid mac addr:%s\n",optarg);
+                    return chw::fail;
+                }
+                break;
                 
             default:
 				printf("Incorrect parameter option, --help for help.\n");
@@ -213,12 +229,12 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
         }
     }
 
-    if ((gConfigCmd.role != 'c') && (gConfigCmd.role != 's')) {
+    if ((gConfigCmd.role != 'c') && (gConfigCmd.role != 's') && gConfigCmd.protol != SockNum::Sock_RAW) {
         printf("must either be a client (-c) or server (-s)\n");
         return chw::fail;
     }
 
-    if(gConfigCmd.server_port == 0) {
+    if(gConfigCmd.server_port == 0 && gConfigCmd.protol != SockNum::Sock_RAW) {
         printf("server port is empty, use -p option, --help for help.\n");
         return chw::fail;
     }
@@ -228,7 +244,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
     {
         if(gConfigCmd.src == nullptr || gConfigCmd.dst == nullptr)
         {
-            printf("file transfer model,-S and -D option is s must, -h for help. \n");
+            printf("file transfer model,-S and -D option is must, -h for help. \n");
             return chw::fail;
         }
 
@@ -262,6 +278,9 @@ void CmdLineParse::help()
             "  -P, --Perf                Performance test mode\n"
             "  -F, --File                File transmission mode\n"
             "  -B, --bind      <host>    bind to a specific interface\n"
+            "  -r, --raw                 use raw socket, only for --Text and --Perf\n"
+            "  -I, --interface           local net card, only for --raw\n"
+            "  -M, --dstmac              destination mac address, only for --raw\n"
 
             "Server specific:\n"
             "  -s, --server              run in server mode\n"

@@ -72,6 +72,17 @@ public:
      */
     uint32_t senddata_b(char* buff, uint32_t len);
 
+    /**
+     * @brief 使用网络地址发送数据，用于udp和raw
+     * 
+     * @param buff 数据
+     * @param len  数据长度
+     * @param addr 目的地址
+     * @param socklen 目的地址长度
+     * @return uint32_t 发送成功的数据长度
+     */
+    uint32_t send_addr(char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen);
+
     const Socket::Ptr &getSock() const;
 
 protected:

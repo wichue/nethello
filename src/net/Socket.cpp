@@ -545,10 +545,11 @@ bool Socket::fromSock(int fd, SockNum::SockType type) {
 }
 
 bool Socket::fromSock_l(SockNum::Ptr sock) {
+    setSock(sock);//chw:先创建_sock_fd，再激活事件监听，否则可能已经收到数据但_sock_fd还是null的
     if (!attachEvent(sock)) {
         return false;
     }
-    setSock(std::move(sock));
+    // setSock(std::move(sock));
     return true;
 }
 
@@ -1050,7 +1051,7 @@ uint32_t Socket::send_i(char* buff, uint32_t len)
     LOCK_GUARD(_mtx_sock_fd);
 
     if (!_sock_fd) {
-        PrintE("tcp not connected.");
+        PrintE("socket is null.");
         // 如果已断开连接或者发送超时
         return 0;
     }
@@ -1072,6 +1073,38 @@ uint32_t Socket::send_i(char* buff, uint32_t len)
                     _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,addr_len);
                     // PrintD("_snd_bytes=%d", _snd_bytes);
                 }
+            }
+
+            _send_speed += _snd_bytes;
+            return _snd_bytes;
+        }
+    } else {
+        PrintE("send able is false.");
+        return 0;
+    }
+
+    return 0;
+}
+
+uint32_t Socket::send_addr(char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
+{
+    LOCK_GUARD(_mtx_sock_fd);
+
+    if (!_sock_fd) {
+        PrintE("socket not connected.");
+        // 如果已断开连接或者发送超时
+        return 0;
+    }
+    //发送失败由上层处理
+    if (_sendable) {
+        // 该socket可写
+        uint32_t _snd_bytes = 0;
+        if(len > 0 && buff != nullptr) {
+            if(_sock_fd->type() == SockNum::Sock_TCP) {
+                PrintE("send_addr not support tcp.");
+                return 0;
+            } else {
+                _snd_bytes =  SockUtil::send_udp_data(_sock_fd->rawFd(),buff,len,addr,socklen);
             }
 
             _send_speed += _snd_bytes;

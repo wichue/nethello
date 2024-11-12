@@ -366,11 +366,17 @@ bool isValidMacAddress(const std::string& mac) {
  * @return uint32_t 成功返回chw::success,失败返回chw::fail
  */
 uint32_t StrtoMacBuf(const char* charArray, unsigned char* macAddress) {
+#if defined(__linux__) || defined(__linux)
+    if(is_valid_mac_addr(charArray) == chw::fail)
+    {
+        return chw::fail;
+    }
+#else
     if(isValidMacAddress(charArray) == chw::fail)
     {
         return chw::fail;
     }
-
+#endif// defined(__linux__) || defined(__linux)
     std::istringstream iss(charArray);
     int value;
 

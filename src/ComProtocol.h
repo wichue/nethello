@@ -254,6 +254,9 @@ typedef enum {
 
 #pragma pack()
 
+#define ETH_RAW_TEXT (0xFF01)   // 自定义文本以太协议
+#define ETH_RAW_PERF (0xFF02)   // 自定义性能以太协议
+
 // 文件传输状态
 enum FileTranStatus
 {
@@ -295,16 +298,18 @@ struct ConfigCmd
 {
     char      role;              // 'c' lient(-c) or 's' erver(-s)
     char     *server_hostname;   // 服务端ip(-c)
-    SockNum::SockType protol;    // 协议类型，默认tcp(-u udp)
+    SockNum::SockType protol;    // 协议类型，默认tcp(-u udp,-r raw)
     int32_t   domain;            // AF_INET(-4) or AF_INET6(-6)
     uint16_t  server_port;       // 服务端的端口号(-p)
     uint32_t  duration;          // 测试总时长，默认0一直测试(-t)
     double    reporter_interval; // 状态输出间隔，默认1，单位秒(-i)
     char     *bind_address;      // 监听的ip地址，默认监听所有ip(-B)
-    uint32_t  blksize;           // 发送的每个报文大小(-l)
+    uint32_t  blksize;           // 发送的每个报文大小(-l)，为0时不发送
     uint32_t  bandwidth;         // 设置带宽，默认0以最大能力发送(-b)
     WorkModel workmodel;         // 工作模式，默认 TEXT_MODEL
     uint16_t  client_port;       // 客户端绑定的端口号(-n)
+    char*     interface;         // 本地网卡名称(-I)，仅用于(-r)模式，不传参默认nullptr不绑定本地网卡，则不会接收到消息
+    uint8_t   dstmac[6];         // 目的MAC地址(-M)，仅用于(-r)模式，不传参默认全0
 
     char* src;//文件传输模式，本地文件路经(-S)
     char* dst;//文件传输模式，目的文件路经(-D)
@@ -328,6 +333,8 @@ struct ConfigCmd
         workmodel = TEXT_MODEL;
         src = nullptr;
         dst = nullptr;
+        interface = nullptr;
+        memset(dstmac,0,6);
     }
 };
 

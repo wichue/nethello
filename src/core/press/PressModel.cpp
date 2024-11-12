@@ -266,19 +266,19 @@ void PressModel::start_client_press()
             }
 
             pMsgHdr->uMsgIndex ++;
-            uint32_t sndlen = _pClient->senddata_b(buf,gConfigCmd.blksize);
-            // if(sndlen == gConfigCmd.blksize)
-            // {
-            //     _client_snd_num ++;
-            //     _client_snd_seq ++;
-            //     _client_snd_len += sndlen;
-            // }
-            // else
-            // {
-            //     // 出现错误，退出测试
-            //     prepare_exit();
-            //     sleep_exit(100 * 1000);
-            // }
+            uint32_t sndlen = _pClient->senddata_i(buf,gConfigCmd.blksize);
+            if(sndlen == gConfigCmd.blksize)
+            {
+                _client_snd_num ++;
+                _client_snd_seq ++;
+                _client_snd_len += sndlen;
+            }
+            else
+            {
+                // 出现错误，退出测试
+                prepare_exit();
+                sleep_exit(100 * 1000);
+            }
         }
     }
 
