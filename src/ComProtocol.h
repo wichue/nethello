@@ -289,6 +289,10 @@ public:
     virtual void startmodel() = 0;
     virtual void prepare_exit() = 0;
 
+    const EventLoop::Ptr &getPoller() const {
+        return _poller;
+    }
+
 protected:
     chw::EventLoop::Ptr _poller;
 };

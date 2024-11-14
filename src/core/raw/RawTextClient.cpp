@@ -48,7 +48,7 @@ void RawTextClient::onError(const SockException &ex)
 }
 
 /**
- * @brief 使用原始套接字发送文本数据
+ * @brief 使用原始套接字发送文本数据[dstmac][srcmac][FF01][text]
  * 
  * @param buf 数据
  * @param len 数据长度

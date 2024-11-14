@@ -68,6 +68,22 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
 ![file](https://github.com/wichue/nethello/blob/master/doc/file.png)
+### 原始套接字
+- raw socket文本聊天
+
+```shell
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9e
+```
+
+- raw socket性能测试
+
+```shell
+# 发送端
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9e -P
+# 接收端
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9e -P -l 0
+```
+
 ## 命令行参数
 ```shell
       -v, --version             show version information and quit

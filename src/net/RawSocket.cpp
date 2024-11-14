@@ -15,7 +15,7 @@ RawSocket::RawSocket(const EventLoop::Ptr &poller) : Client(poller)
 }
 
 RawSocket::~RawSocket() {
-    TraceL << "~" << getIdentifier();
+
 }
 
 /**
@@ -119,12 +119,16 @@ uint32_t RawSocket::create_client(const std::string &NetCard, uint16_t , uint16_
     }
     memcpy(_local_mac,ifr.ifr_hwaddr.sa_data,IFHWADDRLEN);
 
-    // todo:不执行bind也可以收发
+    // 不执行bind也可以收发
     if(bind(fd,(struct sockaddr*)&_local_addr,sizeof(_local_addr))) {
         PrintE("bind raw socket,fd:%d, failed:%s",fd,get_uv_errmsg());
         close(fd);
         return chw::fail;
     }
+
+    // 设置发送和接收缓存区大小,某些场景下对速率有明显提升
+    // SockUtil::setSendBuf(fd,100*1024*1024);
+    // SockUtil::setRecvBuf(fd,100*1024*1024);
 
     PrintD("create raw socket, local interface:%s, mac:%s.",NetCard.c_str(),MacBuftoStr(_local_mac).c_str());
 

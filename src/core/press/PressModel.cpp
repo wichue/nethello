@@ -90,7 +90,7 @@ void PressModel::startmodel()
         } else {
             _pClient->create_client(chw::gConfigCmd.server_hostname,chw::gConfigCmd.server_port,chw::gConfigCmd.client_port,chw::gConfigCmd.bind_address);
         }
-        _pClient->getSock()->SetSndType(Socket::SEND_BUFF);
+        // _pClient->getSock()->SetSndType(Socket::SEND_BUFF);
     }
     
     // 创建定时器，周期打印速率信息到控制台

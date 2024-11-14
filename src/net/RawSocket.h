@@ -37,7 +37,7 @@ public:
      */
     virtual void setOnCon(onConCB oncon) override;
 
-protected:
+public:
     uint8_t _local_mac[IFHWADDRLEN] = {0};// 本端绑定网卡的MAC地址
     struct sockaddr_ll _local_addr;// 本地网卡地址，也是发送时sendto的目的地址，数据会发送到指定本地网卡
 };

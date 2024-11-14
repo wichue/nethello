@@ -31,6 +31,8 @@ SET(SRCS
     ${PREFIX}/src/core/file/FileModel.cpp
     ${PREFIX}/src/core/raw/RawTextClient.cpp
     ${PREFIX}/src/core/raw/RawTextModel.cpp
+    ${PREFIX}/src/core/raw/RawPressModel.cpp
+    ${PREFIX}/src/core/raw/RawPressClient.cpp
 
     ${PREFIX}/src/base/SignalCatch.cpp
     ${PREFIX}/src/base/BackTrace.cpp

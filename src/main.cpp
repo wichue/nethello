@@ -18,6 +18,7 @@
 #include "FileModel.h"
 #include "util.h"
 #include "RawTextModel.h"
+#include "RawPressModel.h"
 
 chw::workmodel::Ptr _workmodel = nullptr;
 using namespace chw;
@@ -26,12 +27,18 @@ void sigend_handler_abort(int sig)
 {
     if(_workmodel)
     {
-        _workmodel->prepare_exit();
+        _workmodel->getPoller()->async([&](){
+            _workmodel->prepare_exit();
+            usleep(100 * 1000);
+            printf("catch abort signal:%d,exit now.\n",sig);
+            exit(0);
+        });
     }
-    usleep(100 * 1000);
-    
-    printf("catch abort signal:%d,exit now.\n",sig);
-    exit(0);
+    else
+    {
+        printf("catch abort signal:%d,exit now.\n",sig);
+        exit(0);
+    }
 }
 
 //捕获段错误
@@ -96,7 +103,11 @@ int main(int argc, char **argv)
         }
         break;
     case chw::PRESS_MODEL:
-        _workmodel = std::make_shared<chw::PressModel>();
+        if(chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+            _workmodel = std::make_shared<chw::RawPressModel>();
+        } else {
+            _workmodel = std::make_shared<chw::PressModel>();
+        }
         break;
     case chw::FILE_MODEL:
         _workmodel = std::make_shared<chw::FileModel>();
@@ -112,6 +123,7 @@ int main(int argc, char **argv)
     static chw::Semaphore sem;
     signal(SIGINT, [](int) { sigend_handler_abort(SIGINT); sem.post(); });///SIGINT:Ctrl+C发送信号，结束程序
     sem.wait();
+    usleep(100 * 1000);
 
     chw::SignalCatch::Instance().CustomAbort(SIG_DFL);
     chw::SignalCatch::Instance().CustomCrash(SIG_DFL);
