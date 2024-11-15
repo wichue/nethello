@@ -31,6 +31,7 @@ PressModel::PressModel(const chw::EventLoop::Ptr& poller) : workmodel(poller)
     _server_rcv_spd = 0;
     _bStart = false;
     _rs = "";
+    _bsending = false;
 }
 
 PressModel::~PressModel()
@@ -113,7 +114,9 @@ void PressModel::startmodel()
     {
         if(chw::gConfigCmd.role == 'c')
         {
+            _bsending = true;
             start_client_press();
+            break;
         }
         else
         {
@@ -125,6 +128,9 @@ void PressModel::startmodel()
 
 void PressModel::prepare_exit()
 {
+    _bsending = false;
+    usleep(100 * 1000);
+
     uint32_t uDurTimeMs = _ticker_dur.elapsedTime();// 当前测试时长ms
     double uDurTimeS = 0;// 当前测试时长s
     if(uDurTimeMs > 0)
@@ -169,9 +175,12 @@ void PressModel::prepare_exit()
         if(chw::gConfigCmd.role == 's')
         {
             uint32_t lost_num = _server_rcv_seq - _server_rcv_num;
-            double lost_ratio = ((double)(lost_num) / (double)_server_rcv_seq) * 100;
-            // PrintD("%-16.0f%-8.2f(%s)  all %s pkt:%lu,bytes:%lu,seq:%lu,lost:%u(%.2f%%)"
-            //     ,uDurTimeS,speed,unit.c_str(),_rs.c_str(),_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
+            double lost_ratio = 0;
+            if(_server_rcv_seq > 0)
+            {
+                lost_ratio = ((double)(lost_num) / (double)_server_rcv_seq) * 100;
+            }
+
             InfoL << std::left << std::setw(16) << std::setprecision(0) << std::fixed << uDurTimeS << std::setw(8) << std::setprecision(2) << std::fixed << speed << "(" << unit << ")"
                 << "  all " << _rs << " pkt:" << _server_rcv_num << ",bytes:" << _server_rcv_len
                 << ",seq:" << _server_rcv_seq << ",lost:" << lost_num << "(" << std::setprecision(2) << std::fixed << lost_ratio << "%)";
@@ -257,7 +266,7 @@ void PressModel::start_client_press()
     // 不控速
     if(gConfigCmd.bandwidth == 0)
     {
-        while(1)
+        while(_bsending)
         {
             if(_bStart == false)
             {
@@ -276,6 +285,8 @@ void PressModel::start_client_press()
             else
             {
                 // 出现错误，退出测试
+                auto err = get_uv_error(true);
+                PrintE("send return=%u,all len=%d,err=%s", sndlen, gConfigCmd.blksize, uv_strerror(err));
                 prepare_exit();
                 sleep_exit(100 * 1000);
             }
@@ -288,7 +299,7 @@ void PressModel::start_client_press()
     uint32_t uByteps = uMBps * 1024 * 1024;// 每秒需要发送多少byte数据
     uint32_t uBytep100ms = uByteps / 10;// 每100ms需要发送多少byte数据
     
-    while(1)
+    while(_bsending)
     {
         if(_bStart == false)
         {
@@ -311,6 +322,8 @@ void PressModel::start_client_press()
             else
             {
                 // 出现错误，退出测试
+                auto err = get_uv_error(true);
+                PrintE("send return=%u,all len=%d,err=%s", sndlen, gConfigCmd.blksize, uv_strerror(err));
                 prepare_exit();
                 sleep_exit(100 * 1000);
             }

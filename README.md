@@ -72,18 +72,20 @@ _CRT_NONSTDC_NO_DEPRECATE
 - raw socket文本聊天
 
 ```shell
-./nethello -r -I eth0 -M 00:16:3e:3c:07:9e
+# 相互发
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
 ```
-
+![file](https://github.com/wichue/nethello/blob/master/doc/raw_text.png)
 - raw socket性能测试
 
 ```shell
 # 发送端
-./nethello -r -I eth0 -M 00:16:3e:3c:07:9e -P
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P
 # 接收端
-./nethello -r -I eth0 -M 00:16:3e:3c:07:9e -P -l 0
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P -l 0
 ```
-
+![file](https://github.com/wichue/nethello/blob/master/doc/raw_perf.png)
 ## 命令行参数
 ```shell
       -v, --version             show version information and quit

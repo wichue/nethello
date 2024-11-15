@@ -272,6 +272,7 @@ bool Socket::attachEvent(const SockNum::Ptr &sock) {
 
     // tcp客户端或udp，监听读、写、错误
     //auto read_buffer = _poller->getSharedBuffer(sock->type() == SockNum::Sock_UDP);
+    //chw:: 暂不监听Event_Write事件，当前发送方案没有使用Event_Write
     auto result = _poller->addEvent(sock->rawFd(), EventLoop::Event_Read | EventLoop::Event_Error/* | EventLoop::Event_Write*/, [weak_self, sock/*, read_buffer*/](int event) {
         auto strong_self = weak_self.lock();
         if (!strong_self) {

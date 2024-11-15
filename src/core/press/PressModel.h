@@ -51,6 +51,7 @@ private:
     chw::Server::Ptr _pServer;
     chw::Client::Ptr _pClient;
     std::shared_ptr<Timer> _timer;
+    bool _bsending;
 private:
     Ticker _ticker_ctl;// 控速用的计时器
     Ticker _ticker_dur;// 计算测试时长的计时器

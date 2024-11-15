@@ -30,13 +30,13 @@ void sigend_handler_abort(int sig)
         _workmodel->getPoller()->async([&](){
             _workmodel->prepare_exit();
             usleep(100 * 1000);
-            printf("catch abort signal:%d,exit now.\n",sig);
+            printf("catch abort1 signal:%d,exit now.\n",sig);
             exit(0);
         });
     }
     else
     {
-        printf("catch abort signal:%d,exit now.\n",sig);
+        printf("catch abort2 signal:%d,exit now.\n",sig);
         exit(0);
     }
 }
@@ -46,12 +46,19 @@ void sigend_handler_crash(int sig)
 {
     if(_workmodel)
     {
-        _workmodel->prepare_exit();
+        _workmodel->getPoller()->async([&](){
+            _workmodel->prepare_exit();
+            printf("catch crash1 signal:%d,exit now.\n",sig);
+            usleep(100 * 1000);
+            chw::chw_assert();
+        });
     }
-    usleep(100 * 1000);
-    
-    printf("catch crash signal:%d,exit now.\n",sig);
-	chw::chw_assert();
+    else
+    {
+        printf("catch crash2 signal:%d,exit now.\n",sig);
+        usleep(100 * 1000);
+        chw::chw_assert();
+    }
 }
 
 //todo:windows
