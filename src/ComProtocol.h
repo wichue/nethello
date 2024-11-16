@@ -312,7 +312,7 @@ struct ConfigCmd
     uint32_t  bandwidth;         // 设置带宽，默认0以最大能力发送(-b)
     WorkModel workmodel;         // 工作模式，默认 TEXT_MODEL
     uint16_t  client_port;       // 客户端绑定的端口号(-n)
-    char*     interface;         // 本地网卡名称(-I)，仅用于(-r)模式，不传参默认nullptr不绑定本地网卡，则不会接收到消息
+    char*     interfaceC;        // 本地网卡名称(-I)，仅用于(-r)模式，不传参默认nullptr不绑定本地网卡，则不会接收到消息
     uint8_t   dstmac[6];         // 目的MAC地址(-M)，仅用于(-r)模式，不传参默认全0
 
     char* src;//文件传输模式，本地文件路经(-S)
@@ -337,7 +337,7 @@ struct ConfigCmd
         workmodel = TEXT_MODEL;
         src = nullptr;
         dst = nullptr;
-        interface = nullptr;
+        interfaceC = nullptr;
         memset(dstmac,0,6);
     }
 };

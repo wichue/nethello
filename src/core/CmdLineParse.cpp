@@ -214,7 +214,7 @@ uint32_t CmdLineParse::parse_arguments(int argc, char **argv)
                 gConfigCmd.protol = SockNum::Sock_RAW;
                 break;
             case 'I':
-                gConfigCmd.interface = optarg;
+                gConfigCmd.interfaceC = optarg;
                 break;
             case 'M':
                 if(StrtoMacBuf(optarg,gConfigCmd.dstmac) == chw::fail) {

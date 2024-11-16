@@ -17,8 +17,10 @@
 #include "PressModel.h"
 #include "FileModel.h"
 #include "util.h"
+#if defined(__linux__) || defined(__linux)
 #include "RawTextModel.h"
 #include "RawPressModel.h"
+#endif// defined(__linux__) || defined(__linux)
 
 chw::workmodel::Ptr _workmodel = nullptr;
 using namespace chw;
@@ -102,20 +104,32 @@ int main(int argc, char **argv)
     
     switch (chw::gConfigCmd.workmodel)
     {
+#if defined(__linux__) || defined(__linux)
     case chw::TEXT_MODEL:
-        if(chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+        if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
             _workmodel = std::make_shared<chw::RawTextModel>();
-        } else {
+        }
+        else {
             _workmodel = std::make_shared<chw::TextModel>();
         }
         break;
     case chw::PRESS_MODEL:
-        if(chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+        if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
             _workmodel = std::make_shared<chw::RawPressModel>();
-        } else {
+        }
+        else {
             _workmodel = std::make_shared<chw::PressModel>();
         }
         break;
+#else
+    case chw::TEXT_MODEL:
+        _workmodel = std::make_shared<chw::TextModel>();
+        break;
+    case chw::PRESS_MODEL:
+        _workmodel = std::make_shared<chw::PressModel>();
+        break;
+#endif// defined(__linux__) || defined(__linux)
+
     case chw::FILE_MODEL:
         _workmodel = std::make_shared<chw::FileModel>();
         break;
