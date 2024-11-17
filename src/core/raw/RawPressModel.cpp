@@ -49,10 +49,10 @@ void RawPressModel::startmodel()
         }
     });
 
-    if(gConfigCmd.interface == nullptr) {
+    if(gConfigCmd.interfaceC == nullptr) {
         _pClient->create_client("",0);
     } else {
-        _pClient->create_client(gConfigCmd.interface,0);
+        _pClient->create_client(gConfigCmd.interfaceC,0);
     }
     
     // 创建定时器，周期打印速率信息到控制台

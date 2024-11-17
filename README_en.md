@@ -9,6 +9,7 @@ The lightweight tcp / udp network test tool based on C + + 11 implementation inc
 - Text chat, optional TCP/UDP protocol, test if the network is connected.
 - Performance testing, optional TCP/UDP protocol, can set sending rate, packet length, testing duration, output interval, etc.
 - File transfer, currently supports TCP protocol, allowing the client to send files to the server.
+- Raw socket testing, implementing text chat and performance testing using raw sockets, currently only supports Linux.
 
 ## Compile and Install
 ### linux
@@ -63,12 +64,30 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
 ![file](https://github.com/wichue/nethello/blob/master/doc/file.png)
+### Raw Socket
+- raw socket text chat
+
+```shell
+# Mutual exchange
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
+```
+![raw_text](https://github.com/wichue/nethello/blob/master/doc/raw_text.png)
+- raw socket performance testing
+
+```shell
+# Sending end
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P
+# receiving end
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P -l 0
+```
+![raw_perf](https://github.com/wichue/nethello/blob/master/doc/raw_perf.png)
 ## Command line parameters
 ```shell
       -v, --version             show version information and quit
       -h, --help                show this message and quit
 
-    Server or Client:
+	  Server or Client:
       -p, --port      #         server port to listen on/connect to
       -i, --interval  #         seconds between periodic bandwidth reports
       -u, --udp                 use UDP rather than TCP\n"
@@ -89,4 +108,9 @@ _CRT_NONSTDC_NO_DEPRECATE
       -S, --src                 --File(-F) model,Source file path, include file name
       -D, --dst                 --File(-F) model,Purpose file save path,exclusive file name
       -n, --number              client bind port
+
+    raw socket:
+      -r, --raw                 run raw socket, only for -T and -P mode
+      -I, --interface           local net card, only for -r
+      -M, --dstmac              destination mac address, only for -r
 ```

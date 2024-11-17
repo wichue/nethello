@@ -12,7 +12,7 @@
 - 文本聊天，可选tcp/udp协议，测试网络是否连通。
 - 压力测试，可选tcp/udp协议，可设置发送速率，每包长度，测试时长，输出间隔等。
 - 文件传输，目前支持tcp协议，由客户端发送文件至服务端。
-- 原始套接字测试，raw socket 实现文本聊天和性能测试。
+- 原始套接字测试，raw socket 实现文本聊天和性能测试，暂时仅支持linux。
 
 ## 编译和安装
 ### linux
@@ -76,7 +76,7 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
 ```
-![file](https://github.com/wichue/nethello/blob/master/doc/raw_text.png)
+![raw_text](https://github.com/wichue/nethello/blob/master/doc/raw_text.png)
 - raw socket性能测试
 
 ```shell
@@ -85,13 +85,13 @@ _CRT_NONSTDC_NO_DEPRECATE
 # 接收端
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P -l 0
 ```
-![file](https://github.com/wichue/nethello/blob/master/doc/raw_perf.png)
+![raw_perf](https://github.com/wichue/nethello/blob/master/doc/raw_perf.png)
 ## 命令行参数
 ```shell
       -v, --version             show version information and quit
       -h, --help                show this message and quit
 
-	Server or Client:
+	  Server or Client:
       -p, --port      #         server port to listen on/connect to
       -i, --interval  #         seconds between periodic bandwidth reports
       -u, --udp                 use UDP rather than TCP\n"
@@ -100,9 +100,6 @@ _CRT_NONSTDC_NO_DEPRECATE
       -P, --Perf                Performance test mode
       -F, --File                File transmission mode
       -B, --bind      <host>    bind to a specific interface
-      -r, --raw                 use raw socket, only for --Text and --Perf
-      -I, --interface           local net card, only for --raw
-      -M, --dstmac              destination mac address, only for --raw
 
     Server specific:
       -s, --server              run in server mode
@@ -115,4 +112,9 @@ _CRT_NONSTDC_NO_DEPRECATE
       -S, --src                 --File(-F) model,Source file path, include file name
       -D, --dst                 --File(-F) model,Purpose file save path,exclusive file name
       -n, --number              client bind port
+
+    raw socket:
+      -r, --raw                 run raw socket, only for -T and -P mode
+      -I, --interface           local net card, only for -r
+      -M, --dstmac              destination mac address, only for -r
 ```

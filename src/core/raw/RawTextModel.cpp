@@ -35,10 +35,10 @@ void RawTextModel::startmodel()
         }
     });
 
-    if(gConfigCmd.interface == nullptr) {
+    if(gConfigCmd.interfaceC == nullptr) {
         _pClient->create_client("",0);
     } else {
-        _pClient->create_client(gConfigCmd.interface,0);
+        _pClient->create_client(gConfigCmd.interfaceC,0);
     }
     
     // 主线程

@@ -278,9 +278,6 @@ void CmdLineParse::help()
             "  -P, --Perf                Performance test mode\n"
             "  -F, --File                File transmission mode\n"
             "  -B, --bind      <host>    bind to a specific interface\n"
-            "  -r, --raw                 use raw socket, only for --Text and --Perf\n"
-            "  -I, --interface           local net card, only for --raw\n"
-            "  -M, --dstmac              destination mac address, only for --raw\n"
 
             "Server specific:\n"
             "  -s, --server              run in server mode\n"
@@ -293,6 +290,11 @@ void CmdLineParse::help()
             "  -S, --src                 --File(-F) model,Source file path, include file name\n"
             "  -D, --dst                 --File(-F) model,Purpose file save path,exclusive file name\n"
             "  -n, --number              client bind port\n"
+
+            "raw socket:\n"
+            "  -r, --raw                 run raw socket, only for -T and -P mode\n"
+            "  -I, --interface           local net card, only for -r\n"
+            "  -M, --dstmac              destination mac address, only for -r\n"
 			);
 
 	exit(0);
