@@ -210,6 +210,16 @@ std::vector<std::string> split(const std::string& s, const char *delim);
 bool StrIsNull(const char *value);
 
 /**
+ * @brief 判断源字符串是否包含子字符串
+ * 
+ * @param str   源字符串
+ * @param sub   子字符串
+ * @return true 包含
+ * @return false 不包含
+ */
+bool Contain(const std::string& str, const std::string& sub);
+
+/**
  * @brief 将16进制字符转换为10进制
  * @param hex   [in]16进制字符
  * @return      转换后的10进制
