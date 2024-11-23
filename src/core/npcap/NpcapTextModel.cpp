@@ -4,6 +4,10 @@
 #include "NpcapTextModel.h"
 #include "GlobalValue.h"
 
+#include <stdint.h>
+#include <string>
+#include <iostream>
+
 namespace chw {
 
 NpcapTextModel::NpcapTextModel(const chw::EventLoop::Ptr& poller) : workmodel(poller)
@@ -22,7 +26,7 @@ NpcapTextModel::~NpcapTextModel()
 
 void NpcapTextModel::startmodel()
 {
-    _pClient = std::make_shared<chw::NpcapSocket>(_poller);
+    _pClient = std::make_shared<chw::NpcapSocket>();
     if(_pClient->OpenAdapter(gConfigCmd.interfaceC) == chw::success)
     {
         usleep(1000);
@@ -33,7 +37,7 @@ void NpcapTextModel::startmodel()
         sleep_exit(100*1000);
     }
 
-    _pClient->SetReadCb([](char* buf, uint32_t len){
+    _pClient->SetReadCb([](const u_char* buf, uint32_t len){
         ethhdr* peth = (ethhdr*)buf;
         uint16_t uEthType = ntohs(peth->h_proto);
         switch(uEthType)

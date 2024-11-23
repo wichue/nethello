@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include "ComProtocol.h"
+#include "EventLoop.h"
 #include "NpcapSocket.h"
 
 namespace chw {

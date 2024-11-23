@@ -15,10 +15,11 @@ namespace chw {
 /**
  * @brief https://npcap.com/#download
  * 下载：npcap-sdk-1.13.zip，解压缩后获取Lib和Include文件夹。
- * VS-属性-C/C++-附加包含目录，把...\Include\和...\Include\pcap目录添加进去。
+ * VS-属性-C/C++-附加包含目录，把...\Include目录添加进去。
  * VS-属性-调试-环境，添加 PATH=...\Lib;%PATH%
  * VS-属性-连接器-常规-附加库目录，添加 ...\Lib
  * ...用完整目录替代。
+ * 如果提示缺少Packet.dll和wpcap.dll，拷贝适合当前操作系统环境的库到可执行文件目录。
  */
 class NpcapSocket : public std::enable_shared_from_this<NpcapSocket>
 {
@@ -63,12 +64,12 @@ public:
      * 
      * @param cb 回调函数
      */
-    void SetReadCb(std::function<void(char* buf, uint32_t len)> cb);
+    void SetReadCb(std::function<void(const u_char* buf, uint32_t len)> cb);
 
 private:
     pcap_t * _handle;// 网络适配器句柄
     bool _bRunning;// 是否循环接收数据
-    std::function<void(char* buf, uint32_t len)> _cb;// 读数据回调
+    std::function<void(const u_char*, uint32_t len)> _cb;// 读数据回调
 };
 
 }//namespace chw 

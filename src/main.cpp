@@ -20,6 +20,8 @@
 #if defined(__linux__) || defined(__linux)
 #include "RawTextModel.h"
 #include "RawPressModel.h"
+#else
+#include "NpcapTextModel.h"
 #endif// defined(__linux__) || defined(__linux)
 
 chw::workmodel::Ptr _workmodel = nullptr;
@@ -123,7 +125,12 @@ int main(int argc, char **argv)
         break;
 #else
     case chw::TEXT_MODEL:
-        _workmodel = std::make_shared<chw::TextModel>();
+        if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+            _workmodel = std::make_shared<chw::NpcapTextModel>();
+        }
+        else {
+            _workmodel = std::make_shared<chw::TextModel>();
+        }
         break;
     case chw::PRESS_MODEL:
         _workmodel = std::make_shared<chw::PressModel>();

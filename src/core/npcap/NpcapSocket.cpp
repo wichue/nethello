@@ -103,7 +103,7 @@ int32_t NpcapSocket::SendToAdapter(char* buf, uint32_t len)
     }
 
     // pcap_sendpacket返回值：成功返回0，失败返回-1
-    int32_t iRet = pcap_sendpacket(_handle,buf,len);
+    int32_t iRet = pcap_sendpacket(_handle,(const u_char*)buf,len);
     if(iRet != 0)
     {
         PrintE("adapter send failed,iRet:%d,err:%s",iRet,pcap_geterr(_handle));
@@ -112,12 +112,12 @@ int32_t NpcapSocket::SendToAdapter(char* buf, uint32_t len)
     return iRet;
 }
 
-void NpcapSocket::SetReadCb(std::function<void(char* buf, uint32_t len)> cb)
+void NpcapSocket::SetReadCb(std::function<void(const u_char* buf, uint32_t len)> cb)
 {
     if(cb != nullptr) {
-        _cb = std::move(cd);
+        _cb = std::move(cb);
     } else {
-        _cb = [](char* buf, uint32_t len){
+        _cb = [](const u_char* buf, uint32_t len){
             PrintW("NpcapSocket not set read callback, data ignored: %d",len);
         };
     }
@@ -137,7 +137,7 @@ uint32_t NpcapSocket::StartRecvFromAdapter()
         const u_char * Packet_Data = nullptr;    // 数据本身
         int retValue = 0;
         // pcap_next_ex返回值：成功返回接收包个数，超时返回0，发送错误返回-1
-        int retValue = pcap_next_ex(_handle, &Packet_Header, &Packet_Data);
+        retValue = pcap_next_ex(_handle, &Packet_Header, &Packet_Data);
 
         if(retValue > 0) {
             // 成功接收到数据包
