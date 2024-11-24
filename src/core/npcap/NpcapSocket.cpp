@@ -7,6 +7,9 @@
 
 #include "util.h"
 #include "Logger.h"
+#include "GetMacAddress.h"
+#include "GlobalValue.h"
+#include "MemoryHandle.h"
 
 #pragma comment(lib, "packet.lib")
 #pragma comment(lib, "wpcap.lib")
@@ -44,7 +47,7 @@ uint32_t NpcapSocket::OpenAdapter(std::string desc)
 		{
 			if (ptr->description)
             {
-                PrintD("adapter desc:%s",ptr->description);
+                //PrintD("adapter desc:%s,name:%s",ptr->description,ptr->name);
                 if(Contain(ptr->description,desc) == true)
                 {
                     PrintD("find adapter:%s",ptr->description);
@@ -66,6 +69,11 @@ uint32_t NpcapSocket::OpenAdapter(std::string desc)
         return chw::fail; 
     }
 
+    if (GetMac(_local_mac, ptr->name) != 0)
+    {
+        return chw::fail;
+    }
+
     // PCAP_OPENFLAG_PROMISCUOUS:设置网卡混杂模式
     // PCAP_OPENFLAG_NOCAPTURE_LOCAL:不抓去自己发的包
     // PCAP_OPENFLAG_MAX_RESPONSIVENESS:设置最小拷贝为0   有数据包，立即触发回调函数
@@ -82,14 +90,19 @@ uint32_t NpcapSocket::OpenAdapter(std::string desc)
     */
     _handle = pcap_open(ptr->name, 65535, PCAP_OPENFLAG_PROMISCUOUS | PCAP_OPENFLAG_NOCAPTURE_LOCAL | PCAP_OPENFLAG_MAX_RESPONSIVENESS, 1, NULL, 0);
  
-	/* 不再需要设备列表了，释放它 */
-	pcap_freealldevs(allAdapters);
-
     if(_handle == nullptr)
     {
         PrintE("open adapter failed,err:%s.",errbuf);
+        /* 不再需要设备列表了，释放它 */
+        pcap_freealldevs(allAdapters);
+
         return chw::fail;
     }
+
+    PrintD("create npcap socket, local interface:%s, local mac:%s.", ptr->description, MacBuftoStr(_local_mac).c_str());
+
+    /* 不再需要设备列表了，释放它 */
+    pcap_freealldevs(allAdapters);
 
     return chw::success;
 }
@@ -102,8 +115,16 @@ int32_t NpcapSocket::SendToAdapter(char* buf, uint32_t len)
         return -1;
     }
 
+    char* snd_buf = (char*)_RAM_NEW_(sizeof(ethhdr) + len);
+    memcpy(snd_buf + sizeof(ethhdr), buf, len);
+
+    ethhdr* peth = (ethhdr*)snd_buf;
+    memcpy(peth->h_dest, gConfigCmd.dstmac, 6);
+    memcpy(peth->h_source, _local_mac, 6);
+    peth->h_proto = htons(ETH_RAW_TEXT);
+
     // pcap_sendpacket返回值：成功返回0，失败返回-1
-    int32_t iRet = pcap_sendpacket(_handle,(const u_char*)buf,len);
+    int32_t iRet = pcap_sendpacket(_handle,(const u_char*)snd_buf, sizeof(ethhdr) + len);
     if(iRet != 0)
     {
         PrintE("adapter send failed,iRet:%d,err:%s",iRet,pcap_geterr(_handle));

@@ -58,7 +58,8 @@ struct time_val
 };
 
 //pcap数据包头结构体
-struct pcap_pkthdr
+//与pcap.h头文件定义的pcap_pkthdr重名
+struct pcap_pkthdr_c
 {
     struct time_val ts;  /* time stamp */
     uint32_t caplen; /* length of portion present 实际捕获包的长度*/

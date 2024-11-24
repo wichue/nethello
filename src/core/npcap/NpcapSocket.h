@@ -68,6 +68,7 @@ public:
 
 private:
     pcap_t * _handle;// 网络适配器句柄
+    uint8_t _local_mac[6] = { 0 };// 本端绑定网卡的MAC地址
     bool _bRunning;// 是否循环接收数据
     std::function<void(const u_char*, uint32_t len)> _cb;// 读数据回调
 };

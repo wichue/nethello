@@ -372,7 +372,7 @@ uint32_t StrtoMacBuf(const char* charArray, unsigned char* macAddress) {
         return chw::fail;
     }
 #else
-    if(isValidMacAddress(charArray) == chw::fail)
+    if(isValidMacAddress(charArray) == false)
     {
         return chw::fail;
     }
