@@ -5,12 +5,12 @@
 #include <string>
 
 /**
- * @brief Ê¹ÓÃPacket¿â»ñÈ¡±¾µØÍø¿¨µÄMACµØÖ·
- * ¸ÄĞ´×Ô£º\npcap-sdk-1.13\Examples-remote\PacketDriver\GetMacAddress
+ * @brief ä½¿ç”¨Packetåº“è·å–æœ¬åœ°ç½‘å¡çš„MACåœ°å€
+ * æ”¹å†™è‡ªï¼š\npcap-sdk-1.13\Examples-remote\PacketDriver\GetMacAddress
  *
- * @param mac	[out]»ñÈ¡µÄMACµØÖ·
- * @param name	[in]pcap_findalldevs_ex»ñÈ¡µÄÍø¿¨Ãû³Æ
- * @return int	³É¹¦·µ»Ø0£¬Ê§°Ü·µ»Ø-1
+ * @param mac	[out]è·å–çš„MACåœ°å€
+ * @param name	[in]pcap_findalldevs_exè·å–çš„ç½‘å¡åç§°
+ * @return int	æˆåŠŸè¿”å›0ï¼Œå¤±è´¥è¿”å›-1
  */
 int GetMac(uint8_t mac[], std::string name);
 

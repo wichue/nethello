@@ -113,7 +113,7 @@ int GetMac(uint8_t mac[], std::string name)
 	for (i = 0; i < AdapterNum; i++)
 	{
 		//printf("\n%d- %s\n", i + 1, AdapterList[i]);
-		//name°üº¬rpcap://Ç°×º
+		//nameåŒ…å«rpcap://å‰ç¼€
 		if(chw::Contain(name, AdapterList[i]))
 		{
 			Open = i + 1;
