@@ -133,6 +133,25 @@ int32_t NpcapSocket::SendToAdapter(char* buf, uint32_t len)
     return iRet;
 }
 
+/**
+ * @brief 从网络适配器发送数据，默认已经加入以太头，直接发送数据
+ * 
+ * @param buf 数据
+ * @param len 数据长度
+ * @return int32_t 发送成功返回0，失败返回-1
+ */
+int32_t NpcapSocket::SendToAdPure(char* buf, uint32_t len)
+{
+    // pcap_sendpacket返回值：成功返回0，失败返回-1
+    int32_t iRet = pcap_sendpacket(_handle,(const u_char*)buf, len);
+    if(iRet != 0)
+    {
+        PrintE("adapter send failed,iRet:%d,err:%s",iRet,pcap_geterr(_handle));
+    }
+
+    return iRet;
+}
+
 void NpcapSocket::SetReadCb(std::function<void(const u_char* buf, uint32_t len)> cb)
 {
     if(cb != nullptr) {

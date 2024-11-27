@@ -29,6 +29,8 @@ SET(SRCS
     ${PREFIX}/src/core/file/FileTcpClient.cpp
     ${PREFIX}/src/core/file/FileSession.cpp
     ${PREFIX}/src/core/file/FileModel.cpp
+    ${PREFIX}/src/core/file/FileSend.cpp
+    ${PREFIX}/src/core/file/FileRecv.cpp
     ${PREFIX}/src/core/raw/RawTextClient.cpp
     ${PREFIX}/src/core/raw/RawTextModel.cpp
     ${PREFIX}/src/core/raw/RawPressModel.cpp

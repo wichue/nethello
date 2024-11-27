@@ -37,13 +37,22 @@ public:
     uint32_t OpenAdapter(std::string desc);
 
     /**
-     * @brief 从网络适配器发送数据
+     * @brief 从网络适配器发送数据，自动加入以太头
      * 
      * @param buf 数据
      * @param len 数据长度
      * @return int32_t 发送成功返回0，失败返回-1
      */
     int32_t SendToAdapter(char* buf, uint32_t len);
+
+    /**
+     * @brief 从网络适配器发送数据，默认已经加入以太头，直接发送数据
+     * 
+     * @param buf 数据
+     * @param len 数据长度
+     * @return int32_t 发送成功返回0，失败返回-1
+     */
+    int32_t SendToAdPure(char* buf, uint32_t len);
 
     /**
      * @brief 开始从网卡适配器接收数据
@@ -68,9 +77,10 @@ public:
 
 private:
     pcap_t * _handle;// 网络适配器句柄
-    uint8_t _local_mac[6] = { 0 };// 本端绑定网卡的MAC地址
     bool _bRunning;// 是否循环接收数据
     std::function<void(const u_char*, uint32_t len)> _cb;// 读数据回调
+public:
+    uint8_t _local_mac[6] = { 0 };// 本端绑定网卡的MAC地址
 };
 
 }//namespace chw 
