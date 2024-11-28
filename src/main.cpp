@@ -22,6 +22,7 @@
 #include "RawPressModel.h"
 #else
 #include "NpcapTextModel.h"
+#include "NpcapPressModel.h"
 #endif// defined(__linux__) || defined(__linux)
 
 chw::workmodel::Ptr _workmodel = nullptr;
@@ -31,17 +32,15 @@ void sigend_handler_abort(int sig)
 {
     if(_workmodel)
     {
-        _workmodel->getPoller()->async([&](){
-            _workmodel->prepare_exit();
-            usleep(100 * 1000);
-            printf("catch abort1 signal:%d,exit now.\n",sig);
-            exit(0);
-        });
+        _workmodel->prepare_exit();
+        usleep(100 * 1000);
+        printf("catch abort1 signal:%d,exit now.\n",sig);
+        exit(0);
     }
     else
     {
         printf("catch abort2 signal:%d,exit now.\n",sig);
-        exit(0);
+        _exit(0);// 立即强退
     }
 }
 
@@ -50,12 +49,10 @@ void sigend_handler_crash(int sig)
 {
     if(_workmodel)
     {
-        _workmodel->getPoller()->async([&](){
-            _workmodel->prepare_exit();
-            printf("catch crash1 signal:%d,exit now.\n",sig);
-            usleep(100 * 1000);
-            chw::chw_assert();
-        });
+        _workmodel->prepare_exit();
+        printf("catch crash1 signal:%d,exit now.\n",sig);
+        usleep(100 * 1000);
+        chw::chw_assert();
     }
     else
     {
@@ -133,7 +130,12 @@ int main(int argc, char **argv)
         }
         break;
     case chw::PRESS_MODEL:
-        _workmodel = std::make_shared<chw::PressModel>();
+        if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+            _workmodel = std::make_shared<chw::NpcapPressModel>();
+        }
+        else {
+            _workmodel = std::make_shared<chw::PressModel>();
+        }
         break;
 #endif// defined(__linux__) || defined(__linux)
 

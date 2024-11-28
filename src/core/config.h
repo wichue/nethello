@@ -24,5 +24,11 @@
 #define RELEASE_MODEL 0
 #endif
 
+// win定义MAC地址长度
+#ifdef _WIN32
+#ifndef IFHWADDRLEN
+#define IFHWADDRLEN 6
+#endif //IFHWADDRLEN
+#endif //_WIN32
 
 #endif//__CONFIG_H

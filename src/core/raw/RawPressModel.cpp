@@ -79,7 +79,7 @@ void RawPressModel::startmodel()
             start_client_press();
         }
 
-        break;
+        sleep(1);
     }
 }
 

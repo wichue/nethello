@@ -47,6 +47,7 @@ private:
     std::shared_ptr<Timer> _timer;// 周期输出信息定时器(-i选项控制)
     bool _bsending;
     double _interval;
+    chw::EventLoop::Ptr _recv_poller;// 用于接收npcap的线程
 private:
     Ticker _ticker_ctl;// 控速用的计时器
     Ticker _ticker_dur;// 计算测试时长的计时器

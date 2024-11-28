@@ -61,7 +61,7 @@ void NpcapTextModel::startmodel()
     });
     
     // 发送在主线程执行
-    while(true)
+    while(_bsending)
     {
         std::string msg;
         std::getline(std::cin, msg);
@@ -75,5 +75,10 @@ void NpcapTextModel::startmodel()
     }
 }
 
+void NpcapTextModel::prepare_exit()
+{
+    _bsending = false; 
+    _pClient->StopRecvFromAdapter();
+}
 
 }//namespace chw

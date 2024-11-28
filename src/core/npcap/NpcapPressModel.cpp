@@ -8,7 +8,7 @@
 #include "PressSession.h"
 #include "PressClient.h"
 #include "MsgInterface.h"
-#include "RawPressClient.h"
+#include "config.h"
 #include <iomanip>
 
 namespace chw {
@@ -20,6 +20,7 @@ NpcapPressModel::NpcapPressModel(const chw::EventLoop::Ptr& poller) : workmodel(
         _poller = chw::EventLoop::addPoller("NpcapPressModel");
     }
     _pClient = nullptr;
+    _recv_poller = nullptr;
 
     _client_snd_num = 0;
     _client_snd_seq = 0;
@@ -31,6 +32,9 @@ NpcapPressModel::NpcapPressModel(const chw::EventLoop::Ptr& poller) : workmodel(
     // _server_rcv_spd = 0;
     _bsending = false;
     _interval = 1;
+
+    _last_lost = 0;
+    _last_seq = 0;
 
     _last_client_snd_len = 0;
     _last_server_rcv_len = 0;
@@ -45,7 +49,7 @@ void NpcapPressModel::startmodel()
 {
     _ticker_dur.resetTime();
 
-    _pClient = std::make_shared<chw::NpcapSocket>(_poller);
+    _pClient = std::make_shared<chw::NpcapSocket>();
     if(_pClient->OpenAdapter(gConfigCmd.interfaceC) == chw::fail)
     {
         sleep_exit(100*1000);
@@ -87,6 +91,17 @@ void NpcapPressModel::startmodel()
         return true;
     }, _poller);
 
+    // 创建独立线程接收npcap数据，避免阻塞定时器
+    if (_recv_poller == nullptr)
+    {
+        _recv_poller = chw::EventLoop::addPoller("npcap recv poller");
+    }
+
+    // 接收在事件循环线程执行
+    _recv_poller->async([this]() {
+        _pClient->StartRecvFromAdapter();
+    },false);
+
     // 主线程
     PrintD("time(s)     send                recv                lost/all(rate)");
     while(true)
@@ -104,6 +119,7 @@ void NpcapPressModel::startmodel()
 void NpcapPressModel::prepare_exit()
 {
     _bsending = false;
+    _pClient->StopRecvFromAdapter();
     usleep(100 * 1000);
 
     uint32_t uDurTimeMs = _ticker_dur.elapsedTime();// 当前测试时长ms
@@ -158,7 +174,7 @@ void NpcapPressModel::prepare_exit()
     ,Rcv_unit.c_str());
 
     // 输出接收和发送包数量,丢包率
-    PrintD("all send pkt:%lu,bytes:%lu; all rcv pkt:%lu,bytes:%lu,seq:%lu,lost:%u(%.2f%%)"
+    PrintD("all send pkt:%llu,bytes:%llu; all rcv pkt:%llu,bytes:%llu,seq:%llu,lost:%lu(%.2f%%)"
     ,_client_snd_num,_client_snd_len
     ,_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
 }
@@ -166,10 +182,10 @@ void NpcapPressModel::prepare_exit()
 void NpcapPressModel::onManagerModel()
 {
     uint64_t uDurTimeMs = _ticker_dur.elapsedTime();// 当前测试时长ms
-    uint64_t uDurTimeS = 0;// 当前测试时长s
+    double uDurTimeS = 0;// 当前测试时长s
     if(uDurTimeMs > 0)
     {
-        uDurTimeS = uDurTimeMs / 1000;
+        uDurTimeS = (double)uDurTimeMs / 1000;
     }
 
     uint64_t Snd_BytesPs = 0;// 发送速率，字节/秒
@@ -204,7 +220,7 @@ void NpcapPressModel::onManagerModel()
     {
         cur_lost_ratio = ((double)(cur_lost_num) / (double)cur_rcv_seq) * 100;
     }
-    PrintD("%-12u%-8.2f%-12s%-8.2f%-12s%u/%u (%.2f%%)"
+    PrintD("%-12.0f%-8.2f%-12s%-8.2f%-12s%lu/%lu (%.2f%%)"
     ,uDurTimeS
     ,Snd_speed
     ,Snd_unit.c_str()

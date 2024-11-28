@@ -19,10 +19,11 @@ public:
     ~NpcapTextModel() override;
     
     virtual void startmodel() override;
-    virtual void prepare_exit() override{};
+    virtual void prepare_exit() override;
 
 private:
     chw::NpcapSocket::Ptr _pClient;
+    bool _bsending = true;
 };
 
 }//namespace chw
