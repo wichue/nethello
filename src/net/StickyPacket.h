@@ -11,9 +11,6 @@ namespace chw {
 
 typedef std::function<void(char*,uint32_t)> DispatchCB;
 
-#define STD_BIND_2(__selector__,__target__)\
-std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2)
-
 /**
  * @brief tcp粘包处理
  * 

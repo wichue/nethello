@@ -31,4 +31,11 @@
 #endif //IFHWADDRLEN
 #endif //_WIN32
 
+// npcap pcap_send_queue 队列大小
+#ifdef _WIN32
+#ifndef NPCAP_SEND_QUEUE_SIZE
+#define NPCAP_SEND_QUEUE_SIZE 20
+#endif //NPCAP_SEND_QUEUE_SIZE
+#endif //_WIN32
+
 #endif//__CONFIG_H

@@ -259,14 +259,18 @@ void NpcapPressModel::start_client_press()
     memcpy(peth->h_source,_pClient->_local_mac,IFHWADDRLEN);
     peth->h_proto = htons(ETH_RAW_PERF);
     
+    uint32_t snd_count = 0;
     // 不控速
     if(gConfigCmd.bandwidth == 0)
     {
         while(_bsending)
         {
+            snd_count ++;
             pMsgHdr->uMsgIndex ++;
-            int32_t iRet = _pClient->SendToAdPure(buf,buflen);
-            if(iRet == 0)
+            // int32_t iRet = _pClient->SendToAdPure(buf,buflen);
+            // if(iRet == 0)
+            uint32_t uiRet = _pClient->PushNpcapSendQue(buf, buflen);
+            if(uiRet == chw::success)
             {
                 _client_snd_num ++;
                 _client_snd_seq ++;
@@ -278,7 +282,15 @@ void NpcapPressModel::start_client_press()
                 prepare_exit();
                 sleep_exit(100 * 1000);
             }
+
+            if (snd_count >= NPCAP_SEND_QUEUE_SIZE)
+            {
+                snd_count = 0;
+                _pClient->SendQueToAdPure();
+                _pClient->ClearNpcapSendQue();
+            }
         }
+        _pClient->SendQueToAdPure();
         return;
     }
 
@@ -293,9 +305,12 @@ void NpcapPressModel::start_client_press()
         uint32_t curr_all_sndlen = 0;
         while(1)
         {
+            snd_count ++;
             pMsgHdr->uMsgIndex ++;
-            int32_t iRet = _pClient->SendToAdPure(buf,buflen);
-            if(iRet == 0)
+            // int32_t iRet = _pClient->SendToAdPure(buf,buflen);
+            // if(iRet == 0)
+            uint32_t uiRet = _pClient->PushNpcapSendQue(buf, buflen);
+            if(uiRet == chw::success)
             {
                 _client_snd_num ++;
                 _client_snd_seq ++;
@@ -308,6 +323,13 @@ void NpcapPressModel::start_client_press()
                 sleep_exit(100 * 1000);
             }
             curr_all_sndlen += buflen;
+
+            if (snd_count >= NPCAP_SEND_QUEUE_SIZE)
+            {
+                snd_count = 0;
+                _pClient->SendQueToAdPure();
+                _pClient->ClearNpcapSendQue();
+            }
 
             uint16_t use_ms =  _ticker_ctl.elapsedTime();
             if(use_ms >= 100)
@@ -322,6 +344,7 @@ void NpcapPressModel::start_client_press()
             }
         }
     }
+    _pClient->SendQueToAdPure();
 }
 
 }//namespace chw 

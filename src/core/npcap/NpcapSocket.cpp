@@ -10,6 +10,7 @@
 #include "GetMacAddress.h"
 #include "GlobalValue.h"
 #include "MemoryHandle.h"
+#include "config.h"
 
 #pragma comment(lib, "packet.lib")
 #pragma comment(lib, "wpcap.lib")
@@ -28,6 +29,11 @@ NpcapSocket::~NpcapSocket()
     if(_handle != nullptr)
     {
         pcap_close(_handle);
+    }
+
+    if (_queue != nullptr)
+    {
+        pcap_sendqueue_destroy(_queue);
     }
 }
 
@@ -99,10 +105,22 @@ uint32_t NpcapSocket::OpenAdapter(std::string desc)
         return chw::fail;
     }
 
-    PrintD("create npcap socket, local interface:%s, local mac:%s.", ptr->description, MacBuftoStr(_local_mac).c_str());
-
     /* 不再需要设备列表了，释放它 */
     pcap_freealldevs(allAdapters);
+
+    //设置内核缓冲区和用户缓冲区的大小
+    pcap_setbuff(_handle, 100 * 1024 * 1024);
+    pcap_set_buffer_size(_handle, 100 * 1024 * 1024);
+
+    _queue = pcap_sendqueue_alloc((2000 + sizeof(struct pcap_pkthdr)) * NPCAP_SEND_QUEUE_SIZE);
+    if (_queue == NULL)
+    {
+        PrintE("alloc npcap send queue failed.");
+        pcap_close(_handle);
+        return chw::fail;
+    }
+
+    PrintD("create npcap socket, local interface:%s, local mac:%s.", ptr->description, MacBuftoStr(_local_mac).c_str());
 
     return chw::success;
 }
@@ -111,7 +129,7 @@ int32_t NpcapSocket::SendToAdapter(char* buf, uint32_t len)
 {
     if(_handle == nullptr)
     {
-        PrintE("adapter _handle is nullptr");
+        PrintE("SendToAdapter, adapter _handle is nullptr");
         return -1;
     }
 
@@ -142,6 +160,12 @@ int32_t NpcapSocket::SendToAdapter(char* buf, uint32_t len)
  */
 int32_t NpcapSocket::SendToAdPure(char* buf, uint32_t len)
 {
+    if (_handle == nullptr)
+    {
+        PrintE("SendToAdPure, adapter _handle is nullptr");
+        return -1;
+    }
+
     // pcap_sendpacket返回值：成功返回0，失败返回-1
     int32_t iRet = pcap_sendpacket(_handle,(const u_char*)buf, len);
     if(iRet != 0)
@@ -150,6 +174,50 @@ int32_t NpcapSocket::SendToAdPure(char* buf, uint32_t len)
     }
 
     return iRet;
+}
+
+uint32_t NpcapSocket::PushNpcapSendQue(char* buf, uint32_t len)
+{
+    struct pcap_pkthdr PktHdr;
+    PktHdr.caplen = len;
+    PktHdr.len = len;
+    if (pcap_sendqueue_queue(_queue, &PktHdr, (const u_char*)buf) == -1)
+    {
+        PrintE("npcap push queue failed,err:%s.", pcap_geterr(_handle));
+        return chw::fail;
+    }
+
+    return chw::success;
+}
+
+void NpcapSocket::ClearNpcapSendQue()
+{
+    memset(_queue->buffer, 0, _queue->maxlen);
+    _queue->len = 0;
+}
+
+uint32_t NpcapSocket::SendQueToAdPure()
+{
+    if (_handle == nullptr)
+    {
+        PrintE("SendQueToAdPure adapter _handle is nullptr");
+        return 0;
+    }
+
+    /**
+     * @brief pcap_sendqueue_transmit 比用pcap_sendpacket()来发送一系列的数据要高效的多，因为他的数据是在内核级上被缓冲。
+     * @param p     pcap_t句柄
+     * @param queue 发送队列
+     * @param sync  0表示异步发送，函数立即返回，数据在后台发送；非0则同步发送，函数会阻塞直到数据包都发送完成。
+     * @return  sync是0返回拷贝到内核数据大小，sync非0返回发送成功数据大小，失败返回0.
+     */
+    uint32_t uiRet = pcap_sendqueue_transmit(_handle, _queue, 0);
+    if (uiRet <= 0)
+    {
+        PrintE("pcap_sendqueue_transmit failed,iRet=%lu,err=%s", uiRet, pcap_geterr(_handle));
+    }
+
+    return uiRet;
 }
 
 void NpcapSocket::SetReadCb(std::function<void(const u_char* buf, uint32_t len)> cb)

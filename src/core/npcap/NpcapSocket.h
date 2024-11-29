@@ -55,6 +55,28 @@ public:
     int32_t SendToAdPure(char* buf, uint32_t len);
 
     /**
+     * @brief 把数据压入pcap_send_queue队列
+     * 
+     * @param buf 数据
+     * @param len 数据长度
+     * @return uint32_t 成功返回chw::success,失败返回chw::fail
+     */
+    uint32_t PushNpcapSendQue(char* buf, uint32_t len);
+
+    /**
+     * @brief 清空pcap_send_queue队列
+     * 
+     */
+    void ClearNpcapSendQue();
+
+    /**
+     * @brief 发送pcap_send_queue队列里的数据
+     * 
+     * @return uint32_t 发送成功或拷贝到内核的数据大小，失败返回0
+     */
+    uint32_t SendQueToAdPure();
+
+    /**
      * @brief 开始从网卡适配器接收数据
      * 
      * @return uint32_t 正常结束返回chw::success,发生错误返回chw::fail
@@ -77,6 +99,7 @@ public:
 
 private:
     pcap_t * _handle;// 网络适配器句柄
+    pcap_send_queue* _queue;// 发包队列
     bool _bRunning;// 是否循环接收数据
     std::function<void(const u_char*, uint32_t len)> _cb;// 读数据回调
 public:

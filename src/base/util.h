@@ -44,6 +44,12 @@ class_name &class_name::Instance() { \
 
 namespace chw {
 
+#define STD_BIND_2(__selector__,__target__)\
+std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2)
+
+#define STD_BIND_4(__selector__,__target__)\
+std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)
+
 enum chw_ret{
     success,
     fail
