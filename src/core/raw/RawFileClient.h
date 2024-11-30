@@ -13,6 +13,10 @@ namespace chw {
 
 typedef std::function<int(const char *buffer, int len, ikcpcb *kcp, void *user)> RawSndCb;
 
+/**
+ * @brief 基于linux原始套接字的文件传输发送端，使用kcp实现可靠传输
+ * 
+ */
 class RawFileClient : public  RawSocket {
 public:
     RawFileClient(const chw::EventLoop::Ptr& poller = nullptr);
@@ -24,31 +28,51 @@ public:
     // 错误回调
     virtual void onError(const SockException &ex) override;
 
-    void CreateKcp();
+    /**
+     * @brief 创建kcp实例
+     * 
+     * @param conv 会话标识
+     */
+    void CreateKcp(uint32_t conv);
+
+    /**
+     * @brief kcp处理接收数据
+     * 
+     * @param buf 数据
+     * @param len 数据长度
+     */
+    void KcpRcvData(const char* buf, long len);
 private:
     /**
      * @brief 原始套结字发送数据回调，传递给kcp发送数据，不直接调用
      * 
-     * @param buf 
-     * @param len 
-     * @param kcp 
-     * @param user 
-     * @return int 
+     * @param buf   [in]数据
+     * @param len   [in]数据长度
+     * @param kcp   [in]kcp实例
+     * @param user  [in]用户句柄
+     * @return int  发送成功的数据长度
      */
     int RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user);
 
     /**
      * @brief 把数据交给kcp发送，需要发送数据时调用
      * 
-     * @param buffer 数据
-     * @param len    数据长度
+     * @param buffer [in]数据
+     * @param len    [in]数据长度
      * @return int   成功返回压入队列的数据长度，0则输入为0或缓存满，失败返回小于0
      */
     int KcpSendData(const char *buffer, int len);
 
+    /**
+     * @brief 周期执行ikcp_update
+     * 
+     */
+    void onKcpUpdate();
+
 private:
-    ikcpcb *_kcp;
-    FileSend::Ptr _FileSend;
+    ikcpcb *_kcp;// kcp实例
+    FileSend::Ptr _FileSend;// 文件发送业务
+    std::shared_ptr<Timer> _timer;// 周期执行ikcp_update定时器
 
     RawSndCb _RawSndCb;// 用于把std::function转换为函数指针
 };

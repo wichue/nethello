@@ -257,6 +257,7 @@ typedef enum {
 
 #define ETH_RAW_TEXT (0xFF01)   // 自定义文本以太协议
 #define ETH_RAW_PERF (0xFF02)   // 自定义性能以太协议
+#define ETH_RAW_FILE (0xFF03)   // 自定义文件传输以太协议
 
 // 文件传输状态
 enum FileTranStatus

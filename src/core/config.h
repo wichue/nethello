@@ -38,4 +38,7 @@
 #endif //NPCAP_SEND_QUEUE_SIZE
 #endif //_WIN32
 
+// 使用raw、npcap传输文件时，用户数据相对以太头的偏移
+#define RAW_FILE_ETH_OFFSET     0
+
 #endif//__CONFIG_H

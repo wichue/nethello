@@ -26,6 +26,12 @@ public:
         _size = 0;
     }
 
+    Buffer(char* buf, uint32_t len) {
+        _data = buf;
+        _capacity = len;
+        _size = len;
+    }
+
     ~Buffer() {
         if(_data != nullptr) {
             _RAM_DEL_(_data);

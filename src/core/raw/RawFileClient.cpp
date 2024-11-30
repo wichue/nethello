@@ -3,6 +3,7 @@
 
 #include "RawFileClient.h"
 #include "GlobalValue.h"
+#include "config.h"
 
 namespace chw {
 
@@ -24,19 +25,43 @@ void RawFileClient::onRecv(const Buffer::Ptr &pBuf)
     uint16_t uEthType = ntohs(peth->h_proto);
     switch(uEthType)
     {
-        case ETH_RAW_TEXT:
-        {
-            //接收数据事件
-            PrintD("\b<%s",(char*)(pBuf->data()) + sizeof(ethhdr));
-            InfoLNCR << ">";
-        }
+        case ETH_RAW_FILE:
+            //把数据交给kcp处理
+            KcpRcvData((const char*)pBuf->data() + sizeof(ethhdr) + RAW_FILE_ETH_OFFSET,pBuf->Size());
         break;
 
         default:
         break;
     }
 
-    pBuf->Reset0();
+    pBuf->Reset();
+}
+
+/**
+ * @brief kcp处理接收数据
+ * 
+ * @param buf 数据
+ * @param len 数据长度
+ */
+void RawFileClient::KcpRcvData(const char* buf, long len)
+{
+    ///6.预接收数据:调用ikcp_input将裸数据交给KCP，这些数据有可能是KCP控制报文
+    int ret = ikcp_input(_kcp, buf, len);
+    if(ret < 0)//检测ikcp_input是否提取到真正的数据
+    {
+        return;
+    }
+
+    ///7.kcp将接收到的kcp数据包还原成用户数据
+    char rcv_buf[2048] = { 0 };
+    int datalen = ikcp_recv(_kcp, rcv_buf, 2048);
+    if(datalen >= 0)//检测ikcp_recv提取到的数据
+    {
+        printf("ikcp_recv datalen = %d,buf=%s\n",datalen,rcv_buf);
+
+        Buffer::Ptr buf = std::make_shared<Buffer>(rcv_buf,datalen);
+        _FileSend->onRecv(buf);
+    }
 }
 
 // 错误回调
@@ -46,16 +71,21 @@ void RawFileClient::onError(const SockException &ex)
     WarnL << ex.what();
 }
 
-void RawFileClient::CreateKcp()
+/**
+ * @brief 创建kcp实例
+ * 
+ * @param conv 会话标识
+ */
+void RawFileClient::CreateKcp(uint32_t conv)
 {
-    ///2.创建kcp实例，两端第一个参数conv要相同
+    ///1.创建kcp实例，两端第一个参数conv要相同
     _kcp = ikcp_create(0x1, (void *)this);
 
-    ///3.kcp参数设置
-    // _kcp->output = STD_BIND_4(RawFileClient::raw_sendData,this);//设置udp发送接口
-    _RawSndCb = STD_BIND_4(RawFileClient::RawSendDataCb,this);//设置udp发送接口
+    ///2.设置kcp发送回调
+    _RawSndCb = STD_BIND_4(RawFileClient::RawSendDataCb,this);
     _kcp->output = _RawSndCb.target<int(const char *buffer, int len, ikcpcb *kcp, void *user)>();
 
+    ///3.kcp参数设置
     // 配置窗口大小：平均延迟200ms，每20ms发送一个包，
     // 而考虑到丢包重发，设置最大收发窗口为128
     ikcp_wndsize(_kcp, 128, 128);
@@ -79,12 +109,39 @@ void RawFileClient::CreateKcp()
         _kcp->fastresend = 1;
     }
 
-    ///4.启动线程，处理收发
-    // m_isLoop = true;
-    // pthread_t tid;
-    // pthread_create(&tid,NULL,run_udp_thread,this);
+    ///4.创建定时器周期处理ikcp_update
+    std::weak_ptr<RawFileClient> weak_self = std::static_pointer_cast<RawFileClient>(shared_from_this());
+    _timer = std::make_shared<Timer>(0.02, [weak_self]() -> bool {
+        auto strong_self = weak_self.lock();
+        if (!strong_self) {
+            return false;
+        }
+
+        ///5.处理kcp发送和重发
+        strong_self->onKcpUpdate();
+        return true;
+    }, _poller);
+
 }
 
+/**
+ * @brief 周期执行ikcp_update
+ * 
+ */
+void RawFileClient::onKcpUpdate()
+{
+    ikcp_update(_kcp,getCurrentMillisecond());
+}
+
+/**
+ * @brief 原始套结字发送数据回调，传递给kcp发送数据，不直接调用
+ * 
+ * @param buf   [in]数据
+ * @param len   [in]数据长度
+ * @param kcp   [in]kcp实例
+ * @param user  [in]用户句柄
+ * @return int  发送成功的数据长度
+ */
 int RawFileClient::RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user)
 {
     char* snd_buf = (char*)_RAM_NEW_(sizeof(ethhdr) + len);
@@ -98,6 +155,13 @@ int RawFileClient::RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *us
     return send_addr(snd_buf,sizeof(ethhdr) + len,(struct sockaddr*)&_local_addr,sizeof(struct sockaddr_ll));
 }
 
+/**
+ * @brief 把数据交给kcp发送，需要发送数据时调用
+ * 
+ * @param buffer [in]数据
+ * @param len    [in]数据长度
+ * @return int   成功返回压入队列的数据长度，0则输入为0或缓存满，失败返回小于0
+ */
 int RawFileClient::KcpSendData(const char *buffer, int len)
 {
     //这里只是把数据加入到发送队列
