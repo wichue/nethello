@@ -7,6 +7,11 @@
 #include "uv_errno.h"
 #include "SocketBase.h"
 
+#if defined(_WIN32)
+#include "Windows.h"
+#pragma comment(lib, "ws2_32.lib")
+#endif
+
 using namespace std;
 
 #define checkFD(fd) \
@@ -30,6 +35,9 @@ PipeWrap::PipeWrap() {
 void PipeWrap::reOpen() {
     clearFD();
 #if defined(_WIN32)
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+
     const char *localip = SockUtil::support_ipv6() ? "::1" : "127.0.0.1";
     auto listener_fd = SockUtil::listen(0, localip);
     checkFD(listener_fd)
