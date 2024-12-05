@@ -20,6 +20,7 @@
 #if defined(__linux__) || defined(__linux)
 #include "RawTextModel.h"
 #include "RawPressModel.h"
+#include "RawFileModel.h"
 #else
 #include "NpcapTextModel.h"
 #include "NpcapPressModel.h"
@@ -62,7 +63,6 @@ void sigend_handler_crash(int sig)
     }
 }
 
-//todo:windows
 /**
  * 
  * 模式1：文本聊天，客户端连接后，命令行>可以发文本给服务端，服务端命令行可以输入回复文本，支持tcp/udp。
@@ -140,7 +140,12 @@ int main(int argc, char **argv)
 #endif// defined(__linux__) || defined(__linux)
 
     case chw::FILE_MODEL:
-        _workmodel = std::make_shared<chw::FileModel>();
+        if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+            _workmodel = std::make_shared<chw::RawFileModel>();
+        } else {
+            _workmodel = std::make_shared<chw::FileModel>();
+        }
+        
         break;
     
     default:

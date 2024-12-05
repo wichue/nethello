@@ -13,8 +13,6 @@ namespace chw {
 
 FileRecv::FileRecv()
 {
-    _cls = chw::demangle(typeid(FileRecv).name());
-    
     _status = TRANS_INIT;
     _write_size = 0;
     _filesize = 0;
@@ -291,25 +289,6 @@ void FileRecv::procFileData(char* buf, uint32_t len)
 void FileRecv::onError(const SockException &err)
 {
 
-}
-
-/**
- * @brief 定时器周期管理回调
- * 
- */
-void FileRecv::onManager()
-{
-
-}
-
-/**
- * @brief 返回当前类名称
- * 
- * @return const std::string& 类名称
- */
-const std::string &FileRecv::className() const 
-{
-    return _cls;
 }
 
 }//namespace chw

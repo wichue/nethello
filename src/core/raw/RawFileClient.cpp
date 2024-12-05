@@ -7,10 +7,20 @@
 
 namespace chw {
 
-RawFileClient::RawFileClient(const chw::EventLoop::Ptr& poller)
+RawFileClient::RawFileClient(const chw::EventLoop::Ptr& poller) : RawSocket(poller)
 {
     _kcp = nullptr;
-    _FileSend = std::make_shared<chw::FileSend>(poller);
+    
+    if(chw::gConfigCmd.role == 's')
+    {
+        _FileTransfer = std::make_shared<chw::FileRecv>();
+    }
+    else
+    {
+        _FileTransfer = std::make_shared<chw::FileSend>(poller);
+    }
+
+    _FileTransfer->SetSndData(STD_BIND_2(RawFileClient::KcpSendData,this));
 }
 
 RawFileClient::~RawFileClient()
@@ -27,7 +37,7 @@ void RawFileClient::onRecv(const Buffer::Ptr &pBuf)
     {
         case ETH_RAW_FILE:
             //把数据交给kcp处理
-            KcpRcvData((const char*)pBuf->data() + sizeof(ethhdr) + RAW_FILE_ETH_OFFSET,pBuf->Size());
+            KcpRcvData((const char*)pBuf->data() + sizeof(ethhdr) + RAW_FILE_ETH_OFFSET,pBuf->Size() - sizeof(ethhdr) - RAW_FILE_ETH_OFFSET);
         break;
 
         default:
@@ -53,14 +63,12 @@ void RawFileClient::KcpRcvData(const char* buf, long len)
     }
 
     ///7.kcp将接收到的kcp数据包还原成用户数据
-    char rcv_buf[2048] = { 0 };
-    int datalen = ikcp_recv(_kcp, rcv_buf, 2048);
+    char rcv_buf[CHW_RAW_MTU] = { 0 };
+    int datalen = ikcp_recv(_kcp, rcv_buf, CHW_RAW_MTU);
     if(datalen >= 0)//检测ikcp_recv提取到的数据
     {
-        printf("ikcp_recv datalen = %d,buf=%s\n",datalen,rcv_buf);
-
-        Buffer::Ptr buf = std::make_shared<Buffer>(rcv_buf,datalen);
-        _FileSend->onRecv(buf);
+        Buffer::Ptr buf = std::make_shared<Buffer>(rcv_buf,datalen,false);
+        _FileTransfer->onRecv(buf);
     }
 }
 
@@ -71,6 +79,30 @@ void RawFileClient::onError(const SockException &ex)
     WarnL << ex.what();
 }
 
+void RawFileClient::StartFileTransf()
+{
+    if(_FileTransfer != nullptr)
+    {
+        _FileTransfer->StartTransf();
+    }
+}
+
+int RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user)
+{
+    RawFileClient* pClient = (RawFileClient*)user;
+
+    char* snd_buf = (char*)_RAM_NEW_(sizeof(ethhdr) + len);
+    memcpy(snd_buf + sizeof(ethhdr),buf,len);
+
+    ethhdr* peth = (ethhdr*)snd_buf;
+    memcpy(peth->h_dest,gConfigCmd.dstmac,IFHWADDRLEN);
+    memcpy(peth->h_source,pClient->_local_mac,IFHWADDRLEN);
+    peth->h_proto = htons(ETH_RAW_FILE);
+    
+    return pClient->send_addr(snd_buf,sizeof(ethhdr) + len,(struct sockaddr*)&pClient->_local_addr,sizeof(struct sockaddr_ll));
+}
+
+
 /**
  * @brief 创建kcp实例
  * 
@@ -79,11 +111,10 @@ void RawFileClient::onError(const SockException &ex)
 void RawFileClient::CreateKcp(uint32_t conv)
 {
     ///1.创建kcp实例，两端第一个参数conv要相同
-    _kcp = ikcp_create(0x1, (void *)this);
+    _kcp = ikcp_create(conv, (void *)this);
 
     ///2.设置kcp发送回调
-    _RawSndCb = STD_BIND_4(RawFileClient::RawSendDataCb,this);
-    _kcp->output = _RawSndCb.target<int(const char *buffer, int len, ikcpcb *kcp, void *user)>();
+    _kcp->output = RawSendDataCb;
 
     ///3.kcp参数设置
     // 配置窗口大小：平均延迟200ms，每20ms发送一个包，
@@ -134,28 +165,6 @@ void RawFileClient::onKcpUpdate()
 }
 
 /**
- * @brief 原始套结字发送数据回调，传递给kcp发送数据，不直接调用
- * 
- * @param buf   [in]数据
- * @param len   [in]数据长度
- * @param kcp   [in]kcp实例
- * @param user  [in]用户句柄
- * @return int  发送成功的数据长度
- */
-int RawFileClient::RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user)
-{
-    char* snd_buf = (char*)_RAM_NEW_(sizeof(ethhdr) + len);
-    memcpy(snd_buf + sizeof(ethhdr),buf,len);
-
-    ethhdr* peth = (ethhdr*)snd_buf;
-    memcpy(peth->h_dest,gConfigCmd.dstmac,IFHWADDRLEN);
-    memcpy(peth->h_source,_local_mac,IFHWADDRLEN);
-    peth->h_proto = htons(ETH_RAW_TEXT);
-
-    return send_addr(snd_buf,sizeof(ethhdr) + len,(struct sockaddr*)&_local_addr,sizeof(struct sockaddr_ll));
-}
-
-/**
  * @brief 把数据交给kcp发送，需要发送数据时调用
  * 
  * @param buffer [in]数据
@@ -165,7 +174,13 @@ int RawFileClient::RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *us
 int RawFileClient::KcpSendData(const char *buffer, int len)
 {
     //这里只是把数据加入到发送队列
-    return ikcp_send(_kcp,buffer,len);
+    int ret = ikcp_send(_kcp,buffer,len);
+    if(ret > 0)
+    {
+        onKcpUpdate();
+    }
+    
+    return ret;
 }
 
 }//namespace chw

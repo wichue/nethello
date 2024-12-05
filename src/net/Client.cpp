@@ -93,7 +93,7 @@ uint32_t Client::send_addr(char* buff, uint32_t len, struct sockaddr* addr, int3
         return _socket->send_addr(buff,len,addr,socklen);
     } else {
         PrintE("_socket==nullptr");
-        return chw::fail;
+        return 0;
     } 
 }
 

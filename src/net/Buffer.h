@@ -24,16 +24,18 @@ public:
         _data = nullptr;
         _capacity = 0;
         _size = 0;
+        _isNeedFree = true;
     }
 
-    Buffer(char* buf, uint32_t len) {
+    Buffer(char* buf, uint32_t len, bool isNeedFree) {
         _data = buf;
         _capacity = len;
         _size = len;
+        _isNeedFree = isNeedFree;
     }
 
     ~Buffer() {
-        if(_data != nullptr) {
+        if(_isNeedFree == true && _data != nullptr) {
             _RAM_DEL_(_data);
             _data = nullptr;
         }
@@ -167,6 +169,7 @@ private:
     void* _data;//堆空间
     size_t _capacity;//堆空间总大小
     size_t _size;//有效数据大小
+    bool _isNeedFree;//析构时是否需要释放_data
 };
 
 }//namespace chw

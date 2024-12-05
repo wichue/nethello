@@ -41,4 +41,7 @@
 // 使用raw、npcap传输文件时，用户数据相对以太头的偏移
 #define RAW_FILE_ETH_OFFSET     0
 
+// 原始套结字mtu大小
+#define CHW_RAW_MTU 1500
+
 #endif//__CONFIG_H

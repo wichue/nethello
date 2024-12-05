@@ -8,6 +8,8 @@
 #include "RawSocket.h"
 #include "ikcp.h"
 #include "FileSend.h"
+#include "FileRecv.h"
+#include "FileTransfer.h"
 
 namespace chw {
 
@@ -15,10 +17,13 @@ typedef std::function<int(const char *buffer, int len, ikcpcb *kcp, void *user)>
 
 /**
  * @brief 基于linux原始套接字的文件传输发送端，使用kcp实现可靠传输
+ * 发送数据使用： KcpSendData
+ * 接收数据使用： KcpRcvData
  * 
  */
 class RawFileClient : public  RawSocket {
 public:
+    using Ptr = std::shared_ptr<RawFileClient>;
     RawFileClient(const chw::EventLoop::Ptr& poller = nullptr);
     ~RawFileClient();
 
@@ -36,13 +41,19 @@ public:
     void CreateKcp(uint32_t conv);
 
     /**
+     * @brief 开始文件传输，客户端调用
+     * 
+     */
+    void StartFileTransf();
+private:
+    /**
      * @brief kcp处理接收数据
      * 
      * @param buf 数据
      * @param len 数据长度
      */
     void KcpRcvData(const char* buf, long len);
-private:
+
     /**
      * @brief 原始套结字发送数据回调，传递给kcp发送数据，不直接调用
      * 
@@ -52,7 +63,7 @@ private:
      * @param user  [in]用户句柄
      * @return int  发送成功的数据长度
      */
-    int RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user);
+    // int RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user);
 
     /**
      * @brief 把数据交给kcp发送，需要发送数据时调用
@@ -71,7 +82,7 @@ private:
 
 private:
     ikcpcb *_kcp;// kcp实例
-    FileSend::Ptr _FileSend;// 文件发送业务
+    FileTransfer::Ptr _FileTransfer;// 文件发送业务
     std::shared_ptr<Timer> _timer;// 周期执行ikcp_update定时器
 
     RawSndCb _RawSndCb;// 用于把std::function转换为函数指针

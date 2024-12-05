@@ -13,11 +13,12 @@
 
 namespace chw {
 
-FileSend::FileSend(const EventLoop::Ptr &poller)
+FileSend::FileSend(const EventLoop::Ptr &poller) : FileTransfer()
 {
     _status = TRANS_INIT;
     _send_poller = nullptr;
     _poller = poller;
+    _snd_buf_mtu = 1000;
 }
 
 void FileSend::SetSndData(std::function<uint32_t(char* buf, uint32_t )> cb)
@@ -75,6 +76,11 @@ void FileSend::StartTransf()
         sleep_exit(100 * 1000);
     }
     _RAM_DEL_(preq);
+}
+
+void FileSend::SetSndBufMtu(uint32_t mtu)
+{
+    _snd_buf_mtu = mtu;
 }
 
 /**
@@ -171,11 +177,16 @@ void FileSend::procTranRsp(char* buf)
             sleep_exit(100 * 1000);
         }
 
+        auto strong_self = weak_self.lock();
+        if (!strong_self) {
+            return;
+        }
+
         char* buf;	
 	    try {
-	        buf = (char*)_RAM_NEW_(TCP_BUFFER_SIZE);
+	        buf = (char*)_RAM_NEW_(strong_self->_snd_buf_mtu);
 	    } catch(std::bad_alloc) {
-	    	PrintE("malloc buf failed, size=%u",TCP_BUFFER_SIZE);
+	    	PrintE("malloc buf failed, size=%u",strong_self->_snd_buf_mtu);
 	    	sleep_exit(100 * 1000);
 	    }
 
@@ -186,18 +197,13 @@ void FileSend::procTranRsp(char* buf)
             sleep_exit(100 * 1000);
         }
 
-        auto strong_self = weak_self.lock();
-        if (!strong_self) {
-            _RAM_DEL_(buf);
-            return;
-        }
         MsgHdr* pMsgHdr = (MsgHdr*)buf;
         pMsgHdr->uMsgType = FILE_TRAN_DATA;
 
         Ticker tker;// 统计耗时
         uint32_t uReadSize = 0;
         uint32_t allSendLen = 0;
-        while ((uReadSize = fread(buf + sizeof(MsgHdr), 1, TCP_BUFFER_SIZE - sizeof(MsgHdr), fp)) > 0)
+        while ((uReadSize = fread(buf + sizeof(MsgHdr), 1, strong_self->_snd_buf_mtu - sizeof(MsgHdr), fp)) > 0)
         {
             pMsgHdr->uTotalLen = uReadSize + sizeof(MsgHdr);
             uint32_t len = strong_self->_send_data((char*)buf,uReadSize + sizeof(MsgHdr));
@@ -214,7 +220,12 @@ void FileSend::procTranRsp(char* buf)
         _RAM_DEL_(buf);
 
         auto elapsed = tker.elapsedTime();
-        double times = (double)elapsed / 1000;//耗时，单位秒
+        double times = (double)elapsed / (double)1000;//耗时，单位秒
+        // 文件小速度快，elapsed可能是0
+        if(times <= 0)
+        {
+            times = 0.001;
+        }
 
         uint32_t status = 0;
         if(allSendLen == filesize)
@@ -273,7 +284,7 @@ void FileSend::localTransEnd(uint32_t status, uint32_t filesize, double times)
         
     _send_data((char*)psig,sizeof(FileTranSig));
     _RAM_DEL_(psig);
-    sleep_exit(100 * 1000);
+    // sleep_exit(100 * 1000);
 }
 
 // 错误回调
