@@ -21,6 +21,8 @@ RawFileClient::RawFileClient(const chw::EventLoop::Ptr& poller) : RawSocket(poll
     }
 
     _FileTransfer->SetSndData(STD_BIND_2(RawFileClient::KcpSendData,this));
+    _rcv_buf = std::make_shared<Buffer>();
+    _rcv_buf->SetCapacity(TCP_BUFFER_SIZE);
 }
 
 RawFileClient::~RawFileClient()
@@ -63,13 +65,16 @@ void RawFileClient::KcpRcvData(const char* buf, long len)
     }
 
     ///7.kcp将接收到的kcp数据包还原成用户数据
-    char rcv_buf[CHW_RAW_MTU] = { 0 };
-    int datalen = ikcp_recv(_kcp, rcv_buf, CHW_RAW_MTU);
-    if(datalen >= 0)//检测ikcp_recv提取到的数据
-    {
-        Buffer::Ptr buf = std::make_shared<Buffer>(rcv_buf,datalen,false);
-        _FileTransfer->onRecv(buf);
+    while (1) {
+        int nrecv = ikcp_recv(_kcp, (char*)_rcv_buf->data() + _rcv_buf->Size(), _rcv_buf->Idle());
+        // printf("ikcp_recv nrecv=%d\n", nrecv);
+        if (nrecv < 0) break;
+        _rcv_buf->SetSize(nrecv + _rcv_buf->Size());
+        _FileTransfer->onRecv(_rcv_buf);
     }
+
+    ///8.每次接收到数据后更新kcp状态(ikcp_update)
+    onKcpUpdate();
 }
 
 // 错误回调
@@ -87,10 +92,20 @@ void RawFileClient::StartFileTransf()
     }
 }
 
+/**
+ * @brief 原始套结字发送数据回调，传递给kcp发送数据，不直接调用
+ * 
+ * @param buf   [in]数据
+ * @param len   [in]数据长度
+ * @param kcp   [in]kcp实例
+ * @param user  [in]用户句柄
+ * @return int  发送成功的数据长度
+ */
 int RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user)
 {
     RawFileClient* pClient = (RawFileClient*)user;
 
+    // 加入以太头
     char* snd_buf = (char*)_RAM_NEW_(sizeof(ethhdr) + len);
     memcpy(snd_buf + sizeof(ethhdr),buf,len);
 
@@ -122,7 +137,7 @@ void RawFileClient::CreateKcp(uint32_t conv)
     ikcp_wndsize(_kcp, 128, 128);
 
     // 判断测试用例的模式
-    int mode = 0;
+    int mode = 2;
     if (mode == 0) {
         // 默认模式
         ikcp_nodelay(_kcp, 0, 10, 0, 0);
@@ -142,7 +157,7 @@ void RawFileClient::CreateKcp(uint32_t conv)
 
     ///4.创建定时器周期处理ikcp_update
     std::weak_ptr<RawFileClient> weak_self = std::static_pointer_cast<RawFileClient>(shared_from_this());
-    _timer = std::make_shared<Timer>(0.02, [weak_self]() -> bool {
+    _timer = std::make_shared<Timer>(0.001, [weak_self]() -> bool {
         auto strong_self = weak_self.lock();
         if (!strong_self) {
             return false;
@@ -153,6 +168,35 @@ void RawFileClient::CreateKcp(uint32_t conv)
         return true;
     }, _poller);
 
+    _timer_spd = std::make_shared<Timer>(1, [weak_self]() -> bool {
+        auto strong_self = weak_self.lock();
+        if (!strong_self) {
+            return false;
+        }
+
+        strong_self->onManager();
+        return true;
+    }, _poller);
+}
+
+void RawFileClient::onManager()
+{
+    return;// 默认不打印速率
+
+    uint64_t Rcv_BytesPs = 0;// 接收速率，字节/秒
+    double Rcv_speed = 0;// 接收速率
+    std::string Rcv_unit = "";// 接收速率单位
+
+    uint64_t Snd_BytesPs = 0;// 发送速率，字节/秒
+    double Snd_speed = 0;// 发送速率
+    std::string Snd_unit = "";// 发送速率单位
+
+    Rcv_BytesPs = getSock()->getRecvSpeed();
+    Snd_BytesPs = getSock()->getSendSpeed();
+
+    speed_human(Snd_BytesPs,Snd_speed,Snd_unit);
+    speed_human(Rcv_BytesPs,Rcv_speed,Rcv_unit);
+    PrintD("recv speed=%.2f(%s),send speed=%.2f(%s)",Rcv_speed,Rcv_unit.c_str(),Snd_speed,Snd_unit.c_str());
 }
 
 /**
@@ -161,7 +205,8 @@ void RawFileClient::CreateKcp(uint32_t conv)
  */
 void RawFileClient::onKcpUpdate()
 {
-    ikcp_update(_kcp,getCurrentMillisecond());
+    // 传入微秒比毫秒速率快很多
+    ikcp_update(_kcp,getCurrentMicrosecond());
 }
 
 /**
@@ -175,9 +220,10 @@ int RawFileClient::KcpSendData(const char *buffer, int len)
 {
     //这里只是把数据加入到发送队列
     int ret = ikcp_send(_kcp,buffer,len);
-    if(ret > 0)
+    if(ret >= 0)
     {
-        onKcpUpdate();
+        // 通过定时器回调触发 onKcpUpdate 速率更快
+        // onKcpUpdate();
     }
     
     return ret;

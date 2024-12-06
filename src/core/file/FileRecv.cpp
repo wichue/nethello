@@ -189,7 +189,6 @@ void FileRecv::procTranReq(char* buf)
 	}
     PrintD("recv file, save to:%s,size:%u(bytes)",pReq->filepath,pReq->filesize);
 
-    _ticker.resetTime();
     SendSignalMsg(FILE_TRAN_RSP,ERROR_SUCCESS);
     _status = TRANS_SENDING;
 }
@@ -221,6 +220,13 @@ void FileRecv::procTranEnd(char* buf)
  */
 void FileRecv::procFileData(char* buf, uint32_t len)
 {
+    static bool firstdata = false;
+    if(firstdata == false)
+    {
+        firstdata = true;
+        _ticker.resetTime();
+    }
+
     if (!_write_file)
     {
         PrintE("write file is null");

@@ -45,6 +45,8 @@ public:
      * 
      */
     void StartFileTransf();
+
+    void onManager();
 private:
     /**
      * @brief kcp处理接收数据
@@ -53,17 +55,6 @@ private:
      * @param len 数据长度
      */
     void KcpRcvData(const char* buf, long len);
-
-    /**
-     * @brief 原始套结字发送数据回调，传递给kcp发送数据，不直接调用
-     * 
-     * @param buf   [in]数据
-     * @param len   [in]数据长度
-     * @param kcp   [in]kcp实例
-     * @param user  [in]用户句柄
-     * @return int  发送成功的数据长度
-     */
-    // int RawSendDataCb(const char *buf, int len, ikcpcb *kcp, void *user);
 
     /**
      * @brief 把数据交给kcp发送，需要发送数据时调用
@@ -82,10 +73,10 @@ private:
 
 private:
     ikcpcb *_kcp;// kcp实例
-    FileTransfer::Ptr _FileTransfer;// 文件发送业务
+    FileTransfer::Ptr _FileTransfer;// 文件传输业务
+    Buffer::Ptr _rcv_buf;// 存放接收到数据后，kcp还原的用户数据
     std::shared_ptr<Timer> _timer;// 周期执行ikcp_update定时器
-
-    RawSndCb _RawSndCb;// 用于把std::function转换为函数指针
+    std::shared_ptr<Timer> _timer_spd;// 周期输出信息定时器
 };
 
 }//namespace chw
