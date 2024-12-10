@@ -3,6 +3,7 @@
 
 #include "RawSocket.h"
 #include "util.h"
+#include "config.h"
 #include <linux/if_ether.h>
 
 using namespace std;
@@ -126,9 +127,9 @@ uint32_t RawSocket::create_client(const std::string &NetCard, uint16_t , uint16_
         return chw::fail;
     }
 
-    // 设置发送和接收缓存区大小,某些场景下对速率有明显提升
-    // SockUtil::setSendBuf(fd,100*1024*1024);
-    // SockUtil::setRecvBuf(fd,100*1024*1024);
+    // 设置发送和接收缓存区大小,性能较低的arm等有明显提升
+    SockUtil::setSendBuf(fd,RAW_SEND_BUFFER);
+    SockUtil::setRecvBuf(fd,RAW_RECV_BUFFER);
 
     PrintD("create raw socket, local interface:%s, mac:%s.",NetCard.c_str(),MacBuftoStr(_local_mac).c_str());
 

@@ -61,7 +61,7 @@ public:
         try {
             buffer = _RAM_NEW_(size);
         } catch(std::bad_alloc&) {
-            PrintE("[Buffer]1 alloc failed,size=%u",size);
+            PrintE("[Buffer]1 alloc failed,size=%lu",size);
             return chw::fail;
         }
 
@@ -94,7 +94,7 @@ public:
                 _data = _RAM_NEW_(size);
                 _capacity = size;
             } catch(std::bad_alloc&) {
-                PrintE("[Buffer]2 alloc failed,size=%u",size);
+                PrintE("[Buffer]2 alloc failed,size=%lu",size);
                 _data = nullptr;
                 _capacity = 0;
                 return chw::fail;
@@ -127,7 +127,7 @@ public:
      */
     uint32_t Align(size_t start, size_t end) {
         if(start >= end || end - start > _capacity) {
-            PrintE("[Buffer] Align failed,start=%u,end=%u,_capacity=%u",start,end,_capacity);
+            PrintE("[Buffer] Align failed,start=%lu,end=%lu,_capacity=%lu",start,end,_capacity);
             return chw::fail;
         }
 

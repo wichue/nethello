@@ -140,7 +140,7 @@ void RawPressModel::prepare_exit()
     ,Rcv_unit.c_str());
 
     // 输出接收和发送包数量,丢包率
-    PrintD("all send pkt:%lu,bytes:%lu; all rcv pkt:%lu,bytes:%lu,seq:%lu,lost:%u(%.2f%%)"
+    PrintD("all send pkt:%lu,bytes:%lu; all rcv pkt:%lu,bytes:%lu,seq:%lu,lost:%lu(%.2f%%)"
     ,_client_snd_num,_client_snd_len
     ,_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
 }
@@ -182,7 +182,7 @@ void RawPressModel::onManagerModel()
     {
         cur_lost_ratio = ((double)(cur_lost_num) / (double)cur_rcv_seq) * 100;
     }
-    PrintD("%-12u%-8.2f%-12s%-8.2f%-12s%u/%u (%.2f%%)"
+    PrintD("%-12u%-8.2f%-12s%-8.2f%-12s%lu/%lu (%.2f%%)"
     ,uDurTimeS
     ,Snd_speed
     ,Snd_unit.c_str()

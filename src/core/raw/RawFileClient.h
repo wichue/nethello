@@ -13,8 +13,6 @@
 
 namespace chw {
 
-typedef std::function<int(const char *buffer, int len, ikcpcb *kcp, void *user)> RawSndCb;
-
 /**
  * @brief 基于linux原始套接字的文件传输发送端，使用kcp实现可靠传输
  * 发送数据使用： KcpSendData

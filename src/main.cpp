@@ -141,7 +141,9 @@ int main(int argc, char **argv)
 
     case chw::FILE_MODEL:
         if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+#if defined(__linux__) || defined(__linux)
             _workmodel = std::make_shared<chw::RawFileModel>();
+#endif// defined(__linux__) || defined(__linux)
         } else {
             _workmodel = std::make_shared<chw::FileModel>();
         }

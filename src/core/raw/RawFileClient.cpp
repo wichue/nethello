@@ -181,8 +181,7 @@ void RawFileClient::CreateKcp(uint32_t conv)
 
 void RawFileClient::onManager()
 {
-    return;// 默认不打印速率
-
+#if FILE_MODEL_PRINT_SPEED
     uint64_t Rcv_BytesPs = 0;// 接收速率，字节/秒
     double Rcv_speed = 0;// 接收速率
     std::string Rcv_unit = "";// 接收速率单位
@@ -197,6 +196,7 @@ void RawFileClient::onManager()
     speed_human(Snd_BytesPs,Snd_speed,Snd_unit);
     speed_human(Rcv_BytesPs,Rcv_speed,Rcv_unit);
     PrintD("recv speed=%.2f(%s),send speed=%.2f(%s)",Rcv_speed,Rcv_unit.c_str(),Snd_speed,Snd_unit.c_str());
+#endif//FILE_MODEL_PRINT_SPEED
 }
 
 /**

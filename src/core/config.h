@@ -44,4 +44,13 @@
 // 原始套结字mtu大小
 #define CHW_RAW_MTU 1500
 
+// 文件传输模式是否打印实时速率，0不打印，1打印
+#define FILE_MODEL_PRINT_SPEED  1
+
+// 原始套接字发送缓存
+#define RAW_SEND_BUFFER 200*1024*1024
+
+// 原始套接字接收缓存
+#define RAW_RECV_BUFFER 200*1024*1024
+
 #endif//__CONFIG_H

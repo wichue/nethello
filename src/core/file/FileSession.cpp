@@ -172,7 +172,7 @@ void FileSession::procTranReq(char* buf)
         SendSignalMsg(FILE_TRAN_RSP,code);
         sleep_exit(100 * 1000);
 	}
-    PrintD("recv file, save to:%s,size:%u(bytes)",pReq->filepath,pReq->filesize);
+    PrintD("recv file, save to:%s,size:%lu(bytes)",pReq->filepath,pReq->filesize);
 
     _ticker.resetTime();
     SendSignalMsg(FILE_TRAN_RSP,ERROR_SUCCESS);
@@ -223,7 +223,7 @@ void FileSession::procFileData(char* buf, uint32_t len)
         fclose(_write_file);
 
         SendSignalMsg(FILE_TRAN_END,ERROR_FILE_PEER_UNKNOWN);
-        PrintE("file write failed, error=%d(%s),write_len=%u,len=%u",errno,strerror(errno),write_len,len - sizeof(MsgHdr));
+        PrintE("file write failed, error=%d(%s),write_len=%lu,len=%lu",errno,strerror(errno),write_len,len - sizeof(MsgHdr));
         sleep_exit(100 * 1000);
     }
     
@@ -257,7 +257,7 @@ void FileSession::procFileData(char* buf, uint32_t len)
         fclose(_write_file);
 
         SendSignalMsg(FILE_TRAN_END,ERROR_FILE_PEER_UNKNOWN);
-        PrintE("error: _write_size(%u) > _filesize(%u)",_write_size, _filesize);
+        PrintE("error: _write_size(%lu) > _filesize(%lu)",_write_size, _filesize);
         sleep_exit(100 * 1000);
     }
     else

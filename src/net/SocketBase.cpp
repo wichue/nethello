@@ -1230,7 +1230,7 @@ struct sockaddr_storage SockUtil::make_sockaddr(const char *host, uint16_t port)
 #define MSG_NOSIGNAL 0
 #endif // !MSG_NOSIGNAL
 
-uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
+uint32_t SockUtil::send_tcp_data(int32_t fd, char * buff, uint32_t len)
 {
     uint32_t total_send_bytes = 0;
     int32_t curr_send_len = 0;
@@ -1248,14 +1248,14 @@ uint32_t SockUtil::send_tcp_data(uint32_t fd, char * buff, uint32_t len)
                 continue;
             }
 
-            PrintE("send failed,err=%s,resendtimes=%d,len=%u,total_send_bytes=%u,fd=%d",uv_strerror(err),resendtimes,len,total_send_bytes,fd);
+            PrintE("send failed,err=%s,resendtimes=%d,len=%lu,total_send_bytes=%lu,fd=%d",uv_strerror(err),resendtimes,len,total_send_bytes,fd);
             return total_send_bytes;
         } else if(curr_send_len > 0) {
             total_send_bytes += curr_send_len;
             left_bytes -= curr_send_len;
         } else {
             auto err = get_uv_error(true);
-            PrintE("send return 0,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
+            PrintE("send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
             return 0;
         }
     }
@@ -1282,17 +1282,17 @@ int32_t SockUtil::send_once_tcp(int32_t fd, char * buff, uint32_t len)
         // if(errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
             return 0;
         } else {
-            PrintE("send failed,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
+            PrintE("send failed,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
             return -1;
         }
     } else { // 对端关闭连接
         auto err = get_uv_error(true);
-        PrintE("send return 0,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
+        PrintE("send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
         return -1;
     }
 }
 
-uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
+uint32_t SockUtil::send_udp_data(int32_t fd, char* buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
 {
     int32_t snd_len = 0;
     uint32_t resendtimes = 0;
@@ -1307,13 +1307,13 @@ uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct s
                 continue;
             }
 
-            PrintE("send failed,err=%s,resendtimes=%d,len=%u,snd_len=%u,fd=%d",uv_strerror(err),resendtimes,len,snd_len,fd);
+            PrintE("send failed,err=%s,resendtimes=%d,len=%lu,snd_len=%lu,fd=%d",uv_strerror(err),resendtimes,len,snd_len,fd);
             return 0;
         } else if(snd_len > 0) {
             return snd_len;
         } else {
             auto err = get_uv_error(true);
-            PrintE("send return 0,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
+            PrintE("send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
             return 0;
         }
     }
@@ -1321,7 +1321,7 @@ uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct s
     return 0;
 }
 
- uint32_t SockUtil::send_once_udp(uint32_t fd, char * buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
+ uint32_t SockUtil::send_once_udp(int32_t fd, char * buff, uint32_t len, struct sockaddr* addr, int32_t socklen)
  {
     int32_t sndlen = sendto(fd, buff, len, 0, addr, socklen);
     if(sndlen > 0) {
@@ -1331,12 +1331,12 @@ uint32_t SockUtil::send_udp_data(uint32_t fd, char* buff, uint32_t len, struct s
         if (err == UV_EAGAIN) {
             return 0;
         } else {
-            PrintE("udp send failed,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
+            PrintE("udp send failed,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
             return -1;
         }
     } else { // 对端关闭连接
         auto err = get_uv_error(true);
-        PrintE("udp send return 0,err=%s,len=%u,fd=%d",uv_strerror(err),len,fd);
+        PrintE("udp send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
         return -1;
     }
  }

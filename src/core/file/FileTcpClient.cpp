@@ -53,7 +53,7 @@ void FileTcpClient::StartTransf()
 
     snprintf(preq->filepath,256,"%s%s",dst_path.c_str(),path_Name(gConfigCmd.src).c_str());
     preq->filesize = filesize;
-    PrintD("preq->filepath=%s,filesize=%u",preq->filepath,preq->filesize);
+    PrintD("preq->filepath=%s,filesize=%lu",preq->filepath,preq->filesize);
 
     senddata_i((char*)preq,sizeof(FileTranReq));
     _RAM_DEL_(preq);
@@ -157,7 +157,7 @@ void FileTcpClient::procTranRsp(char* buf)
 	    try {
 	        buf = (char*)_RAM_NEW_(TCP_BUFFER_SIZE);
 	    } catch(std::bad_alloc) {
-	    	PrintE("malloc buf failed, size=%u",TCP_BUFFER_SIZE);
+	    	PrintE("malloc buf failed, size=%lu",TCP_BUFFER_SIZE);
 	    	sleep_exit(100 * 1000);
 	    }
 
@@ -207,7 +207,7 @@ void FileTcpClient::procTranRsp(char* buf)
         else
         {
             //发送失败
-            PrintE("send failed, filesize=%u, allSendLen=%u",filesize,allSendLen);
+            PrintE("send failed, filesize=%lu, allSendLen=%lu",filesize,allSendLen);
             status = TRANS_SEND_FAIL;
         }
         

@@ -68,7 +68,7 @@ void FileSend::StartTransf()
 
     snprintf(preq->filepath,256,"%s%s",dst_path.c_str(),path_Name(gConfigCmd.src).c_str());
     preq->filesize = filesize;
-    PrintD("preq->filepath=%s,filesize=%u",preq->filepath,preq->filesize);
+    PrintD("preq->filepath=%s,filesize=%lu",preq->filepath,preq->filesize);
 
     if(_send_data((char*)preq,sizeof(FileTranReq)) == 0)
     {
@@ -186,7 +186,7 @@ void FileSend::procTranRsp(char* buf)
 	    try {
 	        buf = (char*)_RAM_NEW_(strong_self->_snd_buf_mtu);
 	    } catch(std::bad_alloc) {
-	    	PrintE("malloc buf failed, size=%u",strong_self->_snd_buf_mtu);
+	    	PrintE("malloc buf failed, size=%lu",strong_self->_snd_buf_mtu);
 	    	sleep_exit(100 * 1000);
 	    }
 
@@ -236,7 +236,7 @@ void FileSend::procTranRsp(char* buf)
         else
         {
             //发送失败
-            PrintE("send failed, filesize=%u, allSendLen=%u",filesize,allSendLen);
+            PrintE("send failed, filesize=%lu, allSendLen=%lu",filesize,allSendLen);
             status = TRANS_SEND_FAIL;
         }
         
