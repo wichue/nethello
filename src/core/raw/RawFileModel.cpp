@@ -43,7 +43,7 @@ void RawFileModel::startmodel()
         _pClient->create_client(gConfigCmd.interfaceC,0);
     }
 
-    _pClient->CreateKcp(10086);
+    _pClient->CreateAKcp(10086);
     if(chw::gConfigCmd.role == 'c')
     {
         _pClient->StartFileTransf();

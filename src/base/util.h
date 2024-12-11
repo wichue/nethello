@@ -44,6 +44,9 @@ class_name &class_name::Instance() { \
 
 namespace chw {
 
+#define STD_BIND_1(__selector__,__target__)\
+std::bind(&__selector__,__target__, std::placeholders::_1)
+
 #define STD_BIND_2(__selector__,__target__)\
 std::bind(&__selector__,__target__, std::placeholders::_1, std::placeholders::_2)
 

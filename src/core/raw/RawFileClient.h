@@ -10,13 +10,12 @@
 #include "FileSend.h"
 #include "FileRecv.h"
 #include "FileTransfer.h"
+#include "KcpClient.h"
 
 namespace chw {
 
 /**
  * @brief 基于linux原始套接字的文件传输发送端，使用kcp实现可靠传输
- * 发送数据使用： KcpSendData
- * 接收数据使用： KcpRcvData
  * 
  */
 class RawFileClient : public  RawSocket {
@@ -34,9 +33,9 @@ public:
     /**
      * @brief 创建kcp实例
      * 
-     * @param conv 会话标识
+     * @param conv [in]会话标识
      */
-    void CreateKcp(uint32_t conv);
+    void CreateAKcp(uint32_t conv);
 
     /**
      * @brief 开始文件传输，客户端调用
@@ -44,15 +43,18 @@ public:
      */
     void StartFileTransf();
 
-    void onManager();
-private:
     /**
-     * @brief kcp处理接收数据
+     * @brief 周期打印收发速率
      * 
-     * @param buf 数据
-     * @param len 数据长度
      */
-    void KcpRcvData(const char* buf, long len);
+    void onManager();
+public:
+    /**
+     * @brief 从kcp接收用户数据
+     * 
+     * @param buf [in]数据
+     */
+    void RcvDataFromKcp(const Buffer::Ptr &buf);
 
     /**
      * @brief 把数据交给kcp发送，需要发送数据时调用
@@ -61,20 +63,11 @@ private:
      * @param len    [in]数据长度
      * @return int   成功返回压入队列的数据长度，0则输入为0或缓存满，失败返回小于0
      */
-    int KcpSendData(const char *buffer, int len);
-
-    /**
-     * @brief 周期执行ikcp_update
-     * 
-     */
-    void onKcpUpdate();
-
+    int SendDataToKcpQue(const char *buffer, int len);
 private:
-    ikcpcb *_kcp;// kcp实例
     FileTransfer::Ptr _FileTransfer;// 文件传输业务
-    Buffer::Ptr _rcv_buf;// 存放接收到数据后，kcp还原的用户数据
-    std::shared_ptr<Timer> _timer;// 周期执行ikcp_update定时器
     std::shared_ptr<Timer> _timer_spd;// 周期输出信息定时器
+    KcpClient::Ptr _KcpClient;// kcp客户端
 };
 
 }//namespace chw
