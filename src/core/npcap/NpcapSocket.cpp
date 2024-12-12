@@ -109,8 +109,8 @@ uint32_t NpcapSocket::OpenAdapter(std::string desc)
     pcap_freealldevs(allAdapters);
 
     //设置内核缓冲区和用户缓冲区的大小
-    pcap_setbuff(_handle, 100 * 1024 * 1024);
-    pcap_set_buffer_size(_handle, 100 * 1024 * 1024);
+    pcap_setbuff(_handle, 200 * 1024 * 1024);
+    pcap_set_buffer_size(_handle, 200 * 1024 * 1024);
 
     _queue = pcap_sendqueue_alloc((2000 + sizeof(struct pcap_pkthdr)) * NPCAP_SEND_QUEUE_SIZE);
     if (_queue == NULL)
@@ -214,7 +214,7 @@ uint32_t NpcapSocket::SendQueToAdPure()
     uint32_t uiRet = pcap_sendqueue_transmit(_handle, _queue, 0);
     if (uiRet <= 0)
     {
-        PrintE("pcap_sendqueue_transmit failed,iRet=%lu,err=%s", uiRet, pcap_geterr(_handle));
+        ErrorL << "pcap_sendqueue_transmit failed,iRet=" << uiRet << ",err=" << pcap_geterr(_handle);
     }
 
     return uiRet;

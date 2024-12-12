@@ -48,7 +48,7 @@ public:
      * 
      */
     void onManager();
-public:
+private:
     /**
      * @brief 从kcp接收用户数据
      * 

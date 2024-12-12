@@ -32,7 +32,7 @@ uint32_t StickyPacket(const Buffer::Ptr &buf,const DispatchCB& cb)
         {
             if(pMsgHdr->uTotalLen > MAX_PKT_SIZE)
             {
-                PrintE("too big net pkt size:%lu",pMsgHdr->uTotalLen);
+                ErrorL << "too big net pkt size:" << pMsgHdr->uTotalLen;
                 return chw::fail;
             }
             buf->SetCapacity(pMsgHdr->uTotalLen );
@@ -74,7 +74,7 @@ uint32_t StickyPacket(const Buffer::Ptr &buf,const DispatchCB& cb)
         }
         else
         {
-            PrintE("error:offset(%lu) > buf->Size(%s)",offset,buf->Size());
+            ErrorL << "error:offset(" << offset << ") > buf->Size(" << buf->Size() << ")";
             return chw::fail;
         }
     }

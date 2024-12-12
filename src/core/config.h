@@ -31,6 +31,13 @@
 #endif //IFHWADDRLEN
 #endif //_WIN32
 
+// windows是否使用npcap库（windows版原始套结字测试），0不使用，1使用
+#ifdef _WIN32
+#ifndef WIN_USE_NPCAP_LIB
+#define WIN_USE_NPCAP_LIB 1
+#endif //WIN_USE_NPCAP_LIB
+#endif //_WIN32
+
 // npcap pcap_send_queue 队列大小
 #ifdef _WIN32
 #ifndef NPCAP_SEND_QUEUE_SIZE
@@ -52,5 +59,8 @@
 
 // 原始套接字接收缓存
 #define RAW_RECV_BUFFER 200*1024*1024
+
+// 文件传输时每包大小
+#define FILE_SEND_MTU   1460
 
 #endif//__CONFIG_H

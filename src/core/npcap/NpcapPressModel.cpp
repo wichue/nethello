@@ -166,17 +166,33 @@ void NpcapPressModel::prepare_exit()
     }
 
     // 输出平均速率
-    PrintD("%-12.0f%-8.2f%-12s%-8.2f%-12s"
-    ,uDurTimeS
-    ,Snd_speed
-    ,Snd_unit.c_str()
-    ,Rcv_speed
-    ,Rcv_unit.c_str());
+    // PrintD("%-12.0f%-8.2f%-12s%-8.2f%-12s"
+    // ,uDurTimeS
+    // ,Snd_speed
+    // ,Snd_unit.c_str()
+    // ,Rcv_speed
+    // ,Rcv_unit.c_str());
+
+    InfoL << std::left 
+    << std::setw(12) << std::setprecision(0) << std::fixed << uDurTimeS 
+    << std::setw(8) << std::setprecision(2) << std::fixed << Snd_speed 
+    << std::setw(12) << Snd_unit
+    << std::setw(8) << std::setprecision(2) << std::fixed << Rcv_speed
+    << std::setw(12) << Rcv_unit;
 
     // 输出接收和发送包数量,丢包率
-    PrintD("all send pkt:%llu,bytes:%llu; all rcv pkt:%llu,bytes:%llu,seq:%llu,lost:%lu(%.2f%%)"
-    ,_client_snd_num,_client_snd_len
-    ,_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
+    // PrintD("all send pkt:%llu,bytes:%llu; all rcv pkt:%llu,bytes:%llu,seq:%llu,lost:%lu(%.2f%%)"
+    // ,_client_snd_num,_client_snd_len
+    // ,_server_rcv_num,_server_rcv_len,_server_rcv_seq,lost_num,lost_ratio);
+
+    InfoL 
+    << "all send pkt:" << _client_snd_num 
+    << ",bytes:" << _client_snd_len
+    << "; all rcv pkt:" << _server_rcv_num
+    << ",bytes:" << _server_rcv_len
+    << ",seq:" << _server_rcv_seq
+    << ",lost:" << lost_num
+    << "(" << std::setprecision(2) << std::fixed << lost_ratio << "%)";
 }
 
 void NpcapPressModel::onManagerModel()
@@ -220,15 +236,25 @@ void NpcapPressModel::onManagerModel()
     {
         cur_lost_ratio = ((double)(cur_lost_num) / (double)cur_rcv_seq) * 100;
     }
-    PrintD("%-12.0f%-8.2f%-12s%-8.2f%-12s%lu/%lu (%.2f%%)"
-    ,uDurTimeS
-    ,Snd_speed
-    ,Snd_unit.c_str()
-    ,Rcv_speed
-    ,Rcv_unit.c_str()
-    ,cur_lost_num
-    ,cur_rcv_seq
-    ,cur_lost_ratio);
+    // PrintD("%-12.0f%-8.2f%-12s%-8.2f%-12s%lu/%lu (%.2f%%)"
+    // ,uDurTimeS
+    // ,Snd_speed
+    // ,Snd_unit.c_str()
+    // ,Rcv_speed
+    // ,Rcv_unit.c_str()
+    // ,cur_lost_num
+    // ,cur_rcv_seq
+    // ,cur_lost_ratio);
+
+    InfoL << std::left 
+    << std::setw(12) << std::setprecision(0) << std::fixed << uDurTimeS 
+    << std::setw(8) << std::setprecision(2) << std::fixed << Snd_speed 
+    << std::setw(12) << Snd_unit
+    << std::setw(8) << std::setprecision(2) << std::fixed << Rcv_speed
+    << std::setw(12) << Rcv_unit
+    << cur_lost_num << "/" << cur_rcv_seq
+    << "(" 
+    << std::setprecision(2) << std::fixed << cur_lost_ratio << "%)";
 
     _last_lost = lost_num;
     _last_seq  = _server_rcv_seq;

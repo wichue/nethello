@@ -164,7 +164,7 @@ void PressModel::prepare_exit()
     
     speed_human(BytesPs,speed,unit);
 
-    PrintD("- - - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - -");
+    PrintD("- - - - - - - - - - - - - - - - average- - - - - - - - - -- - - - - - - - -");
     if(chw::gConfigCmd.protol == SockNum::Sock_TCP)
     {
         // PrintD("%-16.0f%-8.2f(%s)",uDurTimeS,speed,unit.c_str());
@@ -236,7 +236,14 @@ void PressModel::onManagerModel()
             uint32_t cur_lost_num = lost_num - _last_lost;// 当前周期丢包数量
             uint32_t cur_rcv_seq = _server_rcv_seq - _last_seq;// 当前周期应该收到包的数量
             double cur_lost_ratio = ((double)(cur_lost_num) / (double)cur_rcv_seq) * 100;// 当前周期丢包率
-            PrintD("%-16u%-8.2f(%s)    %lu/%lu (%.2f%%)",uDurTimeS,speed,unit.c_str(),cur_lost_num,cur_rcv_seq,cur_lost_ratio);
+            // PrintD("%-16u%-8.2f(%s)    %lu/%lu (%.2f%%)",uDurTimeS,speed,unit.c_str(),cur_lost_num,cur_rcv_seq,cur_lost_ratio);
+            InfoL << std::left
+            << std::setw(16) << uDurTimeS 
+            << std::setw(8) << std::setprecision(2) << std::fixed << speed 
+            << "(" << unit << ")"
+            << "    "
+            << cur_lost_num << "/" << cur_rcv_seq
+            << "(" << std::setprecision(2) << std::fixed << cur_lost_ratio << "%)";
 
             _last_lost = lost_num;
             _last_seq  = _server_rcv_seq;
@@ -286,7 +293,7 @@ void PressModel::start_client_press()
             {
                 // 出现错误，退出测试
                 auto err = get_uv_error(true);
-                PrintE("send return=%lu,all len=%d,err=%s", sndlen, gConfigCmd.blksize, uv_strerror(err));
+                ErrorL << "send return=" << sndlen << ",all len=" << gConfigCmd.blksize << ",err=" << uv_strerror(err);
                 prepare_exit();
                 sleep_exit(100 * 1000);
             }
@@ -323,7 +330,7 @@ void PressModel::start_client_press()
             {
                 // 出现错误，退出测试
                 auto err = get_uv_error(true);
-                PrintE("send return=%lu,all len=%d,err=%s", sndlen, gConfigCmd.blksize, uv_strerror(err));
+                ErrorL << "send return=" << sndlen << ",all len=" << gConfigCmd.blksize << ",err=" << uv_strerror(err);
                 prepare_exit();
                 sleep_exit(100 * 1000);
             }

@@ -14,12 +14,16 @@ namespace chw {
 #define MAX_BUFFER_SIZE     16<<20       //buf最大大小,16MB
 
 /**
- * 缓存封装，构造时缓存为空，调用 SetCapacity 分配内存
+ * 缓存封装
  * 
  */
 class Buffer {
 public:
     using Ptr = std::shared_ptr<Buffer>;
+    /**
+     * @brief 构造一个空缓存，调用 SetCapacity 分配内存
+     * 
+     */
     Buffer() {
         _data = nullptr;
         _capacity = 0;
@@ -27,10 +31,18 @@ public:
         _isNeedFree = true;
     }
 
-    Buffer(char* buf, uint32_t len, bool isNeedFree) {
+    /**
+     * @brief 使用已分配的buf构造缓存
+     * 
+     * @param buf       数据
+     * @param capacity  总长度
+     * @param size      有效数据长度
+     * @param isNeedFree 析构时是否释放buf
+     */
+    Buffer(char* buf, size_t capacity, size_t size, bool isNeedFree) {
         _data = buf;
-        _capacity = len;
-        _size = len;
+        _capacity = capacity;
+        _size = size;
         _isNeedFree = isNeedFree;
     }
 
@@ -61,7 +73,7 @@ public:
         try {
             buffer = _RAM_NEW_(size);
         } catch(std::bad_alloc&) {
-            PrintE("[Buffer]1 alloc failed,size=%lu",size);
+            ErrorL << "[Buffer]1 alloc failed,size=" << size;
             return chw::fail;
         }
 
@@ -94,7 +106,7 @@ public:
                 _data = _RAM_NEW_(size);
                 _capacity = size;
             } catch(std::bad_alloc&) {
-                PrintE("[Buffer]2 alloc failed,size=%lu",size);
+                ErrorL << "[Buffer]2 alloc failed,size=" << size;
                 _data = nullptr;
                 _capacity = 0;
                 return chw::fail;
@@ -127,7 +139,7 @@ public:
      */
     uint32_t Align(size_t start, size_t end) {
         if(start >= end || end - start > _capacity) {
-            PrintE("[Buffer] Align failed,start=%lu,end=%lu,_capacity=%lu",start,end,_capacity);
+            ErrorL << "[Buffer] Align failed,start=" << start << ",end=" << end << ",_capacity=" << _capacity;
             return chw::fail;
         }
 
@@ -147,8 +159,12 @@ public:
     }
 
     // 设置有效数据长度
-    void SetSize(size_t len) {
-        _size = len;
+    void SetSize(size_t size) {
+        if(size <= _capacity) {
+            _size = size;
+        } else {
+            ErrorL << "[Buffer][SetSize] size(" << size << ") > capacity(" << _capacity << ")" ;
+        }
     }
 
     // 返回有效数据大小

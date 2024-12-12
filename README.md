@@ -68,8 +68,8 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
 ![file](https://github.com/wichue/nethello/blob/master/doc/file.png)
-### 原始套接字
-- raw socket文本聊天
+### 原始套接字raw和npcap
+- 文本聊天
 
 ```shell
 # 相互发
@@ -77,15 +77,39 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
 ```
 ![raw_text](https://github.com/wichue/nethello/blob/master/doc/raw_text.png)
-- raw socket性能测试
+- 性能测试
 
 ```shell
-# 发送端
-./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P
 # 接收端
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P -l 0
+# 发送端
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P
 ```
 ![raw_perf](https://github.com/wichue/nethello/blob/master/doc/raw_perf.png)
+
+- 文件传输
+```shell
+# 接收端
+./nethello -r -s -F -I eth0
+# 发送端
+./nethello -r -c 123 -F -I eth0 -S /root/gitcode/nethello/build/500M.txt -D /root/gitcode/nethello/build/file
+```
+
+## windows原始套结字npcap配置说明
+https://npcap.com/#download
+下载：npcap-sdk-1.13.zip，解压缩后获取Lib和Include文件夹。
+
+vs配置
+```
+VS-属性-C/C++-附加包含目录，把...\Include目录添加进去。
+VS-属性-调试-环境，添加 PATH=...\Lib;%PATH%
+VS-属性-连接器-常规-附加库目录，添加 ...\Lib
+...用完整目录替代。
+```
+- windows的-I选项识别的是网卡描述，按字段模糊匹配即可，比如USB网卡包含'USB'字段，-I USB即可识别该网卡。
+- 如果提示缺少Packet.dll和wpcap.dll，拷贝适合当前操作系统环境的库到可执行文件目录。
+- 如果不需要windows的npcap测试，为了减少库依赖，可以修改config.h文件WIN_USE_NPCAP_LIB宏定义为0。
+
 ## 命令行参数
 ```shell
       -v, --version             show version information and quit

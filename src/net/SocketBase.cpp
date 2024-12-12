@@ -1248,14 +1248,15 @@ uint32_t SockUtil::send_tcp_data(int32_t fd, char * buff, uint32_t len)
                 continue;
             }
 
-            PrintE("send failed,err=%s,resendtimes=%d,len=%lu,total_send_bytes=%lu,fd=%d",uv_strerror(err),resendtimes,len,total_send_bytes,fd);
+            ErrorL << "send failed,err=" << uv_strerror(err) << ",resendtimes=" << resendtimes << ",len=" << len 
+            << ",total_send_bytes=" << total_send_bytes << ",fd=" << fd;
             return total_send_bytes;
         } else if(curr_send_len > 0) {
             total_send_bytes += curr_send_len;
             left_bytes -= curr_send_len;
         } else {
             auto err = get_uv_error(true);
-            PrintE("send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
+            ErrorL << "send return 0,err=" << uv_strerror(err) << ",len=" << len << ",fd=" << fd;
             return 0;
         }
     }
@@ -1282,12 +1283,12 @@ int32_t SockUtil::send_once_tcp(int32_t fd, char * buff, uint32_t len)
         // if(errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
             return 0;
         } else {
-            PrintE("send failed,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
+            ErrorL << "send failed,err=" << uv_strerror(err) << ",len=" << len << ",fd=" << fd;
             return -1;
         }
     } else { // 对端关闭连接
         auto err = get_uv_error(true);
-        PrintE("send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
+        ErrorL << "send return 0,err=" << uv_strerror(err) << ",len=" << len << ",fd=" << fd;
         return -1;
     }
 }
@@ -1307,13 +1308,13 @@ uint32_t SockUtil::send_udp_data(int32_t fd, char* buff, uint32_t len, struct so
                 continue;
             }
 
-            PrintE("send failed,err=%s,resendtimes=%d,len=%lu,snd_len=%lu,fd=%d",uv_strerror(err),resendtimes,len,snd_len,fd);
+            ErrorL << "send failed,err=" << uv_strerror(err) << ",resendtimes=" << resendtimes << ",len=" << len << ",snd_len=" << snd_len << ",fd=" << fd;
             return 0;
         } else if(snd_len > 0) {
             return snd_len;
         } else {
             auto err = get_uv_error(true);
-            PrintE("send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
+            ErrorL << "send return 0,err=" << uv_strerror(err) << ",len=" << len << ",fd=" << fd;
             return 0;
         }
     }
@@ -1331,12 +1332,12 @@ uint32_t SockUtil::send_udp_data(int32_t fd, char* buff, uint32_t len, struct so
         if (err == UV_EAGAIN) {
             return 0;
         } else {
-            PrintE("udp send failed,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
+            ErrorL << "udp send failed,err=" << uv_strerror(err) << ",len=" << len << ",fd=" << fd;
             return -1;
         }
     } else { // 对端关闭连接
         auto err = get_uv_error(true);
-        PrintE("udp send return 0,err=%s,len=%lu,fd=%d",uv_strerror(err),len,fd);
+        ErrorL << "udp send return 0,err=" << uv_strerror(err) << ",len=" << len << ",fd=" << fd;
         return -1;
     }
  }

@@ -8,6 +8,7 @@
 #include "TcpClient.h"
 #include "ComProtocol.h"
 #include "EventLoop.h"
+#include "FileSend.h"
 
 namespace chw {
 
@@ -27,13 +28,15 @@ public:
      * @param buf [in]消息
      * @param len [in]长度
      */
-    void DispatchMsg(char* buf, uint32_t len);
+    // void DispatchMsg(char* buf, uint32_t len);
 
     // 接收数据回调（epoll线程执行）
     virtual void onRecv(const Buffer::Ptr &pBuf) override;
 
     // 错误回调
     virtual void onError(const SockException &ex) override;
+
+    int SendDataToSer(const char *buffer, int len);
 
     /**
      * @brief 开始文件传输
@@ -46,25 +49,26 @@ private:
      * 
      * @param pBuf [in]响应数据
      */
-    void procTranRsp(char* pBuf);
+    // void procTranRsp(char* pBuf);
 
     /**
      * @brief 收到传输结束消息
      * 
      * @param pBuf [in]消息
      */
-    void procTranEnd(char* pBuf);
+    // void procTranEnd(char* pBuf);
 
     /**
      * @brief 本端文件发送结束
      * 
      * @param status 状态码(FileTranStatus)
      */
-    void localTransEnd(uint32_t status, uint32_t filesiez, double times);
+    // void localTransEnd(uint32_t status, uint32_t filesiez, double times);
 
 private:
-    uint32_t _status;//FileTranStatus
-    EventLoop::Ptr _send_poller;
+    // uint32_t _status;//FileTranStatus
+    // EventLoop::Ptr _send_poller;
+    FileTransfer::Ptr _FileTransfer;// 文件传输业务
 };
 
 }//namespace chw

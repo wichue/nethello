@@ -10,6 +10,7 @@
 #include "StickyPacket.h"
 #include "BackTrace.h"
 #include "uv_errno.h"
+#include "config.h"
 
 namespace chw {
 
@@ -18,7 +19,7 @@ FileSend::FileSend(const EventLoop::Ptr &poller) : FileTransfer()
     _status = TRANS_INIT;
     _send_poller = nullptr;
     _poller = poller;
-    _snd_buf_mtu = 1000;
+    _snd_buf_mtu = FILE_SEND_MTU;
 }
 
 void FileSend::SetSndData(std::function<uint32_t(char* buf, uint32_t )> cb)
@@ -68,7 +69,7 @@ void FileSend::StartTransf()
 
     snprintf(preq->filepath,256,"%s%s",dst_path.c_str(),path_Name(gConfigCmd.src).c_str());
     preq->filesize = filesize;
-    PrintD("preq->filepath=%s,filesize=%lu",preq->filepath,preq->filesize);
+    InfoL << "preq->filepath=" << preq->filepath << ",filesize=" << preq->filesize << "(bytes)";
 
     if(_send_data((char*)preq,sizeof(FileTranReq)) == 0)
     {
@@ -186,7 +187,7 @@ void FileSend::procTranRsp(char* buf)
 	    try {
 	        buf = (char*)_RAM_NEW_(strong_self->_snd_buf_mtu);
 	    } catch(std::bad_alloc) {
-	    	PrintE("malloc buf failed, size=%lu",strong_self->_snd_buf_mtu);
+            ErrorL << "malloc buf failed, size=" << strong_self->_snd_buf_mtu;
 	    	sleep_exit(100 * 1000);
 	    }
 
@@ -199,6 +200,14 @@ void FileSend::procTranRsp(char* buf)
 
         MsgHdr* pMsgHdr = (MsgHdr*)buf;
         pMsgHdr->uMsgType = FILE_TRAN_DATA;
+
+        // 控速
+        double uMBps = (double)gConfigCmd.bandwidth;// 每秒需要发送多少MB数据
+        uint32_t uByteps = uMBps * 1024 * 1024;// 每秒需要发送多少byte数据
+        uint32_t uBytep100ms = uByteps / 10;// 每100ms需要发送多少byte数据
+        uint32_t curr_all_sndlen = 0;// 当前周期发送长度
+        static Ticker ticker_ctl;// 控速用的计时器
+        ticker_ctl.resetTime();
 
         Ticker tker;// 统计耗时
         uint32_t uReadSize = 0;
@@ -214,6 +223,25 @@ void FileSend::procTranRsp(char* buf)
             else
             {
                 allSendLen += uReadSize;
+            }
+
+            if(uBytep100ms != 0)
+            {
+                curr_all_sndlen += uReadSize + sizeof(MsgHdr);
+
+                uint16_t use_ms =  ticker_ctl.elapsedTime();
+                if(use_ms >= 100)
+                {
+                    ticker_ctl.resetTime();
+                    curr_all_sndlen = 0;
+                }
+
+                if(curr_all_sndlen >= uBytep100ms)
+                {
+                    ticker_ctl.resetTime();
+                    curr_all_sndlen = 0;
+                    usleep((100 - use_ms) * 1000);
+                }
             }
         }
         fclose(fp);
@@ -236,7 +264,7 @@ void FileSend::procTranRsp(char* buf)
         else
         {
             //发送失败
-            PrintE("send failed, filesize=%lu, allSendLen=%lu",filesize,allSendLen);
+            ErrorL << "send failed, filesize=" << filesize << ", allSendLen=" << allSendLen;
             status = TRANS_SEND_FAIL;
         }
         

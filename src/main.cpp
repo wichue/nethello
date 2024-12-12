@@ -17,13 +17,16 @@
 #include "PressModel.h"
 #include "FileModel.h"
 #include "util.h"
+#include "config.h"
 #if defined(__linux__) || defined(__linux)
 #include "RawTextModel.h"
 #include "RawPressModel.h"
 #include "RawFileModel.h"
 #else
+#if WIN_USE_NPCAP_LIB
 #include "NpcapTextModel.h"
 #include "NpcapPressModel.h"
+#endif// WIN_USE_NPCAP_LIB
 #endif// defined(__linux__) || defined(__linux)
 
 chw::workmodel::Ptr _workmodel = nullptr;
@@ -123,7 +126,12 @@ int main(int argc, char **argv)
 #else
     case chw::TEXT_MODEL:
         if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+#if WIN_USE_NPCAP_LIB
             _workmodel = std::make_shared<chw::NpcapTextModel>();
+#else
+            PrintE("nonsupport npcap, please check config.h WIN_USE_NPCAP_LIB macro definition.");
+            sleep_exit(100*1000);
+#endif
         }
         else {
             _workmodel = std::make_shared<chw::TextModel>();
@@ -131,7 +139,12 @@ int main(int argc, char **argv)
         break;
     case chw::PRESS_MODEL:
         if (chw::gConfigCmd.protol == SockNum::Sock_RAW) {
+#if WIN_USE_NPCAP_LIB
             _workmodel = std::make_shared<chw::NpcapPressModel>();
+#else
+            PrintE("nonsupport npcap, please check config.h WIN_USE_NPCAP_LIB macro definition.");
+            sleep_exit(100*1000);
+#endif
         }
         else {
             _workmodel = std::make_shared<chw::PressModel>();

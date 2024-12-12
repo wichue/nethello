@@ -187,7 +187,7 @@ void FileRecv::procTranReq(char* buf)
         SendSignalMsg(FILE_TRAN_RSP,code);
         sleep_exit(100 * 1000);
 	}
-    PrintD("recv file, save to:%s,size:%lu(bytes)",pReq->filepath,pReq->filesize);
+    InfoL << "recv file, save to:" << pReq->filepath << ",size:" << pReq->filesize << "(bytes)";
 
     SendSignalMsg(FILE_TRAN_RSP,ERROR_SUCCESS);
     _status = TRANS_SENDING;
@@ -244,7 +244,8 @@ void FileRecv::procFileData(char* buf, uint32_t len)
         fclose(_write_file);
 
         SendSignalMsg(FILE_TRAN_END,ERROR_FILE_PEER_UNKNOWN);
-        PrintE("file write failed, error=%d(%s),write_len=%lu,len=%lu",errno,strerror(errno),write_len,len - sizeof(MsgHdr));
+        ErrorL << "file write failed, error=" << errno << "(" << strerror(errno) << ")"
+               << ",write_len=" << write_len << ",len=" << len - sizeof(MsgHdr);
         sleep_exit(100 * 1000);
     }
     
@@ -278,7 +279,7 @@ void FileRecv::procFileData(char* buf, uint32_t len)
         fclose(_write_file);
 
         SendSignalMsg(FILE_TRAN_END,ERROR_FILE_PEER_UNKNOWN);
-        PrintE("error: _write_size(%lu) > _filesize(%lu)",_write_size, _filesize);
+        ErrorL << "error: _write_size(" << _write_size << ") > _filesize(" << _filesize << ")";
         sleep_exit(100 * 1000);
     }
     else

@@ -1154,7 +1154,7 @@ uint32_t Socket::send_b(char* buff, uint32_t len)
     {
         // 不满足时，对_SndBuffer进行扩容   //todo:合理的扩容方案
         if(_SndBuffer->Capacity() > _max_bufsize_b) {
-            PrintE("too big send_b buff:%lu",_SndBuffer->Capacity());
+            ErrorL << "too big send_b buff:" << _SndBuffer->Capacity();
             shutdown();
             return chw::fail;
         }
@@ -1219,7 +1219,7 @@ uint32_t Socket::flush_b()
                 _SndBuffer->Align(snd_bytes,_SndBuffer->Size());
             } else {
                 // 异常错误
-                PrintE("Invalid snd_bytes=%d,bufflen=%lu",snd_bytes,_SndBuffer->Size());
+                ErrorL << "Invalid snd_bytes=" << snd_bytes << ",bufflen=" << _SndBuffer->Size();
                    shutdown();
                }
             _send_speed += snd_bytes;
