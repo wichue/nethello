@@ -58,57 +58,9 @@ public:
      * @return uint32_t 发送成功的数据长度
      */
     uint32_t senddata(char* buff, uint32_t len) override;
-
-private:
-    /**
-     * @brief 接收传输结束消息
-     * 
-     * @param buf [in]数据
-     */
-    // void procTranEnd(char* buf);
-
-    /**
-     * @brief 接收文件传输请求消息
-     * 
-     * @param buf [in]数据
-     */
-    // void procTranReq(char* buf);
-
-    /**
-     * @brief 接收文件传输数据
-     * 
-     * @param buf [in]数据
-     * @param len [in]长度
-     */
-    // void procFileData(char* buf, uint32_t len);
-
-    /**
-     * @brief 发送信令消息给对端
-     * 
-     * @param msgtype [in]消息类型
-     * @param code    [in]错误码
-     */
-    // void SendSignalMsg(uint32_t msgtype, uint32_t code);
-
-    /**
-     * @brief 分发消息
-     * 
-     * @param buf [in]消息
-     * @param len [in]长度
-     */
-    // void DispatchMsg(char* buf, uint32_t len);
 private:
     std::string _cls;// 类名
     FileTransfer::Ptr _FileTransfer;// 文件传输业务
-    // uint32_t _status;//FileTranStatus
-
-    // std::string _filepath;// 文件保存路经
-    // std::string _filename;// 文件保存文件名
-    // uint32_t _filesize; // 文件大小
-
-    // FILE* _write_file;// 写文件句柄
-    // uint32_t _write_size;// 已写入的大小
-    // Ticker _ticker;// 统计耗时
 };
 
 }//namespace chw
