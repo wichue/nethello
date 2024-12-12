@@ -64,8 +64,8 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -c 127.0.0.1 -p 9090 -F -S /root/gitcode/nethello/build/2GB.txt -D /root/gitcode/nethello/build/file
 ```
 ![file](https://github.com/wichue/nethello/blob/master/doc/file.png)
-### Raw Socket
-- raw socket text chat
+### Raw sockets and NPCAP
+- text chat
 
 ```shell
 # Mutual exchange
@@ -73,15 +73,39 @@ _CRT_NONSTDC_NO_DEPRECATE
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d
 ```
 ![raw_text](https://github.com/wichue/nethello/blob/master/doc/raw_text.png)
-- raw socket performance testing
+- performance testing
 
 ```shell
-# Sending end
-./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P
 # receiving end
 ./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P -l 0
+# Sending end
+./nethello -r -I eth0 -M 00:16:3e:3c:07:9d -P
 ```
 ![raw_perf](https://github.com/wichue/nethello/blob/master/doc/raw_perf.png)
+
+- file transfer
+```shell
+# receiving end
+./nethello -r -s -F -I eth0
+# Sending end
+./nethello -r -c 123 -F -I eth0 -S /root/gitcode/nethello/build/500M.txt -D /root/gitcode/nethello/build/file
+```
+
+## Windows original socket word npcap configuration instructions
+https://npcap.com/#download
+Download: npcap-sdk-1.13.zip， Extract and retrieve the Lib and Include folders.
+Vs configuration
+```
+VS Attribute - C/C++- Attach Include Directory, Put \Add the 'Include' directory.
+VS Properties Debugging Environment, Add PATH= \Lib;% PATH%
+VS Properties Connector General Additional Library Catalog, Add \Lib
+Replace with a complete directory.
+```
+-The - I option of Windows recognizes the network card description, and fuzzy matching based on fields is sufficient. For example, a USB network card contains a 'USB' field- I USB can recognize the network card.
+-If prompted for missing Packet.dll and wpcap.dll, copy the libraries suitable for the current operating system environment to the executable file directory.
+-If NPCAP testing for Windows is not required, in order to reduce library dependencies, the WIN-USE-NPCAP_LIB macro definition in the config. h file can be modified to 0.
+
+
 ## Command line parameters
 ```shell
       -v, --version             show version information and quit
