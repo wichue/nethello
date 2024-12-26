@@ -6,13 +6,13 @@
 [![](https://img.shields.io/badge/language-c++-red.svg)](https://en.cppreference.com/)
 [![](https://img.shields.io/badge/platform-linux%20|%20windows-blue.svg)](https://github.com/wichue/nethello)
 ## 初衷
-基于C++11实现的轻量级tcp/udp/raw网络测试工具，包含常用基础模块、事件循环、网络模块等，无其他三方库依赖，方便编译和部署。
+基于C++11实现的轻量级tcp/udp/raw/npcap网络测试工具，包含常用基础模块、事件循环、网络模块等，无其他三方库依赖，方便编译和部署。
 ## 项目特点
 - tcp/udp客户端和服务端均可绑定IP和port。
-- 文本聊天，可选tcp/udp协议，测试网络是否连通。
-- 压力测试，可选tcp/udp协议，可设置发送速率，每包长度，测试时长，输出间隔等。
-- 文件传输，目前支持tcp协议，由客户端发送文件至服务端。
-- 原始套接字测试，实现文本聊天和性能测试，linux使用rawsocket，windows使用npcap，支持linux和windows相互发。
+- 文本聊天，可选tcp/udp/raw协议，测试网络是否连通。
+- 压力测试，可选tcp/udp/raw协议，可设置发送速率，每包长度，测试时长，输出间隔等。
+- 文件传输，支持tcp和raw+kcp实现，由客户端发送文件至服务端。
+- 原始套接字测试，实现文本聊天、性能测试和文件传输，linux使用rawsocket，windows使用npcap，支持linux和windows相互发。
 
 ## 编译和安装
 ### linux
@@ -138,7 +138,7 @@ VS-属性-连接器-常规-附加库目录，添加 ...\Lib
       -n, --number              client bind port
 
     raw socket:
-      -r, --raw                 run raw socket, only for -T and -P mode
+      -r, --raw                 run raw socket
       -I, --interface           local net card, only for -r
       -M, --dstmac              destination mac address, only for -r
 ```

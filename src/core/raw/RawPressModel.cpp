@@ -30,6 +30,9 @@ RawPressModel::RawPressModel(const chw::EventLoop::Ptr& poller) : workmodel(poll
     _server_rcv_len = 0;
     _server_rcv_spd = 0;
     _bsending = false;
+
+    _last_lost = 0;
+    _last_seq = 0;
 }
 
 RawPressModel::~RawPressModel()

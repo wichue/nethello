@@ -32,6 +32,9 @@ PressModel::PressModel(const chw::EventLoop::Ptr& poller) : workmodel(poller)
     _bStart = false;
     _rs = "";
     _bsending = false;
+
+    _last_lost = 0;
+    _last_seq = 0;
 }
 
 PressModel::~PressModel()
