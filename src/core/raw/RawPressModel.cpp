@@ -230,7 +230,7 @@ void RawPressModel::onManagerModel()
     }
 }
 
-// raw发送数据[dstmac][srcmac][FF02][MsgHdr][data]
+// raw发送数据
 void RawPressModel::start_client_press()
 {
     if(gConfigCmd.blksize < 8)
@@ -238,6 +238,7 @@ void RawPressModel::start_client_press()
         gConfigCmd.blksize = 8;
     }
 
+#if 1   //自定义以太类型：[dstmac][srcmac][FF02][MsgHdr][data]
     uint32_t buflen = sizeof(ethhdr) + gConfigCmd.blksize;
     char* buf = (char*)_RAM_NEW_(buflen);
     MsgHdr* pMsgHdr = (MsgHdr*)(buf + sizeof(ethhdr));
@@ -248,7 +249,40 @@ void RawPressModel::start_client_press()
     memcpy(peth->h_dest,gConfigCmd.dstmac,IFHWADDRLEN);
     memcpy(peth->h_source,_pClient->_local_mac,IFHWADDRLEN);
     peth->h_proto = htons(ETH_RAW_PERF);
-    
+#else   //组建ip/udp包：[dstmac][srcmac][0800][ip4hdr][udphdr][MsgHdr][data]
+    uint32_t buflen = sizeof(IpUdpHdr) + gConfigCmd.blksize;
+    char* buf = (char*)_RAM_NEW_(buflen);
+
+    StrtoMacBuf("00-16-3e-3c-07-9d",_pClient->_local_mac);
+
+    // 构建以太头
+    IpUdpHdr* hdr = (IpUdpHdr*)buf;
+    memcpy(hdr->eth.h_dest,gConfigCmd.dstmac,IFHWADDRLEN);
+    memcpy(hdr->eth.h_source,_pClient->_local_mac,IFHWADDRLEN);
+    hdr->eth.h_proto = htons(ETH_IPV4);
+
+    // 构建ip头
+    hdr->ip4.ihl = 5;
+    hdr->ip4.version = 4;
+    hdr->ip4.tos = 0;
+    hdr->ip4.tot_len = sizeof(ip4hdr) + sizeof(udphdr) + gConfigCmd.blksize;
+    uint16_t uiFlagOffset = 0x4000;
+    hdr->ip4.frag_off = htons(uiFlagOffset);//不分片
+    hdr->ip4.ttl = 64;
+    hdr->ip4.protocol = 17;//UDP
+    hdr->ip4.saddr = inet_addr("192.168.10.96");
+    hdr->ip4.daddr = inet_addr("192.168.10.98");
+
+    // 构建udp头
+    hdr->udp.source = htons(10086);
+    hdr->udp.dest = htons(5205);
+    hdr->udp.len = htons(sizeof(udphdr) + gConfigCmd.blksize);
+
+    // 负载头
+    MsgHdr* pMsgHdr = (MsgHdr*)(buf + sizeof(IpUdpHdr));
+    pMsgHdr->uMsgIndex = 0;
+    pMsgHdr->uTotalLen = gConfigCmd.blksize;
+#endif
     // 不控速
     if(gConfigCmd.bandwidth == 0)
     {

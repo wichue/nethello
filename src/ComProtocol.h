@@ -105,7 +105,7 @@ struct ip4hdr {
 			ihl:4,//首部长度(4位),表示IP报文头部按32位字长（32位，4字节）计数的长度，也即报文头的长度等于IHL的值乘以4。
 #endif
 	uint8_t	tos;// 服务类型字段(8位)
-	uint16_t	tot_len;//总长度字段(16位)是指整个IP数据报的长度
+	uint16_t	tot_len;//总长度字段(16位)是指整个IP数据报的长度,ip头+负载长度
 	uint16_t	id;//标识，用于分片处理，同一数据报的分片具有相同的标识
 	uint16_t	frag_off;//分段偏移
 	uint8_t	ttl;//TTL
@@ -253,7 +253,16 @@ typedef enum {
     null_trans
 } _TRANSPORT_;
 
+//ipv4的udp头
+typedef struct _Ip4UdpHdr_ {
+    ethhdr eth;
+    ip4hdr ip4;
+    udphdr udp;
+}IpUdpHdr;
+
 #pragma pack()
+
+#define ETH_IPV4 (0x0800)       // ipv4协议
 
 #define ETH_RAW_TEXT (0xFF01)   // 自定义文本以太协议
 #define ETH_RAW_PERF (0xFF02)   // 自定义性能以太协议
