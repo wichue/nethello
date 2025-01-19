@@ -63,6 +63,7 @@ SET(SRCS
     ${PREFIX}/src/net/UdpClient.cpp
     ${PREFIX}/src/net/StickyPacket.cpp
     ${PREFIX}/src/net/RawSocket.cpp
+    ${PREFIX}/src/net/TcpSafeClient.cpp 
 
     ${PREFIX}/src/GlobalValue.cpp
 
